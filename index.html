@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片水印 · 固定高度 · 左右布局</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f2f4f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app-container {
+      display: flex;
+      width: 100%;
+      max-width: 1280px;
+      height: 720px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ========== 左侧控制面板 ========== */
+    .control-panel {
+      width: 42%;
+      padding: 28px 28px 24px;
+      border-right: 1px solid #edf2f7;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* 标题行 */
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #2f80ed;
+      flex-shrink: 0;
+    }
+
+    .header-row h2 {
+      color: #1a202c;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .clear-action-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .clear-toast {
+      font-size: 12px;
+      color: #38a169;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .clear-toast.show {
+      opacity: 1;
+    }
+
+    .btn-clear-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #a0aec0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .btn-clear-content:hover {
+      background: #fef2f2;
+      color: #ef4444;
+    }
+
+    .btn-clear-content svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .form-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      padding-right: 4px;
+      margin-bottom: 12px;
+    }
+
+    .form-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .form-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .form-scroll::-webkit-scrollbar-thumb {
+      background: #dcdfe6;
+      border-radius: 3px;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      width: 92px;
+      font-size: 14px;
+      color: #4a5568;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .form-group input[type="text"],
+    .form-group select {
+      flex: 1;
+      padding: 9px 14px;
+      border: 1px solid #dcdfe6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      color: #2d3748;
+      background: #fafbfc;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #2f80ed;
+      box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12);
+      background: #fff;
+    }
+
+    .form-group input::placeholder {
+      color: #a0aec0;
+    }
+
+    /* 经纬度组合 */
+    .coords-group {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .coords-group input {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 14px;
+      border: 1px solid #dcdfe6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      color: #2d3748;
+      background: #fafbfc;
+    }
+
+    .coords-group input:focus {
+      border-color: #2f80ed;
+      box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12);
+      background: #fff;
+    }
+
+    .coords-group input::placeholder {
+      color: #a0aec0;
+    }
+
+    .coords-fixed {
+      font-size: 14px;
+      color: #4a5568;
+      font-weight: 600;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* 时间组合 */
+    .time-group {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .time-group select {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 14px;
+      border: 1px solid #dcdfe6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      color: #2d3748;
+      background: #fafbfc;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 14px;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+
+    .time-group select:focus {
+      border-color: #2f80ed;
+      box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12);
+      background: #fff;
+    }
+
+    /* 时间勾选 */
+    .time-checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+
+    .time-checkbox-wrapper input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #2f80ed;
+    }
+
+    .time-checkbox-wrapper label {
+      font-size: 13px;
+      color: #4a5568;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ========== 底部操作区 ========== */
+    .bottom-area {
+      flex-shrink: 0;
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+      min-height: 130px;
+      align-items: stretch;
+    }
+
+    .upload-btn {
+      flex: 0 0 80%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 16px;
+      background: #eef2f6;
+      border: 2px dashed #b0c4de;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+      position: relative;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .upload-btn:hover {
+      background: #e2e8f0;
+      border-color: #2f80ed;
+      color: #2f80ed;
+    }
+
+    .upload-btn.drag-over {
+      background: #dbeafe;
+      border-color: #2f80ed;
+      color: #2f80ed;
+      box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.2);
+    }
+
+    .upload-btn .big-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .upload-btn .upload-text {
+      font-size: 13px;
+      color: #4a5568;
+    }
+
+    .upload-btn .upload-hint-small {
+      font-size: 11px;
+      color: #a0aec0;
+      font-weight: 400;
+    }
+
+    .upload-btn input[type="file"] {
+      display: none;
+    }
+
+    .right-buttons {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .btn-transform {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400e;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn-transform:hover {
+      background: #fde68a;
+      border-color: #d97706;
+      color: #78350f;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-transform.active {
+      background: #f59e0b;
+      color: #fff;
+      border-color: #d97706;
+    }
+
+    .btn-transform .icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .btn-export {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #ffffff;
+      background: #2f80ed;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-export:hover:not(:disabled) {
+      background: #1c6cd6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(47, 128, 237, 0.3);
+    }
+
+    .btn-export:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #a0aec0;
+      text-align: center;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ========== 右侧预览区 ========== */
+    .preview-panel {
+      width: 58%;
+      padding: 28px 28px 20px;
+      background: #f2f4f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fafafa;
+      line-height: 0;
+      transition: box-shadow 0.2s;
+      user-select: none;
+      height: 100%;
+      max-height: 100%;
+      width: auto;
+      max-width: 100%;
+      aspect-ratio: 3 / 4;
+      background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+
+    .canvas-wrapper.has-image {
+      aspect-ratio: auto;
+      width: auto;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      background-image: none;
+      background-color: #ffffff;
+    }
+
+    .canvas-wrapper.drag-over {
+      box-shadow: 0 0 0 4px #2f80ed, 0 8px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .canvas-wrapper.selected {
+      box-shadow: 0 0 0 4px #2f80ed, 0 8px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    #base-image {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      transition: opacity 0.2s;
+      position: relative;
+      z-index: 1;
+      vertical-align: bottom;
+    }
+
+    #base-image.hidden {
+      display: none;
+    }
+
+    .canvas-wrapper.has-image #base-image {
+      height: 100%;
+      width: auto;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* 水印卡片 */
+    .watermark-card {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      width: 18em;
+      font-size: 13px;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-weight: bold;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      z-index: 2;
+      pointer-events: auto;
+      line-height: 1.4;
+      color: #333;
+      border: none;
+      outline: none;
+      margin: 0;
+      padding: 0;
+      cursor: grab;
+      user-select: none;
+      font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transform-origin: top left;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+    }
+
+    .watermark-card:active {
+      cursor: grabbing;
+    }
+
+    .watermark-card.hidden {
+      display: none;
+    }
+
+    .wm-header {
+      background-color: #2f80ed;
+      color: #ffffff;
+      padding: 10px 12px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 26px;
+      flex-shrink: 0;
+      margin: 0;
+      border: none;
+      font-family: inherit;
+      font-weight: bold;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .wm-yellow-square {
+      width: 8px;
+      height: 8px;
+      background-color: #f2c94c;
+      position: absolute;
+      left: 12px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .wm-title-text {
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 4px;
+      margin: 0;
+      border: none;
+      font-family: inherit;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    /* 占位提示文字（灰色） */
+    .wm-title-text.placeholder-text,
+    .wm-value.placeholder-text {
+      color: #a0aec0 !important;
+      font-weight: 500 !important;
+    }
+
+    .wm-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 0;
+      background: #ffffff;
+      border: none;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    .wm-row {
+      display: flex;
+      align-items: flex-start;
+      margin: 0;
+      padding: 0;
+      border: none;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    .wm-label {
+      width: 6.1em;
+      flex-shrink: 0;
+      color: #1a202c;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+      border: none;
+      letter-spacing: normal;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .wm-value {
+      flex: 1;
+      color: #1a202c;
+      word-break: break-all;
+      line-height: 1.45;
+      padding-left: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      margin: 0;
+      border: none;
+      font-family: inherit;
+    }
+
+    .wm-footer {
+      background-color: #2f80ed;
+      color: #ffffff;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-align: left;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+      border: none;
+      border-radius: 0 0 10px 10px;
+      font-family: inherit;
+      font-weight: bold;
+    }
+
+    /* 悬浮按钮 */
+    .float-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .float-actions .action-btn {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(47, 128, 237, 0.92);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      padding: 0;
+      line-height: 1;
+    }
+
+    .float-actions .action-btn:hover {
+      background: #1c6cd6;
+      transform: scale(1.08);
+    }
+
+    .float-actions .action-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .float-actions .action-btn.reset {
+      background: rgba(229, 62, 62, 0.92);
+    }
+
+    .float-actions .action-btn.reset:hover {
+      background: #c53030;
+    }
+
+    .float-actions .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 空状态提示 */
+    .empty-preview {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: #a0aec0;
+      font-size: 15px;
+      font-weight: 500;
+      gap: 12px;
+      user-select: none;
+      background: #fafafa;
+      z-index: 3;
+    }
+
+    .empty-preview .icon {
+      font-size: 52px;
+      opacity: 0.6;
+    }
+
+    .empty-preview small {
+      font-size: 13px;
+      color: #cbd5e0;
+      font-weight: 400;
+    }
+
+    .empty-preview.hidden {
+      display: none;
+    }
+
+    .signature {
+      margin-top: 16px;
+      color: #b0b4b9;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .signature::before,
+    .signature::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: #b0b4b9;
+      margin: 0 15px;
+      transform: translateY(1px);
+    }
+
+    /* ========== 左侧滑出变形器面板 ========== */
+    .transform-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 320px;
+      background: #ffffff;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #edf2f7;
+    }
+
+    .transform-panel.open {
+      transform: translateX(0);
+    }
+
+    .transform-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px;
+      border-bottom: 1px solid #edf2f7;
+      background: #fafbfc;
+      flex-shrink: 0;
+    }
+
+    .transform-header h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a202c;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .transform-header h3 .icon {
+      font-size: 20px;
+    }
+
+    .transform-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #a0aec0;
+      font-size: 22px;
+      cursor: pointer;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .transform-close:hover {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .transform-body {
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .transform-field {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .transform-field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .transform-field-header label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .transform-field-header .value-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2f80ed;
+      background: #eef4ff;
+      padding: 3px 12px;
+      border-radius: 20px;
+      min-width: 56px;
+      text-align: center;
+    }
+
+    .transform-field input[type="range"] {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #dcdfe6;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .transform-field input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2f80ed;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(47, 128, 237, 0.4);
+      transition: transform 0.1s;
+      border: 2px solid #fff;
+    }
+
+    .transform-field input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .transform-field input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2f80ed;
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(47, 128, 237, 0.4);
+    }
+
+    .transform-field .range-hint {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #a0aec0;
+      padding: 0 2px;
+    }
+
+    .transform-footer {
+      padding: 18px 22px;
+      border-top: 1px solid #edf2f7;
+      flex-shrink: 0;
+    }
+
+    .transform-footer .btn-confirm {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      background: #2f80ed;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .transform-footer .btn-confirm:hover {
+      background: #1c6cd6;
+      box-shadow: 0 4px 12px rgba(47, 128, 237, 0.3);
+    }
+
+    /* 移动端 */
+    @media (max-width: 900px) {
+      .app-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        border-radius: 0;
+      }
+      .control-panel,
+      .preview-panel {
+        width: 100%;
+        height: auto;
+      }
+      .control-panel {
+        border-right: none;
+        border-bottom: 1px solid #edf2f7;
+        padding: 20px;
+      }
+      .preview-panel {
+        padding: 20px;
+        min-height: 400px;
+      }
+      .canvas-wrapper {
+        aspect-ratio: 3 / 4;
+        height: auto;
+        width: 100%;
+        max-width: 400px;
+      }
+      .canvas-wrapper.has-image {
+        height: auto;
+        max-height: 70vh;
+      }
+      .bottom-area {
+        min-height: 110px;
+      }
+      .transform-panel {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .bottom-area {
+        flex-direction: column;
+        min-height: 0;
+      }
+      .upload-btn {
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 80px;
+      }
+      .right-buttons {
+        flex-direction: row;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- 左侧控制面板 -->
+  <div class="control-panel">
+    <!-- 标题行：文字 + 提示 + 重置图标（循环图标） -->
+    <div class="header-row">
+      <h2>水印内容设置</h2>
+      <div class="clear-action-wrapper">
+        <span class="clear-toast" id="clear-toast">已清空</span>
+        <button class="btn-clear-content" id="btn-clear-content" title="一键清空水印内容">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-scroll">
+      <div class="form-group">
+        <label>标题：</label>
+        <input type="text" id="input-title" placeholder="品牌+客户名称" value="">
+      </div>
+      <div class="form-group">
+        <label>施工责任人：</label>
+        <input type="text" id="input-person" placeholder="工程师姓名" value="">
+      </div>
+      
+      <!-- 日期 -->
+      <div class="form-group">
+        <label>日期：</label>
+        <div class="time-group">
+          <select id="input-date-year" style="flex:1;">
+            <!-- JS动态填充 -->
+          </select>
+          <select id="input-date-month" style="flex:1;">
+            <!-- JS动态填充 -->
+          </select>
+          <select id="input-date-day" style="flex:1;">
+            <!-- JS动态填充 -->
+          </select>
+        </div>
+      </div>
+
+      <!-- 时间（勾选显示） -->
+      <div class="form-group">
+        <label>时间：</label>
+        <div class="time-group">
+          <select id="input-time-hour" style="flex:1;">
+            <!-- JS动态填充 -->
+          </select>
+          <span style="color:#4a5568; font-weight:600; font-size:14px;">:</span>
+          <select id="input-time-minute" style="flex:1;">
+            <!-- JS动态填充 -->
+          </select>
+        </div>
+        <div class="time-checkbox-wrapper">
+          <input type="checkbox" id="checkbox-show-time">
+          <label for="checkbox-show-time">显示</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>地点：</label>
+        <input type="text" id="input-location" placeholder="省市区县·小区村庄" value="">
+      </div>
+      <div class="form-group">
+        <label>经纬度：</label>
+        <div class="coords-group">
+          <input type="text" id="input-coords-lat" placeholder="33.55" value="">
+          <span class="coords-fixed">°N,</span>
+          <input type="text" id="input-coords-lng" placeholder="119.08" value="">
+          <span class="coords-fixed">°E</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>施工单位：</label>
+        <input type="text" id="input-company" placeholder="均胜群英" value="">
+      </div>
+    </div>
+
+    <!-- 底部操作区 -->
+    <div class="bottom-area">
+      <label class="upload-btn" id="upload-btn-label" for="file-input">
+        <span class="big-icon">📁</span>
+        <span class="upload-text">选择图片 / 拖拽到此</span>
+        <span class="upload-hint-small">支持 JPG / PNG</span>
+        <input type="file" id="file-input" accept="image/*">
+      </label>
+      <div class="right-buttons">
+        <button class="btn-transform" id="btn-transform" title="调整水印透明度与尺寸">
+          <span class="icon">⚙️</span> 变形器
+        </button>
+        <button class="btn-export" id="btn-export" title="生成图片">
+          <span class="icon">🖼️</span> 生成
+        </button>
+      </div>
+    </div>
+    <div class="hint">单击图片框选中，双击上传</div>
+  </div>
+
+  <!-- 右侧预览区 -->
+  <div class="preview-panel">
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <img id="base-image" class="hidden" alt="预览图片">
+
+      <div class="watermark-card" id="watermark-card">
+        <div class="wm-header">
+          <div class="wm-yellow-square"></div>
+          <div class="wm-title-text" id="disp-title">品牌+客户名称</div>
+        </div>
+        <div class="wm-body">
+          <div class="wm-row">
+            <div class="wm-label">施工责任人：</div>
+            <div class="wm-value" id="disp-person">工程师姓名</div>
+          </div>
+          <div class="wm-row">
+            <div class="wm-label">日&emsp;&emsp;&emsp;期：</div>
+            <div class="wm-value" id="disp-date">2026.10.27 星期二</div>
+          </div>
+          <div class="wm-row">
+            <div class="wm-label">地&emsp;&emsp;&emsp;点：</div>
+            <div class="wm-value" id="disp-location">省市区县·小区村庄</div>
+          </div>
+          <div class="wm-row">
+            <div class="wm-label">经&emsp;纬&emsp;度：</div>
+            <div class="wm-value" id="disp-coords">33.55°N,119.08°E</div>
+          </div>
+        </div>
+        <div class="wm-footer">
+          施工单位：<span id="disp-company">均胜群英</span>
+        </div>
+      </div>
+
+      <div class="empty-preview hidden" id="empty-preview">
+        <div class="icon">🖼️</div>
+        <div>暂无图片</div>
+        <small>单击选中，双击上传图片</small>
+      </div>
+
+      <div class="float-actions">
+        <button class="action-btn" id="btn-copy" title="复制图片到剪贴板">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"/>
+          </svg>
+        </button>
+        <button class="action-btn reset" id="btn-reset" title="清空图片和水印">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="signature">POWERED BY XUGL</div>
+  </div>
+
+  <!-- ===== 左侧滑出变形器面板 ===== -->
+  <div class="transform-panel" id="transform-panel">
+    <div class="transform-header">
+      <h3><span class="icon">⚙️</span> 水印变形器</h3>
+      <button class="transform-close" id="transform-close" title="关闭">×</button>
+    </div>
+    <div class="transform-body">
+      <div class="transform-field">
+        <div class="transform-field-header">
+          <label>💧 水印透明度</label>
+          <span class="value-badge" id="opacity-badge">100%</span>
+        </div>
+        <input type="range" id="opacity-slider" min="0" max="100" value="100" step="1">
+        <div class="range-hint"><span>透明</span><span>不透明</span></div>
+      </div>
+
+      <div class="transform-field">
+        <div class="transform-field-header">
+          <label>📐 水印尺寸</label>
+          <span class="value-badge" id="scale-badge">100%</span>
+        </div>
+        <input type="range" id="scale-slider" min="50" max="200" value="100" step="1">
+        <div class="range-hint"><span>50%</span><span>200%</span></div>
+      </div>
+    </div>
+    <div class="transform-footer">
+      <button class="btn-confirm" id="btn-confirm">完成调整</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- DOM ----------
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    const baseImage = document.getElementById('base-image');
+    const watermarkCard = document.getElementById('watermark-card');
+    const emptyPreview = document.getElementById('empty-preview');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtnLabel = document.getElementById('upload-btn-label');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnReset = document.getElementById('btn-reset');
+    const btnTransform = document.getElementById('btn-transform');
+    const btnClearContent = document.getElementById('btn-clear-content');
+    const clearToast = document.getElementById('clear-toast');
+
+    const transformPanel = document.getElementById('transform-panel');
+    const transformClose = document.getElementById('transform-close');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const opacitySlider = document.getElementById('opacity-slider');
+    const opacityBadge = document.getElementById('opacity-badge');
+    const scaleSlider = document.getElementById('scale-slider');
+    const scaleBadge = document.getElementById('scale-badge');
+
+    const dispTitle = document.getElementById('disp-title');
+    const dispPerson = document.getElementById('disp-person');
+    const dispDate = document.getElementById('disp-date');
+    const dispLocation = document.getElementById('disp-location');
+    const dispCoords = document.getElementById('disp-coords');
+    const dispCompany = document.getElementById('disp-company');
+
+    // 输入框
+    const inputs = {
+      title: document.getElementById('input-title'),
+      person: document.getElementById('input-person'),
+      location: document.getElementById('input-location'),
+      company: document.getElementById('input-company'),
+      coordsLat: document.getElementById('input-coords-lat'),
+      coordsLng: document.getElementById('input-coords-lng')
+    };
+
+    // 日期下拉框
+    const dateYear = document.getElementById('input-date-year');
+    const dateMonth = document.getElementById('input-date-month');
+    const dateDay = document.getElementById('input-date-day');
+
+    // 时间下拉框与勾选
+    const timeHour = document.getElementById('input-time-hour');
+    const timeMinute = document.getElementById('input-time-minute');
+    const checkboxShowTime = document.getElementById('checkbox-show-time');
+
+    // 占位提示文案（灰色）
+    const placeholders = {
+      title: '品牌+客户名称',
+      person: '工程师姓名',
+      date: '2026.10.27 星期二',
+      location: '省市区县·小区村庄',
+      coords: '33.55°N,119.08°E',
+      company: '均胜群英'
+    };
+
+    let watermarkOpacity = 1;
+    let watermarkScale = 1;
+
+    // ---------- 初始化日期与时间下拉框 ----------
+    function initDateSelectors() {
+      // 年份
+      for (let y = 2020; y <= 2030; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        dateYear.appendChild(opt);
+      }
+      // 月份
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        dateMonth.appendChild(opt);
+      }
+      // 天数（动态）
+      updateDays();
+
+      // 默认日期 2026-10-27
+      dateYear.value = '2026';
+      dateMonth.value = '10';
+      dateDay.value = '27';
+    }
+
+    function updateDays() {
+      const year = parseInt(dateYear.value);
+      const month = parseInt(dateMonth.value);
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const currentDay = dateDay.value;
+      dateDay.innerHTML = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        dateDay.appendChild(opt);
+      }
+      if (currentDay && parseInt(currentDay) <= daysInMonth) {
+        dateDay.value = currentDay;
+      } else {
+        dateDay.value = daysInMonth;
+      }
+    }
+
+    dateYear.addEventListener('change', () => { updateDays(); updateWatermarkText(); });
+    dateMonth.addEventListener('change', () => { updateDays(); updateWatermarkText(); });
+    dateDay.addEventListener('change', updateWatermarkText);
+
+    initDateSelectors();
+
+    // 初始化时间
+    function initTimeSelectors() {
+      for (let h = 0; h <= 23; h++) {
+        const opt = document.createElement('option');
+        opt.value = String(h).padStart(2, '0');
+        opt.textContent = String(h).padStart(2, '0');
+        timeHour.appendChild(opt);
+      }
+      for (let m = 0; m <= 59; m++) {
+        const opt = document.createElement('option');
+        opt.value = String(m).padStart(2, '0');
+        opt.textContent = String(m).padStart(2, '0');
+        timeMinute.appendChild(opt);
+      }
+      // 默认 12:00
+      timeHour.value = '12';
+      timeMinute.value = '00';
+    }
+
+    initTimeSelectors();
+
+    timeHour.addEventListener('change', updateWatermarkText);
+    timeMinute.addEventListener('change', updateWatermarkText);
+    checkboxShowTime.addEventListener('change', updateWatermarkText);
+
+    // ---------- 获取日期字符串 ----------
+    function getDateString() {
+      const y = dateYear.value;
+      const m = dateMonth.value.padStart(2, '0');
+      const d = dateDay.value.padStart(2, '0');
+      
+      if (checkboxShowTime.checked) {
+        // 显示时间，替换星期
+        const h = timeHour.value;
+        const min = timeMinute.value;
+        return `${y}.${m}.${d} ${h}:${min}`;
+      } else {
+        // 显示星期
+        const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const w = weekdays[date.getDay()];
+        return `${y}.${m}.${d} ${w}`;
+      }
+    }
+
+    // ---------- 获取经纬度字符串 ----------
+    function getCoordsString() {
+      const lat = inputs.coordsLat.value.trim();
+      const lng = inputs.coordsLng.value.trim();
+      if (!lat && !lng) return '';
+      const latStr = lat ? lat + '°N' : '°N';
+      const lngStr = lng ? lng + '°E' : '°E';
+      return `${latStr},${lngStr}`;
+    }
+
+    // ---------- 水印文字更新 ----------
+    function updateWatermarkText() {
+      // 标题
+      const titleVal = inputs.title.value.trim();
+      if (titleVal) {
+        dispTitle.textContent = titleVal;
+        dispTitle.classList.remove('placeholder-text');
+      } else {
+        dispTitle.textContent = placeholders.title;
+        dispTitle.classList.add('placeholder-text');
+      }
+
+      // 施工责任人
+      const personVal = inputs.person.value.trim();
+      if (personVal) {
+        dispPerson.textContent = personVal;
+        dispPerson.classList.remove('placeholder-text');
+      } else {
+        dispPerson.textContent = placeholders.person;
+        dispPerson.classList.add('placeholder-text');
+      }
+
+      // 日期
+      dispDate.textContent = getDateString();
+      dispDate.classList.remove('placeholder-text');
+
+      // 地点
+      const locationVal = inputs.location.value.trim();
+      if (locationVal) {
+        dispLocation.textContent = locationVal;
+        dispLocation.classList.remove('placeholder-text');
+      } else {
+        dispLocation.textContent = placeholders.location;
+        dispLocation.classList.add('placeholder-text');
+      }
+
+      // 经纬度
+      const coordsStr = getCoordsString();
+      if (coordsStr) {
+        dispCoords.textContent = coordsStr;
+        dispCoords.classList.remove('placeholder-text');
+      } else {
+        dispCoords.textContent = placeholders.coords;
+        dispCoords.classList.add('placeholder-text');
+      }
+
+      // 施工单位
+      const companyVal = inputs.company.value.trim();
+      if (companyVal) {
+        dispCompany.textContent = companyVal;
+        dispCompany.classList.remove('placeholder-text');
+      } else {
+        dispCompany.textContent = placeholders.company;
+        dispCompany.classList.add('placeholder-text');
+      }
+    }
+
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('input', updateWatermarkText);
+    });
+    updateWatermarkText();
+
+    // ---------- 一键清空水印内容 ----------
+    btnClearContent.addEventListener('click', () => {
+      inputs.title.value = '';
+      inputs.person.value = '';
+      inputs.location.value = '';
+      inputs.company.value = '';
+      inputs.coordsLat.value = '';
+      inputs.coordsLng.value = '';
+      
+      // 重置日期为默认值
+      dateYear.value = '2026';
+      dateMonth.value = '10';
+      updateDays();
+      dateDay.value = '27';
+
+      // 重置时间
+      timeHour.value = '12';
+      timeMinute.value = '00';
+      checkboxShowTime.checked = false;
+
+      updateWatermarkText();
+
+      // 显示“已清空”提示
+      clearToast.classList.add('show');
+      setTimeout(() => {
+        clearToast.classList.remove('show');
+      }, 1500);
+    });
+
+    // ---------- 变形器面板 ----------
+    function openTransformPanel() {
+      opacitySlider.value = Math.round(watermarkOpacity * 100);
+      scaleSlider.value = Math.round(watermarkScale * 100);
+      updateOpacityBadge();
+      updateScaleBadge();
+      transformPanel.classList.add('open');
+      btnTransform.classList.add('active');
+    }
+
+    function closeTransformPanel() {
+      transformPanel.classList.remove('open');
+      btnTransform.classList.remove('active');
+    }
+
+    function updateOpacityBadge() {
+      opacityBadge.textContent = opacitySlider.value + '%';
+    }
+
+    function updateScaleBadge() {
+      scaleBadge.textContent = scaleSlider.value + '%';
+    }
+
+    opacitySlider.addEventListener('input', () => {
+      updateOpacityBadge();
+      watermarkOpacity = parseInt(opacitySlider.value, 10) / 100;
+      watermarkCard.style.opacity = watermarkOpacity;
+    });
+
+    scaleSlider.addEventListener('input', () => {
+      updateScaleBadge();
+      watermarkScale = parseInt(scaleSlider.value, 10) / 100;
+      applyWatermarkScale();
+    });
+
+    function applyWatermarkScale() {
+      watermarkCard.style.transform = `scale(${watermarkScale})`;
+    }
+
+    btnTransform.addEventListener('click', () => {
+      if (transformPanel.classList.contains('open')) {
+        closeTransformPanel();
+      } else {
+        openTransformPanel();
+      }
+    });
+
+    transformClose.addEventListener('click', closeTransformPanel);
+    btnConfirm.addEventListener('click', closeTransformPanel);
+
+    // ---------- 水印拖动 ----------
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let cardStartLeft = 0;
+    let cardStartTop = 0;
+
+    function initWatermarkPosition() {
+      const wrapperRect = canvasWrapper.getBoundingClientRect();
+      const cardRect = watermarkCard.getBoundingClientRect();
+
+      let left = cardRect.left - wrapperRect.left;
+      let top = cardRect.top - wrapperRect.top;
+
+      if (watermarkCard.style.left === '' || watermarkCard.style.bottom !== '') {
+        left = 16;
+        top = wrapperRect.height - cardRect.height - 16;
+      }
+
+      watermarkCard.style.left = left + 'px';
+      watermarkCard.style.top = top + 'px';
+      watermarkCard.style.bottom = 'auto';
+      watermarkCard.style.right = 'auto';
+    }
+
+    watermarkCard.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+
+      isDragging = true;
+
+      const wrapperRect = canvasWrapper.getBoundingClientRect();
+      const cardRect = watermarkCard.getBoundingClientRect();
+
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      cardStartLeft = cardRect.left - wrapperRect.left;
+      cardStartTop = cardRect.top - wrapperRect.top;
+
+      watermarkCard.style.cursor = 'grabbing';
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      const wrapperRect = canvasWrapper.getBoundingClientRect();
+      const cardRect = watermarkCard.getBoundingClientRect();
+
+      let newLeft = cardStartLeft + (e.clientX - dragStartX);
+      let newTop = cardStartTop + (e.clientY - dragStartY);
+
+      const maxLeft = wrapperRect.width - cardRect.width;
+      const maxTop = wrapperRect.height - cardRect.height;
+
+      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+      newTop = Math.max(0, Math.min(newTop, maxTop));
+
+      watermarkCard.style.left = newLeft + 'px';
+      watermarkCard.style.top = newTop + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        watermarkCard.style.cursor = 'grab';
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+
+    baseImage.addEventListener('load', () => {
+      setTimeout(() => {
+        initWatermarkPosition();
+      }, 50);
+    });
+
+    window.addEventListener('resize', () => {
+      if (!watermarkCard.classList.contains('hidden')) {
+        const wrapperRect = canvasWrapper.getBoundingClientRect();
+        const cardRect = watermarkCard.getBoundingClientRect();
+        let left = parseFloat(watermarkCard.style.left) || 16;
+        let top = parseFloat(watermarkCard.style.top) || 0;
+        const maxLeft = wrapperRect.width - cardRect.width;
+        const maxTop = wrapperRect.height - cardRect.height;
+        if (left > maxLeft) left = maxLeft;
+        if (top > maxTop) top = maxTop;
+        if (left < 0) left = 0;
+        if (top < 0) top = 0;
+        watermarkCard.style.left = left + 'px';
+        watermarkCard.style.top = top + 'px';
+      }
+    });
+
+    // ---------- 图片上传 ----------
+    function loadImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        alert('请选择图片文件 (JPG, PNG)');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        baseImage.src = e.target.result;
+        baseImage.classList.remove('hidden');
+        baseImage.style.display = 'block';
+
+        canvasWrapper.classList.add('has-image');
+
+        emptyPreview.classList.add('hidden');
+
+        setTimeout(() => {
+          const wrapperRect = canvasWrapper.getBoundingClientRect();
+          const cardRect = watermarkCard.getBoundingClientRect();
+          watermarkCard.style.left = '16px';
+          watermarkCard.style.top = (wrapperRect.height - cardRect.height - 16) + 'px';
+          watermarkCard.style.bottom = 'auto';
+          watermarkCard.style.right = 'auto';
+          applyWatermarkScale();
+        }, 100);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) loadImageFile(file);
+      fileInput.value = '';
+    });
+
+    // 图片框交互
+    canvasWrapper.addEventListener('click', (e) => {
+      if (e.target.closest('.watermark-card') || e.target.closest('.float-actions')) return;
+      canvasWrapper.classList.add('selected');
+    });
+
+    canvasWrapper.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.watermark-card') || e.target.closest('.float-actions')) return;
+      fileInput.click();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!canvasWrapper.contains(e.target)) {
+        canvasWrapper.classList.remove('selected');
+      }
+    });
+
+    // 上传按钮拖拽
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadBtnLabel.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    uploadBtnLabel.addEventListener('dragenter', () => uploadBtnLabel.classList.add('drag-over'));
+    uploadBtnLabel.addEventListener('dragover', () => uploadBtnLabel.classList.add('drag-over'));
+    uploadBtnLabel.addEventListener('dragleave', () => uploadBtnLabel.classList.remove('drag-over'));
+    uploadBtnLabel.addEventListener('drop', (e) => {
+      uploadBtnLabel.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadImageFile(file);
+    });
+
+    // 预览容器拖拽
+    canvasWrapper.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      canvasWrapper.classList.add('drag-over');
+    });
+    canvasWrapper.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      canvasWrapper.classList.remove('drag-over');
+    });
+    canvasWrapper.addEventListener('drop', (e) => {
+      e.preventDefault();
+      canvasWrapper.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadImageFile(file);
+    });
+
+    document.addEventListener('dragover', (e) => e.preventDefault());
+    document.addEventListener('drop', (e) => e.preventDefault());
+
+    // ---------- 复制图片到剪贴板 ----------
+    btnCopy.addEventListener('click', async () => {
+      if (baseImage.classList.contains('hidden') || !baseImage.src) {
+        alert('请先选择一张图片');
+        return;
+      }
+
+      btnCopy.disabled = true;
+
+      try {
+        const imgDisplayWidth = baseImage.clientWidth;
+        const imgDisplayHeight = baseImage.clientHeight;
+
+        const origWrapperStyle = {
+          width: canvasWrapper.style.width,
+          height: canvasWrapper.style.height,
+          borderRadius: canvasWrapper.style.borderRadius,
+          boxShadow: canvasWrapper.style.boxShadow,
+          overflow: canvasWrapper.style.overflow,
+          background: canvasWrapper.style.background,
+          backgroundImage: canvasWrapper.style.backgroundImage,
+          lineHeight: canvasWrapper.style.lineHeight,
+          fontSize: canvasWrapper.style.fontSize,
+          display: canvasWrapper.style.display,
+          aspectRatio: canvasWrapper.style.aspectRatio
+        };
+        const origImgStyle = {
+          maxWidth: baseImage.style.maxWidth,
+          maxHeight: baseImage.style.maxHeight,
+          width: baseImage.style.width,
+          height: baseImage.style.height,
+          display: baseImage.style.display
+        };
+        const origCardTransform = watermarkCard.style.transform;
+
+        canvasWrapper.style.width = imgDisplayWidth + 'px';
+        canvasWrapper.style.height = imgDisplayHeight + 'px';
+        canvasWrapper.style.borderRadius = '0';
+        canvasWrapper.style.boxShadow = 'none';
+        canvasWrapper.style.overflow = 'hidden';
+        canvasWrapper.style.background = 'none';
+        canvasWrapper.style.backgroundImage = 'none';
+        canvasWrapper.style.lineHeight = '0';
+        canvasWrapper.style.fontSize = '0';
+        canvasWrapper.style.display = 'block';
+        canvasWrapper.style.aspectRatio = 'auto';
+
+        baseImage.style.maxWidth = 'none';
+        baseImage.style.maxHeight = 'none';
+        baseImage.style.width = imgDisplayWidth + 'px';
+        baseImage.style.height = imgDisplayHeight + 'px';
+        baseImage.style.display = 'block';
+        baseImage.style.verticalAlign = 'bottom';
+
+        const canvas = await html2canvas(canvasWrapper, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          width: imgDisplayWidth,
+          height: imgDisplayHeight,
+          onclone: (clonedDoc) => {
+            const clonedWrapper = clonedDoc.getElementById('canvas-wrapper');
+            if (clonedWrapper) {
+              clonedWrapper.classList.remove('selected', 'drag-over');
+              clonedWrapper.style.borderRadius = '0';
+              clonedWrapper.style.boxShadow = 'none';
+              clonedWrapper.style.width = imgDisplayWidth + 'px';
+              clonedWrapper.style.height = imgDisplayHeight + 'px';
+              clonedWrapper.style.overflow = 'hidden';
+              clonedWrapper.style.background = 'none';
+              clonedWrapper.style.backgroundImage = 'none';
+              clonedWrapper.style.lineHeight = '0';
+              clonedWrapper.style.fontSize = '0';
+              clonedWrapper.style.display = 'block';
+              clonedWrapper.style.aspectRatio = 'auto';
+            }
+
+            const clonedImg = clonedDoc.getElementById('base-image');
+            if (clonedImg) {
+              clonedImg.classList.remove('hidden');
+              clonedImg.style.display = 'block';
+              clonedImg.style.borderRadius = '0';
+              clonedImg.style.maxWidth = 'none';
+              clonedImg.style.maxHeight = 'none';
+              clonedImg.style.width = imgDisplayWidth + 'px';
+              clonedImg.style.height = imgDisplayHeight + 'px';
+              clonedImg.style.verticalAlign = 'bottom';
+            }
+
+            const clonedCard = clonedDoc.getElementById('watermark-card');
+            if (clonedCard) {
+              clonedCard.style.display = 'flex';
+              clonedCard.classList.remove('hidden');
+              clonedCard.style.borderRadius = '10px';
+              clonedCard.style.border = 'none';
+              clonedCard.style.outline = 'none';
+              clonedCard.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+              clonedCard.style.opacity = watermarkOpacity;
+              clonedCard.style.transform = `scale(${watermarkScale})`;
+              const origCard = watermarkCard;
+              clonedCard.style.left = origCard.style.left;
+              clonedCard.style.top = origCard.style.top;
+              clonedCard.style.bottom = 'auto';
+              clonedCard.style.right = 'auto';
+              clonedCard.style.fontFamily = '"Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              clonedCard.style.fontWeight = 'bold';
+
+              // 占位文字灰色
+              const titleEl = clonedCard.querySelector('.wm-title-text');
+              if (titleEl && titleEl.classList.contains('placeholder-text')) {
+                titleEl.style.color = '#a0aec0';
+                titleEl.style.fontWeight = '500';
+              }
+              const values = clonedCard.querySelectorAll('.wm-value');
+              values.forEach(el => {
+                if (el.classList.contains('placeholder-text')) {
+                  el.style.color = '#a0aec0';
+                  el.style.fontWeight = '500';
+                }
+              });
+
+              const clonedHeader = clonedCard.querySelector('.wm-header');
+              if (clonedHeader) {
+                clonedHeader.style.borderRadius = '10px 10px 0 0';
+                clonedHeader.style.fontWeight = 'bold';
+              }
+              const clonedFooter = clonedCard.querySelector('.wm-footer');
+              if (clonedFooter) {
+                clonedFooter.style.borderRadius = '0 0 10px 10px';
+                clonedFooter.style.fontWeight = 'bold';
+              }
+              const clonedBody = clonedCard.querySelector('.wm-body');
+              if (clonedBody) clonedBody.style.fontWeight = 'bold';
+              const labels = clonedCard.querySelectorAll('.wm-label');
+              labels.forEach(el => el.style.fontWeight = 'bold');
+            }
+
+            const clonedEmpty = clonedDoc.getElementById('empty-preview');
+            if (clonedEmpty) clonedEmpty.style.display = 'none';
+
+            const clonedFloat = clonedDoc.querySelector('.float-actions');
+            if (clonedFloat) clonedFloat.style.display = 'none';
+
+            const clonedPanel = clonedDoc.querySelector('.transform-panel');
+            if (clonedPanel) clonedPanel.style.display = 'none';
+          }
+        });
+
+        canvasWrapper.style.width = origWrapperStyle.width;
+        canvasWrapper.style.height = origWrapperStyle.height;
+        canvasWrapper.style.borderRadius = origWrapperStyle.borderRadius;
+        canvasWrapper.style.boxShadow = origWrapperStyle.boxShadow;
+        canvasWrapper.style.overflow = origWrapperStyle.overflow;
+        canvasWrapper.style.background = origWrapperStyle.background;
+        canvasWrapper.style.backgroundImage = origWrapperStyle.backgroundImage;
+        canvasWrapper.style.lineHeight = origWrapperStyle.lineHeight;
+        canvasWrapper.style.fontSize = origWrapperStyle.fontSize;
+        canvasWrapper.style.display = origWrapperStyle.display;
+        canvasWrapper.style.aspectRatio = origWrapperStyle.aspectRatio;
+
+        baseImage.style.maxWidth = origImgStyle.maxWidth;
+        baseImage.style.maxHeight = origImgStyle.maxHeight;
+        baseImage.style.width = origImgStyle.width;
+        baseImage.style.height = origImgStyle.height;
+        baseImage.style.display = origImgStyle.display;
+
+        watermarkCard.style.transform = origCardTransform;
+
+        canvas.toBlob(async (blob) => {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            btnCopy.style.background = '#38a169';
+            setTimeout(() => {
+              btnCopy.style.background = 'rgba(47, 128, 237, 0.92)';
+            }, 1200);
+          } catch (err) {
+            console.error('复制到剪贴板失败:', err);
+            alert('复制到剪贴板失败，请检查浏览器权限或使用导出功能。');
+          } finally {
+            btnCopy.disabled = false;
+          }
+        }, 'image/png');
+      } catch (err) {
+        console.error('截图失败:', err);
+        alert('复制图片失败，请重试。');
+        canvasWrapper.style.width = '';
+        canvasWrapper.style.height = '';
+        canvasWrapper.style.borderRadius = '';
+        canvasWrapper.style.boxShadow = '';
+        canvasWrapper.style.overflow = '';
+        canvasWrapper.style.background = '';
+        canvasWrapper.style.backgroundImage = '';
+        canvasWrapper.style.lineHeight = '';
+        canvasWrapper.style.fontSize = '';
+        canvasWrapper.style.display = '';
+        canvasWrapper.style.aspectRatio = '';
+
+        baseImage.style.maxWidth = '';
+        baseImage.style.maxHeight = '';
+        baseImage.style.width = '';
+        baseImage.style.height = '';
+        baseImage.style.display = '';
+
+        btnCopy.disabled = false;
+      }
+    });
+
+    // ---------- 重置（清空图片和水印） ----------
+    btnReset.addEventListener('click', () => {
+      baseImage.src = '';
+      baseImage.classList.add('hidden');
+      baseImage.style.display = 'none';
+
+      watermarkCard.style.transform = '';
+
+      emptyPreview.classList.remove('hidden');
+
+      fileInput.value = '';
+
+      canvasWrapper.classList.remove('has-image');
+
+      canvasWrapper.style.backgroundImage = `linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`;
+      canvasWrapper.style.backgroundColor = '';
+      canvasWrapper.style.backgroundSize = '20px 20px';
+      canvasWrapper.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+
+      canvasWrapper.classList.remove('selected', 'drag-over');
+
+      watermarkOpacity = 1;
+      watermarkScale = 1;
+      opacitySlider.value = 100;
+      scaleSlider.value = 100;
+      updateOpacityBadge();
+      updateScaleBadge();
+      watermarkCard.style.opacity = 1;
+
+      setTimeout(() => {
+        const wrapperRect = canvasWrapper.getBoundingClientRect();
+        const cardRect = watermarkCard.getBoundingClientRect();
+        watermarkCard.style.left = '16px';
+        watermarkCard.style.top = (wrapperRect.height - cardRect.height - 16) + 'px';
+        watermarkCard.style.bottom = 'auto';
+        watermarkCard.style.right = 'auto';
+      }, 50);
+
+      closeTransformPanel();
+    });
+
+    // ---------- 生成图片 (JPG) ----------
+    document.getElementById('btn-export').addEventListener('click', function() {
+      const btn = this;
+      const originalText = btn.innerHTML;
+
+      if (baseImage.classList.contains('hidden') || !baseImage.src) {
+        alert('请先选择一张图片');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '⏳ 生成中...';
+
+      const imgDisplayWidth = baseImage.clientWidth;
+      const imgDisplayHeight = baseImage.clientHeight;
+
+      const origWrapperStyle = {
+        width: canvasWrapper.style.width,
+        height: canvasWrapper.style.height,
+        borderRadius: canvasWrapper.style.borderRadius,
+        boxShadow: canvasWrapper.style.boxShadow,
+        overflow: canvasWrapper.style.overflow,
+        background: canvasWrapper.style.background,
+        backgroundImage: canvasWrapper.style.backgroundImage,
+        lineHeight: canvasWrapper.style.lineHeight,
+        fontSize: canvasWrapper.style.fontSize,
+        display: canvasWrapper.style.display,
+        aspectRatio: canvasWrapper.style.aspectRatio
+      };
+      const origImgStyle = {
+        maxWidth: baseImage.style.maxWidth,
+        maxHeight: baseImage.style.maxHeight,
+        width: baseImage.style.width,
+        height: baseImage.style.height,
+        display: baseImage.style.display
+      };
+      const origCardTransform = watermarkCard.style.transform;
+
+      canvasWrapper.style.width = imgDisplayWidth + 'px';
+      canvasWrapper.style.height = imgDisplayHeight + 'px';
+      canvasWrapper.style.borderRadius = '0';
+      canvasWrapper.style.boxShadow = 'none';
+      canvasWrapper.style.overflow = 'hidden';
+      canvasWrapper.style.background = 'none';
+      canvasWrapper.style.backgroundImage = 'none';
+      canvasWrapper.style.lineHeight = '0';
+      canvasWrapper.style.fontSize = '0';
+      canvasWrapper.style.display = 'block';
+      canvasWrapper.style.aspectRatio = 'auto';
+
+      baseImage.style.maxWidth = 'none';
+      baseImage.style.maxHeight = 'none';
+      baseImage.style.width = imgDisplayWidth + 'px';
+      baseImage.style.height = imgDisplayHeight + 'px';
+      baseImage.style.display = 'block';
+      baseImage.style.verticalAlign = 'bottom';
+
+      html2canvas(canvasWrapper, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        width: imgDisplayWidth,
+        height: imgDisplayHeight,
+        onclone: (clonedDoc) => {
+          const clonedWrapper = clonedDoc.getElementById('canvas-wrapper');
+          if (clonedWrapper) {
+            clonedWrapper.classList.remove('selected', 'drag-over');
+            clonedWrapper.style.borderRadius = '0';
+            clonedWrapper.style.boxShadow = 'none';
+            clonedWrapper.style.width = imgDisplayWidth + 'px';
+            clonedWrapper.style.height = imgDisplayHeight + 'px';
+            clonedWrapper.style.overflow = 'hidden';
+            clonedWrapper.style.background = 'none';
+            clonedWrapper.style.backgroundImage = 'none';
+            clonedWrapper.style.lineHeight = '0';
+            clonedWrapper.style.fontSize = '0';
+            clonedWrapper.style.display = 'block';
+            clonedWrapper.style.aspectRatio = 'auto';
+          }
+
+          const clonedImg = clonedDoc.getElementById('base-image');
+          if (clonedImg) {
+            clonedImg.classList.remove('hidden');
+            clonedImg.style.display = 'block';
+            clonedImg.style.borderRadius = '0';
+            clonedImg.style.maxWidth = 'none';
+            clonedImg.style.maxHeight = 'none';
+            clonedImg.style.width = imgDisplayWidth + 'px';
+            clonedImg.style.height = imgDisplayHeight + 'px';
+            clonedImg.style.verticalAlign = 'bottom';
+          }
+
+          const clonedCard = clonedDoc.getElementById('watermark-card');
+          if (clonedCard) {
+            clonedCard.style.display = 'flex';
+            clonedCard.classList.remove('hidden');
+            clonedCard.style.borderRadius = '10px';
+            clonedCard.style.border = 'none';
+            clonedCard.style.outline = 'none';
+            clonedCard.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+            clonedCard.style.opacity = watermarkOpacity;
+            clonedCard.style.transform = `scale(${watermarkScale})`;
+            const origCard = watermarkCard;
+            clonedCard.style.left = origCard.style.left;
+            clonedCard.style.top = origCard.style.top;
+            clonedCard.style.bottom = 'auto';
+            clonedCard.style.right = 'auto';
+            clonedCard.style.fontFamily = '"Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            clonedCard.style.fontWeight = 'bold';
+
+            // 占位文字灰色
+            const titleEl = clonedCard.querySelector('.wm-title-text');
+            if (titleEl && titleEl.classList.contains('placeholder-text')) {
+              titleEl.style.color = '#a0aec0';
+              titleEl.style.fontWeight = '500';
+            }
+            const values = clonedCard.querySelectorAll('.wm-value');
+            values.forEach(el => {
+              if (el.classList.contains('placeholder-text')) {
+                el.style.color = '#a0aec0';
+                el.style.fontWeight = '500';
+              }
+            });
+
+            const clonedHeader = clonedCard.querySelector('.wm-header');
+            if (clonedHeader) {
+              clonedHeader.style.borderRadius = '10px 10px 0 0';
+              clonedHeader.style.fontWeight = 'bold';
+            }
+            const clonedFooter = clonedCard.querySelector('.wm-footer');
+            if (clonedFooter) {
+              clonedFooter.style.borderRadius = '0 0 10px 10px';
+              clonedFooter.style.fontWeight = 'bold';
+            }
+            const clonedBody = clonedCard.querySelector('.wm-body');
+            if (clonedBody) clonedBody.style.fontWeight = 'bold';
+            const labels = clonedCard.querySelectorAll('.wm-label');
+            labels.forEach(el => el.style.fontWeight = 'bold');
+          }
+
+          const clonedEmpty = clonedDoc.getElementById('empty-preview');
+          if (clonedEmpty) clonedEmpty.style.display = 'none';
+
+          const clonedFloat = clonedDoc.querySelector('.float-actions');
+          if (clonedFloat) clonedFloat.style.display = 'none';
+
+          const clonedPanel = clonedDoc.querySelector('.transform-panel');
+          if (clonedPanel) clonedPanel.style.display = 'none';
+        }
+      }).then(canvas => {
+        canvasWrapper.style.width = origWrapperStyle.width;
+        canvasWrapper.style.height = origWrapperStyle.height;
+        canvasWrapper.style.borderRadius = origWrapperStyle.borderRadius;
+        canvasWrapper.style.boxShadow = origWrapperStyle.boxShadow;
+        canvasWrapper.style.overflow = origWrapperStyle.overflow;
+        canvasWrapper.style.background = origWrapperStyle.background;
+        canvasWrapper.style.backgroundImage = origWrapperStyle.backgroundImage;
+        canvasWrapper.style.lineHeight = origWrapperStyle.lineHeight;
+        canvasWrapper.style.fontSize = origWrapperStyle.fontSize;
+        canvasWrapper.style.display = origWrapperStyle.display;
+        canvasWrapper.style.aspectRatio = origWrapperStyle.aspectRatio;
+
+        baseImage.style.maxWidth = origImgStyle.maxWidth;
+        baseImage.style.maxHeight = origImgStyle.maxHeight;
+        baseImage.style.width = origImgStyle.width;
+        baseImage.style.height = origImgStyle.height;
+        baseImage.style.display = origImgStyle.display;
+
+        watermarkCard.style.transform = origCardTransform;
+
+        const jpgDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const date = new Date();
+        const filename = `图片水印_${date.getHours()}${date.getMinutes()}${date.getSeconds()}.jpg`;
+
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = jpgDataUrl;
+        link.click();
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }).catch(err => {
+        console.error('生成失败:', err);
+        alert('生成图片失败，请重试。');
+        canvasWrapper.style.width = origWrapperStyle.width;
+        canvasWrapper.style.height = origWrapperStyle.height;
+        canvasWrapper.style.borderRadius = origWrapperStyle.borderRadius;
+        canvasWrapper.style.boxShadow = origWrapperStyle.boxShadow;
+        canvasWrapper.style.overflow = origWrapperStyle.overflow;
+        canvasWrapper.style.background = origWrapperStyle.background;
+        canvasWrapper.style.backgroundImage = origWrapperStyle.backgroundImage;
+        canvasWrapper.style.lineHeight = origWrapperStyle.lineHeight;
+        canvasWrapper.style.fontSize = origWrapperStyle.fontSize;
+        canvasWrapper.style.display = origWrapperStyle.display;
+        canvasWrapper.style.aspectRatio = origWrapperStyle.aspectRatio;
+
+        baseImage.style.maxWidth = origImgStyle.maxWidth;
+        baseImage.style.maxHeight = origImgStyle.maxHeight;
+        baseImage.style.width = origImgStyle.width;
+        baseImage.style.height = origImgStyle.height;
+        baseImage.style.display = origImgStyle.display;
+
+        watermarkCard.style.transform = origCardTransform;
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      });
+    });
+
+    // 初始化
+    baseImage.style.display = 'none';
+    emptyPreview.classList.add('hidden');
+    watermarkCard.style.opacity = '1';
+    watermarkCard.style.transform = 'scale(1)';
+
+    setTimeout(() => {
+      const wrapperRect = canvasWrapper.getBoundingClientRect();
+      const cardRect = watermarkCard.getBoundingClientRect();
+      watermarkCard.style.left = '16px';
+      watermarkCard.style.top = (wrapperRect.height - cardRect.height - 16) + 'px';
+      watermarkCard.style.bottom = 'auto';
+      watermarkCard.style.right = 'auto';
+    }, 100);
+
+    baseImage.addEventListener('load', () => {
+      canvasWrapper.style.backgroundImage = 'none';
+      canvasWrapper.style.backgroundColor = '#ffffff';
+    });
+
+    console.log('水印工具已就绪：日期/时间拆分，支持时间替换星期。');
+  })();
+</script>
+
+</body>
+</html>
