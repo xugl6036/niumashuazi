@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>电子印章生成器</title>
+<style>
+    :root {
+        --primary: #e60000;
+        --primary-light: #ff4d4f;
+        --primary-soft: rgba(230, 0, 0, 0.06);
+        --text-main: #1a1a1a;
+        --text-sub: #8c8c8c;
+        --text-label: #595959;
+        --border: #e8e8e8;
+        --border-soft: #f0f0f0;
+        --bg-body: #eef1f5;
+        --bg-panel: #ffffff;
+        --bg-input: #f7f8fa;
+        --radius-sm: 6px;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+        --shadow: 0 2px 8px rgba(0,0,0,0.05);
+        --shadow-lg: 0 8px 28px rgba(0,0,0,0.08);
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg-body);
+        background-image:
+            radial-gradient(circle at 20% 0%, rgba(230,0,0,0.03) 0%, transparent 50%),
+            radial-gradient(circle at 80% 100%, rgba(24,144,255,0.03) 0%, transparent 50%);
+        color: var(--text-main);
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        padding: 14px 22px 18px;
+    }
+
+    .disclaimer {
+        text-align: center;
+        color: #8c8c8c;
+        font-size: 12px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.6);
+        border-radius: 100px;
+        backdrop-filter: blur(8px);
+        align-self: center;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    .disclaimer strong { color: var(--primary); font-weight: 600; }
+
+    /* 主布局：左预览 + 右六宫格 */
+    .app-container {
+        display: flex;
+        flex: 1;
+        gap: 20px;
+        width: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* ===== 左侧预览 ===== */
+    .preview-panel {
+        flex: 0 0 360px;
+        background: var(--bg-panel);
+        padding: 28px 24px 24px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .preview-panel::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(230,0,0,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .preview-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -50px; left: -50px;
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(24,144,255,0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .preview-label {
+        position: absolute;
+        top: 18px; left: 24px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #bfbfbf;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    .seal-container {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        max-width: 280px;
+        max-height: 280px;
+        margin-bottom: 26px;
+        position: relative;
+        z-index: 1;
+    }
+    .seal-container svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 6px 20px rgba(230, 0, 0, 0.12));
+    }
+    .action-btns {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        max-width: 280px;
+        position: relative;
+        z-index: 1;
+    }
+    .action-btns button {
+        flex: 1;
+        padding: 11px 0;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all var(--transition);
+        letter-spacing: 0.5px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #ff4d4f, #e60000);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(230, 0, 0, 0.25);
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(230, 0, 0, 0.35);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-default {
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text-label);
+    }
+    .btn-default:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-soft);
+    }
+
+    /* ===== 右侧六宫格配置区 ===== */
+    .config-panel {
+        flex: 1;
+        background: var(--bg-panel);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .config-header {
+        padding: 18px 26px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .config-header h2 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: 0.3px;
+    }
+    .config-header .badge {
+        font-size: 11px;
+        color: var(--text-sub);
+        background: var(--bg-input);
+        padding: 3px 10px;
+        border-radius: 100px;
+    }
+
+    /* 六宫格：2行3列 */
+    .config-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 16px;
+        padding: 20px 24px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #d9d9d9 transparent;
+        min-height: 0;
+    }
+    .config-grid::-webkit-scrollbar { width: 8px; }
+    .config-grid::-webkit-scrollbar-thumb {
+        background: #d9d9d9;
+        border-radius: 8px;
+        border: 2px solid #fff;
+    }
+
+    /* ===== 每个板块卡片 ===== */
+    .group {
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: border-color var(--transition), box-shadow var(--transition);
+        min-height: 0;
+    }
+    .group:hover {
+        border-color: #e0e0e0;
+        box-shadow: var(--shadow);
+    }
+
+    .group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 14px;
+        background: linear-gradient(180deg, #fcfcfd, #f8f9fb);
+        border-bottom: 1px solid var(--border-soft);
+        user-select: none;
+        flex-shrink: 0;
+    }
+    .group-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(230,0,0,0.2);
+    }
+    .group-icon svg {
+        width: 12px;
+        height: 12px;
+        stroke: #fff;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .group-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-main);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .group-subtitle {
+        font-size: 10px;
+        color: var(--text-sub);
+        white-space: nowrap;
+    }
+
+    .group-content {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+        justify-content: center;
+        min-height: 0;
+    }
+
+    .field-row {
+        display: grid;
+        align-items: center;
+        gap: 10px;
+    }
+    .field-row + .field-row {
+        padding-top: 10px;
+        border-top: 1px dashed var(--border-soft);
+    }
+
+    .field {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+    .field-label {
+        font-size: 11.5px;
+        color: var(--text-label);
+        white-space: nowrap;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .input-control {
+        width: 100%;
+        padding: 7px 9px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        height: 32px;
+        outline: none;
+        background: var(--bg-input);
+        color: var(--text-main);
+        transition: all var(--transition);
+        font-family: inherit;
+        min-width: 0;
+    }
+    .input-control:hover { border-color: #d0d0d0; }
+    .input-control:focus {
+        border-color: var(--primary);
+        background: #fff;
+        box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+    .input-control:disabled {
+        background: #f5f5f5;
+        color: #bfbfbf;
+        cursor: not-allowed;
+    }
+    select.input-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238c8c8c' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        padding-right: 24px;
+    }
+
+    .color-control {
+        width: 32px;
+        height: 32px;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        background: #fff;
+        flex-shrink: 0;
+        transition: all var(--transition);
+    }
+    .color-control:hover { border-color: var(--primary); }
+    .color-control::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-control::-webkit-color-swatch {
+        border: none;
+        border-radius: 3px;
+    }
+
+    .toggle {
+        position: relative;
+        display: inline-block;
+        width: 34px;
+        height: 18px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+    .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: #d9d9d9;
+        border-radius: 18px;
+        transition: all var(--transition);
+    }
+    .toggle-track::before {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 2px;
+        top: 2px;
+        background: #fff;
+        border-radius: 50%;
+        transition: all var(--transition);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-track {
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+    .toggle input:checked + .toggle-track::before {
+        transform: translateX(16px);
+    }
+
+    .group.disabled .group-content {
+        opacity: 0.45;
+        pointer-events: none;
+        filter: grayscale(0.5);
+    }
+
+    /* 栅格 */
+    .row-3 { grid-template-columns: repeat(3, 1fr); }
+    .row-2 { grid-template-columns: repeat(2, 1fr); }
+    .row-2-1 { grid-template-columns: 1.2fr 1fr; }
+
+    /* 基础配置专用 */
+    .row-base {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .row-base .field {
+        flex-wrap: nowrap;
+    }
+
+    /* 边线配置专用 */
+    .row-line {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    /* 小屏适配：2行3列 -> 1列 */
+    @media (max-width: 1100px) {
+        body { padding: 10px; overflow-y: auto; height: auto; min-height: 100vh; }
+        .app-container { flex-direction: column; height: auto; gap: 14px; overflow: visible; }
+        .preview-panel { flex: 0 0 auto; height: auto; width: 100%; padding: 22px; }
+        .seal-container { max-width: 260px; max-height: 260px; margin-bottom: 20px; }
+        .config-panel { height: auto; overflow: visible; }
+        .config-grid {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto;
+            overflow: visible;
+            padding: 16px;
+        }
+    }
+    @media (max-width: 700px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+        }
+        .row-3, .row-2, .row-2-1, .row-base, .row-line {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+    <strong>郑重声明：</strong>本工具生成的印章仅供个人学习娱乐使用，请勿用于非法用途，否则后果自负！
+</div>
+
+<div class="app-container">
+    <!-- 左侧预览区 -->
+    <div class="preview-panel">
+        <span class="preview-label">PREVIEW</span>
+        <div class="seal-container">
+            <svg id="sealSvg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <circle id="svgOuterCircle" cx="150" cy="150" r="140" fill="none" stroke="#e60000" stroke-width="6"/>
+                <circle id="svgInnerCircle" cx="150" cy="150" r="130" fill="none" stroke="#e60000" stroke-width="1"/>
+                <path id="svgStar" fill="#e60000" d=""/>
+                <g id="svgMainTextGroup"></g>
+                <text id="svgSubText" x="150" y="235" text-anchor="middle" fill="#e60000" font-size="18" font-weight="bold"></text>
+                <text id="svgCodeText" x="150" y="260" text-anchor="middle" fill="#e60000" font-size="12" font-family="monospace"></text>
+            </svg>
+        </div>
+        <div class="action-btns">
+            <button class="btn-primary" onclick="downloadImage()">下载印章</button>
+            <button class="btn-default" onclick="alert('存为模板功能需后端支持')">存为模板</button>
+        </div>
+    </div>
+
+    <!-- 右侧六宫格配置区 -->
+    <div class="config-panel">
+        <div class="config-header">
+            <h2>印章配置</h2>
+            <span class="badge">实时预览</span>
+        </div>
+
+        <div class="config-grid">
+
+            <!-- 1. 基础配置 -->
+            <div class="group">
+                <div class="group-header">
+                    <div class="group-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+                    </div>
+                    <span class="group-title">基础配置</span>
+                </div>
+                <div class="group-content">
+                    <div class="field-row row-base">
+                        <div class="field">
+                            <span class="field-label">颜色</span>
+                            <input type="color" id="colorPicker" value="#e60000" class="color-control">
+                        </div>
+                        <div class="field">
+                            <span class="field-label">字体</span>
+                            <select id="fontFamily" class="input-control">
+                                <option value="SimSun, serif">宋体</option>
+                                <option value="SimHei, sans-serif">黑体</option>
+                                <option value="Microsoft YaHei, sans-serif">微软雅黑</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-row row-base">
+                        <div class="field">
+                            <span class="field-label">尺寸</span>
+                            <input type="text" value="300×300" disabled class="input-control">
+                        </div>
+                        <div class="field" style="justify-content: flex-end;">
+                            <span class="field-label">老化</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="agingToggle">
+                                <span class="toggle-track"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 主文字 -->
+            <div class="group" id="groupMain">
+                <div class="group-header">
+                    <div class="group-icon">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+                    </div>
+                    <span class="group-title">主文字</span>
+                    <label class="toggle" style="margin-left:auto;">
+                        <input type="checkbox" id="mainTextToggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="group-content">
+                    <div class="field-row">
+                        <input type="text" id="mainTextInput" value="中国人会飞科技有限公司" class="input-control" placeholder="请输入主文字内容">
+                    </div>
+                    <div class="field-row row-3" id="mainTextConfig">
+                        <div class="field"><span class="field-label">字号</span><input type="number" id="mainFontSize" value="28" class="input-control"></div>
+                        <div class="field"><span class="field-label">半径</span><input type="number" id="mainRadius" value="110" class="input-control"></div>
+                        <div class="field"><span class="field-label">起始角</span><input type="number" id="mainStartAngle" value="20" class="input-control"></div>
+                    </div>
+                    <div class="field-row row-2">
+                        <div class="field"><span class="field-label">粗细</span>
+                            <select id="mainFontWeight" class="input-control">
+                                <option value="normal">常规</option>
+                                <option value="bold" selected>加粗</option>
+                                <option value="900">特粗</option>
+                            </select>
+                        </div>
+                        <div class="field"><span class="field-label">拉伸</span><input type="number" id="mainStretch" value="1" step="0.1" class="input-control"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 副文字 -->
+            <div class="group" id="groupSub">
+                <div class="group-header">
+                    <div class="group-icon subtle">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h12M4 17h8"/></svg>
+                    </div>
+                    <span class="group-title">副文字</span>
+                    <label class="toggle" style="margin-left:auto;">
+                        <input type="checkbox" id="subTextToggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="group-content">
+                    <div class="field-row">
+                        <input type="text" id="subTextInput" value="牛马刷子" class="input-control" placeholder="请输入副文字内容">
+                    </div>
+                    <div class="field-row row-2" id="subTextConfig">
+                        <div class="field"><span class="field-label">字号</span><input type="number" id="subFontSize" value="18" class="input-control"></div>
+                        <div class="field"><span class="field-label">Y 轴</span><input type="number" id="subY" value="235" class="input-control"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 序列号 -->
+            <div class="group" id="groupCode">
+                <div class="group-header">
+                    <div class="group-icon subtle">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>
+                    </div>
+                    <span class="group-title">序列号</span>
+                    <label class="toggle" style="margin-left:auto;">
+                        <input type="checkbox" id="codeToggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="group-content">
+                    <div class="field-row">
+                        <input type="text" id="codeTextInput" value="0123456667890" class="input-control" placeholder="请输入序列号">
+                    </div>
+                    <div class="field-row row-2" id="codeConfig">
+                        <div class="field"><span class="field-label">字号</span><input type="number" id="codeFontSize" value="12" class="input-control"></div>
+                        <div class="field"><span class="field-label">Y 轴</span><input type="number" id="codeY" value="260" class="input-control"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 边线配置 -->
+            <div class="group">
+                <div class="group-header">
+                    <div class="group-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>
+                    </div>
+                    <span class="group-title">边线配置</span>
+                </div>
+                <div class="group-content">
+                    <div class="field-row row-line">
+                        <div class="field"><span class="field-label">外粗</span><input type="number" id="outerBorderWidth" value="6" class="input-control"></div>
+                        <div class="field"><span class="field-label">外径</span><input type="number" id="outerBorderRadius" value="140" class="input-control"></div>
+                    </div>
+                    <div class="field-row row-line">
+                        <div class="field" style="justify-content: flex-start;">
+                            <span class="field-label">内边线</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="innerBorderToggle" checked>
+                                <span class="toggle-track"></span>
+                            </label>
+                        </div>
+                        <div class="field" style="gap:6px;">
+                            <input type="number" id="innerBorderWidth" value="1" step="0.5" class="input-control" style="width:48%;" title="内线粗细">
+                            <input type="number" id="innerBorderRadius" value="130" class="input-control" style="width:52%;" title="内线半径">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. 五角星 -->
+            <div class="group">
+                <div class="group-header">
+                    <div class="group-icon" style="background: linear-gradient(135deg, #ffc53d, #faad14); box-shadow: 0 2px 6px rgba(250,173,20,0.3);">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.3 5.9 20.4l1.4-6.8L2.2 9l6.9-.7L12 2z"/></svg>
+                    </div>
+                    <span class="group-title">五角星</span>
+                    <label class="toggle" style="margin-left:auto;">
+                        <input type="checkbox" id="starToggle" checked>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+                <div class="group-content">
+                    <div class="field-row row-2">
+                        <div class="field"><span class="field-label">半径</span><input type="number" id="starRadius" value="24" step="1" min="6" max="60" class="input-control"></div>
+                        <div class="field"><span class="field-label">角度</span><input type="number" id="starAngle" value="0" step="1" min="-180" max="180" class="input-control"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const svg = document.getElementById('sealSvg');
+    const svgOuterCircle = document.getElementById('svgOuterCircle');
+    const svgInnerCircle = document.getElementById('svgInnerCircle');
+    const svgStar = document.getElementById('svgStar');
+    const svgMainTextGroup = document.getElementById('svgMainTextGroup');
+    const svgSubText = document.getElementById('svgSubText');
+    const svgCodeText = document.getElementById('svgCodeText');
+
+    const colorPicker = document.getElementById('colorPicker');
+    const fontFamily = document.getElementById('fontFamily');
+
+    const groups = {
+        main: { toggle: document.getElementById('mainTextToggle'), group: document.getElementById('groupMain') },
+        sub:  { toggle: document.getElementById('subTextToggle'),  group: document.getElementById('groupSub') },
+        code: { toggle: document.getElementById('codeToggle'),     group: document.getElementById('groupCode') }
+    };
+
+    const starToggle = document.getElementById('starToggle');
+    const starRadiusInput = document.getElementById('starRadius');
+    const starAngleInput = document.getElementById('starAngle');
+
+    function getStarPath(cx, cy, outerR, innerR, rotationAngleDeg = 0) {
+        const points = [];
+        const baseAngle = -Math.PI / 2 + (rotationAngleDeg * Math.PI) / 180;
+        for (let i = 0; i < 10; i++) {
+            const r = (i % 2 === 0) ? outerR : innerR;
+            const angle = baseAngle + (Math.PI * 2 / 10) * i;
+            points.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
+        }
+        return `M ${points.join(' L ')} Z`;
+    }
+
+    function renderRingText() {
+        svgMainTextGroup.innerHTML = '';
+        if (!groups.main.toggle.checked) return;
+
+        const text = document.getElementById('mainTextInput').value;
+        const fontSize = parseInt(document.getElementById('mainFontSize').value) || 28;
+        const radius = parseInt(document.getElementById('mainRadius').value) || 110;
+        const startAngle = parseInt(document.getElementById('mainStartAngle').value) || 20;
+        const stretch = parseFloat(document.getElementById('mainStretch').value) || 1;
+        const fontWeight = document.getElementById('mainFontWeight').value;
+        const font = fontFamily.value;
+
+        const chars = text.split('');
+        if (chars.length === 0) return;
+
+        const charArc = fontSize * 1.1;
+        const totalArc = chars.length * charArc;
+        const totalAngle = (totalArc / (2 * Math.PI * radius)) * 360;
+
+        let currentAngle = -90 - (totalAngle / 2) + startAngle;
+        const angleStep = totalAngle / chars.length;
+
+        chars.forEach((char) => {
+            const rad = (currentAngle * Math.PI) / 180;
+            const x = 150 + radius * Math.cos(rad);
+            const y = 150 + radius * Math.sin(rad);
+
+            const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            textEl.setAttribute("x", x);
+            textEl.setAttribute("y", y);
+            textEl.setAttribute("fill", colorPicker.value);
+            textEl.setAttribute("font-size", fontSize);
+            textEl.setAttribute("font-weight", fontWeight);
+            textEl.setAttribute("font-family", font);
+            textEl.setAttribute("text-anchor", "middle");
+            textEl.setAttribute("dominant-baseline", "central");
+            textEl.setAttribute("transform", `rotate(${currentAngle + 90}, ${x}, ${y}) scale(${stretch}, 1)`);
+            textEl.textContent = char;
+            svgMainTextGroup.appendChild(textEl);
+            currentAngle += angleStep;
+        });
+    }
+
+    function updateRender() {
+        const color = colorPicker.value;
+        const font = fontFamily.value;
+
+        Object.keys(groups).forEach(key => {
+            groups[key].group.classList.toggle('disabled', !groups[key].toggle.checked);
+        });
+
+        svgOuterCircle.setAttribute("stroke", color);
+        svgOuterCircle.setAttribute("stroke-width", document.getElementById('outerBorderWidth').value);
+        svgOuterCircle.setAttribute("r", document.getElementById('outerBorderRadius').value);
+
+        if (document.getElementById('innerBorderToggle').checked) {
+            svgInnerCircle.style.display = 'block';
+            svgInnerCircle.setAttribute("stroke", color);
+            svgInnerCircle.setAttribute("stroke-width", document.getElementById('innerBorderWidth').value);
+            svgInnerCircle.setAttribute("r", document.getElementById('innerBorderRadius').value);
+        } else {
+            svgInnerCircle.style.display = 'none';
+        }
+
+        if (starToggle.checked) {
+            svgStar.style.display = 'block';
+            svgStar.setAttribute("fill", color);
+            const starRadius = parseFloat(starRadiusInput.value) || 24;
+            const starAngle = parseFloat(starAngleInput.value) || 0;
+            const innerR = starRadius * 0.4;
+            svgStar.setAttribute("d", getStarPath(150, 150, starRadius, innerR, starAngle));
+        } else {
+            svgStar.style.display = 'none';
+        }
+
+        renderRingText();
+
+        if (groups.sub.toggle.checked) {
+            svgSubText.style.display = 'block';
+            svgSubText.setAttribute("fill", color);
+            svgSubText.setAttribute("font-family", font);
+            svgSubText.setAttribute("font-size", document.getElementById('subFontSize').value);
+            svgSubText.setAttribute("y", document.getElementById('subY').value);
+            const lines = document.getElementById('subTextInput').value.split('\\n');
+            svgSubText.innerHTML = lines.map((l, i) => `<tspan x="150" dy="${i===0?'0':'1.2em'}">${l}</tspan>`).join('');
+        } else {
+            svgSubText.style.display = 'none';
+        }
+
+        if (groups.code.toggle.checked) {
+            svgCodeText.style.display = 'block';
+            svgCodeText.setAttribute("fill", color);
+            svgCodeText.setAttribute("font-family", font);
+            svgCodeText.setAttribute("font-size", document.getElementById('codeFontSize').value);
+            svgCodeText.setAttribute("y", document.getElementById('codeY').value);
+            svgCodeText.textContent = document.getElementById('codeTextInput').value;
+        } else {
+            svgCodeText.style.display = 'none';
+        }
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', updateRender);
+        el.addEventListener('change', updateRender);
+    });
+
+    updateRender();
+
+    function downloadImage() {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+        canvas.width = 600;
+        canvas.height = 600;
+        const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function() {
+            ctx.clearRect(0, 0, 600, 600);
+            ctx.drawImage(img, 0, 0, 600, 600);
+            URL.revokeObjectURL(url);
+            const a = document.createElement("a");
+            a.href = canvas.toDataURL("image/png");
+            a.download = "电子印章.png";
+            a.click();
+        };
+        img.src = url;
+    }
+</script>
+</body>
+</html>
