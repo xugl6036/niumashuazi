@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图 · 布局与颜色</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #f2f5f9;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            width: 100vw; height: 100vh; overflow: hidden;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%; height: 100%; max-width: none;
+            background: white; border-radius: 0;
+            box-shadow: none; padding: 24px 24px 20px;
+            display: flex; flex-direction: column; gap: 18px;
+        }
+
+        .toolbar {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            gap: 16px; border-bottom: 1px solid #e9eef2; padding-bottom: 18px;
+        }
+
+        .toolbar h1 {
+            font-size: 1.75rem; font-weight: 600; color: #1e2b3c;
+            display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
+        }
+
+        .toolbar h1 span {
+            background: #e1e9f0; color: #2d4059; font-size: 0.9rem;
+            padding: 4px 12px; border-radius: 30px; font-weight: 400;
+        }
+
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        button {
+            background: #ffffff; border: 1.5px solid #cfdde9; color: #1f3a5f;
+            padding: 10px 18px; border-radius: 40px; font-weight: 500; font-size: 0.9rem;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.15s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            white-space: nowrap;
+        }
+
+        button:hover {
+            background: #f5faff; border-color: #8bb3d6;
+            box-shadow: 0 8px 16px -6px rgba(36,95,150,0.2); transform: translateY(-1px);
+        }
+
+        button:active { transform: translateY(1px); box-shadow: none; }
+
+        button.primary {
+            background: #1e3b5c; border-color: #1e3b5c; color: white;
+            box-shadow: 0 6px 12px -4px rgba(20,60,100,0.3);
+        }
+
+        button.primary:hover { background: #132c44; border-color: #132c44; }
+
+        button.danger { color: #b13e3e; border-color: #e4b6b6; }
+        button.danger:hover { background: #fff0f0; border-color: #d99a9a; }
+        button.danger:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        #copyBtn { background: #2a7a6c; border-color: #2a7a6c; color: white; }
+        #copyBtn:hover { background: #1e5f54; border-color: #1e5f54; }
+
+        .canvas-wrapper {
+            position: relative; background: #fdfdfe; border-radius: 20px;
+            border: 1px solid #dae3ec; overflow: auto;
+            padding: 16px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+            display: flex; justify-content: center;
+            flex: 1; min-height: 0;
+        }
+
+        #mindmapCanvas {
+            position: relative; background: #ffffff; border-radius: 16px;
+            min-width: 800px; min-height: 450px; width: 100%;
+            transition: background 0.2s; outline: 2px dashed transparent;
+            margin: 0 auto;
+        }
+
+
+        .node {
+            position: absolute; background: #ffffff; border: 2px solid #cbdae9;
+            border-radius: 16px; padding: 12px 20px; min-width: 110px; max-width: 220px;
+            font-size: 0.95rem; font-weight: 500; color: #1b2d3f;
+            box-shadow: 0 6px 14px rgba(0,30,60,0.06); cursor: grab; user-select: none;
+            transition: border 0.1s, box-shadow 0.2s, background 0.1s;
+            word-break: break-word; text-align: center; line-height: 1.4;
+            z-index: 10; border-left-width: 6px; border-left-color: var(--node-accent, #6fa3d9);
+        }
+
+        .node:active { cursor: grabbing; box-shadow: 0 10px 22px rgba(0,50,90,0.15); }
+
+        .node.selected {
+            border-color: #ffa726; border-left-color: var(--node-accent, #ff8f00);
+            box-shadow: 0 0 0 3px rgba(255,167,38,0.35); background: #fffaf0;
+        }
+
+        .node.root {
+            background: var(--root-bg, #eef6ff); border-left-color: var(--node-accent, #1e5f8e);
+            font-weight: 600; font-size: 1.1rem; padding: 14px 24px;
+            border-color: #b7d0e9; box-shadow: 0 8px 18px rgba(25,85,140,0.12);
+        }
+
+        .node.root.selected { background: #f5f0e6; border-color: #e6a23c; }
+
+        .node.editing {
+            border: 2px solid #4f9eeb; background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(79,158,235,0.15); cursor: text;
+        }
+
+        .edge-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .edge-svg path {
+            stroke: var(--edge-color, #b2c9dd); stroke-width: 2.5;
+            fill: none; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        .status-msg {
+            margin-left: 16px; font-size: 0.9rem; color: #4b6e8c;
+            background: #ecf3fa; padding: 5px 16px; border-radius: 30px;
+            transition: opacity 0.2s; opacity: 0.8;
+        }
+
+        .hint {
+            font-size: 0.85rem; color: #5c7893; display: flex; align-items: center;
+            gap: 18px; padding-top: 6px; flex-wrap: wrap;
+        }
+
+        .hint kbd {
+            background: #e6eef7; padding: 4px 10px; border-radius: 30px;
+            font-family: monospace; font-size: 0.85rem; color: #1a344b;
+            border: 1px solid #cddae8;
+        }
+
+        /* 右键菜单 */
+        .context-menu {
+            position: fixed; background: white; border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.18); padding: 8px 0;
+            min-width: 180px; z-index: 1000; border: 1px solid #e2eaf1;
+            display: none; font-size: 0.9rem;
+        }
+
+        .context-menu.visible { display: block; }
+
+        .context-menu-item {
+            padding: 10px 18px; cursor: pointer; display: flex;
+            align-items: center; gap: 10px; color: #1f3a5f; transition: background 0.1s;
+        }
+
+        .context-menu-item:hover { background: #eef5fc; }
+        .context-menu-item.danger { color: #b13e3e; }
+        .context-menu-item.danger:hover { background: #ffeeee; }
+        .context-menu-separator { height: 1px; background: #e9eef2; margin: 6px 0; }
+        .context-menu-item.disabled { opacity: 0.4; pointer-events: none; }
+
+        /* 布局弹窗（更小 + 横向分布） */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(20,35,55,0.4); backdrop-filter: blur(3px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+
+        .modal-overlay.visible { display: flex; }
+
+        .modal {
+            background: #ffffff; border-radius: 24px; padding: 28px 30px;
+            width: 500px; max-width: 92vw;
+            box-shadow: 0 24px 48px -12px rgba(0,0,0,0.3);
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal h2 {
+            font-size: 1.25rem; color: #1e2b3c; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 10px; font-weight: 600;
+        }
+
+        /* 两行布局 */
+        .modal-row {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .modal-row:last-of-type { margin-bottom: 0; }
+
+        .row-label {
+            font-size: 0.85rem; font-weight: 600; color: #64748b;
+            width: 48px; flex-shrink: 0; letter-spacing: 0.05em;
+        }
+
+        .row-options {
+            display: flex; gap: 12px; flex-wrap: wrap;
+            flex: 1;
+        }
+
+        /* 形状/布局选项按钮 */
+        .layout-chip {
+            flex: 1; min-width: 100px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0; border-radius: 14px;
+            cursor: pointer; background: #f8fafc;
+            transition: all 0.2s ease; font-size: 0.9rem;
+            color: #475569; font-weight: 500;
+        }
+
+        .layout-chip:hover { 
+            border-color: #cbd5e1; 
+            background: #f1f5f9; 
+            transform: translateY(-1px);
+        }
+
+        .layout-chip.active {
+            border-color: var(--chip-active, #1e5f8e);
+            background: var(--chip-bg, #eef6ff);
+            color: var(--chip-active, #1e5f8e);
+            box-shadow: 0 4px 12px -4px var(--chip-active, rgba(30,95,142,0.3));
+        }
+
+        .layout-chip .chip-icon { font-size: 1.2rem; }
+
+        .color-chip {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 3px solid #f8fafc; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .color-chip:hover { transform: scale(1.15); }
+
+        .color-chip.active {
+            border-color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px var(--chip-active, #1e5f8e), 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 选中时的中心白点 */
+        .color-chip.active::after {
+            content: '';
+            width: 12px; height: 12px;
+            background: white; border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* 渐变背景更美观 */
+        .color-chip.blue { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+        .color-chip.green { background: linear-gradient(135deg, #55efc4, #00b894); }
+        .color-chip.orange { background: linear-gradient(135deg, #ffeaa7, #e17055); }
+
+        .modal-actions {
+            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;
+        }
+
+        .modal-actions button { 
+            padding: 10px 24px; 
+            font-size: 0.95rem; 
+            border-radius: 12px; 
+        }
+        
+        .modal-actions button:not(.primary) {
+            background: #f1f5f9; border-color: transparent; color: #64748b;
+        }
+        .modal-actions button:not(.primary):hover {
+            background: #e2e8f0; color: #334155; transform: none;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="toolbar">
+        <h1>🧠 思维导图 <span>拖拽 · 双击编辑 · 右键删除</span></h1>
+        <div class="actions">
+            <button id="addNodeBtn" title="添加新节点">➕ 添加节点</button>
+            <button id="deleteSelectedBtn" class="danger" title="删除选中的节点">🗑️ 删除</button>
+            <button id="layoutBtn" title="切换布局与颜色">🎨 布局</button>
+            <button id="resetBtn" title="恢复初始布局">🔄 重置</button>
+            <button id="copyBtn" class="primary" title="复制为PNG图片">📋 复制PNG</button>
+        </div>
+    </div>
+
+    <div class="canvas-wrapper">
+        <div id="mindmapCanvas">
+            <svg id="edgeSvg" class="edge-svg"></svg>
+        </div>
+    </div>
+
+    <div class="hint">
+        <span>💡 双击节点编辑文字，拖拽移动位置</span>
+        <span><kbd>Shift</kbd> + 拖拽快速添加子节点</span>
+        <span>🖱️ 右键节点删除 · 选中后按 <kbd>Delete</kbd></span>
+        <span id="statusMessage" class="status-msg">就绪 · 纵向树形布局</span>
+    </div>
+</div>
+
+<!-- 右键菜单 -->
+<div id="contextMenu" class="context-menu">
+    <div class="context-menu-item" id="menuEditBtn">✏️ 编辑</div>
+    <div class="context-menu-item" id="menuAddChildBtn">➕ 添加子节点</div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item danger" id="menuDeleteBtn">🗑️ 删除节点（子节点提升）</div>
+    <div class="context-menu-item danger" id="menuDeleteSubtreeBtn">🗑️ 删除节点及所有子节点</div>
+</div>
+
+<!-- 布局与颜色弹窗（更小 + 两行横向） -->
+<div id="layoutModal" class="modal-overlay">
+    <div class="modal">
+        <h2>🎨 布局与颜色</h2>
+
+        <!-- 第一行：形状 -->
+        <div class="modal-row">
+            <div class="row-label">形状</div>
+            <div class="row-options" id="layoutOptions">
+                <div class="layout-chip" data-layout="vertical">
+                    <span class="chip-icon">⬇️</span> 纵向
+                </div>
+                <div class="layout-chip" data-layout="horizontal">
+                    <span class="chip-icon">➡️</span> 横向
+                </div>
+                <div class="layout-chip" data-layout="free">
+                    <span class="chip-icon">🎨</span> 自由
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二行：颜色 -->
+        <div class="modal-row">
+            <div class="row-label">颜色</div>
+            <div class="row-options" id="colorOptions">
+                <div class="color-chip blue active" data-color="blue" title="蓝色"></div>
+                <div class="color-chip green" data-color="green" title="绿色"></div>
+                <div class="color-chip orange" data-color="orange" title="橙色"></div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button id="layoutCancelBtn">取消</button>
+            <button id="layoutApplyBtn" class="primary">应用</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 数据 ----------
+        let nodes = [];
+        let nextId = 1;
+        let currentLayout = 'vertical';   // 默认纵向
+        let currentColor = 'blue';        // 默认蓝色
+
+        // 颜色配置
+        const COLOR_MAP = {
+            blue: {
+                accent: '#6fa3d9',
+                rootBg: '#eef6ff',
+                rootAccent: '#1e5f8e',
+                edge: '#b2c9dd',
+                chipActive: '#1e5f8e',
+                chipBg: '#eef6ff'
+            },
+            green: {
+                accent: '#4caf7d',
+                rootBg: '#eefaf3',
+                rootAccent: '#2e7d52',
+                edge: '#a8d8bd',
+                chipActive: '#2e7d52',
+                chipBg: '#eefaf3'
+            },
+            orange: {
+                accent: '#e89a4a',
+                rootBg: '#fff6ec',
+                rootAccent: '#b56a1e',
+                edge: '#e8c9a0',
+                chipActive: '#b56a1e',
+                chipBg: '#fff6ec'
+            }
+        };
+
+        const DEFAULT_NODES = [
+            { id: 1, text: '中心主题', x: 360, y: 40, parentId: null },
+            { id: 2, text: '分支 A', x: 160, y: 150, parentId: 1 },
+            { id: 3, text: '分支 B', x: 560, y: 150, parentId: 1 },
+            { id: 4, text: '子主题 A1', x: 40, y: 260, parentId: 2 },
+            { id: 5, text: '子主题 A2', x: 260, y: 260, parentId: 2 },
+            { id: 6, text: '子主题 B1', x: 440, y: 260, parentId: 3 },
+            { id: 7, text: '子主题 B2', x: 660, y: 260, parentId: 3 },
+        ];
+
+        // DOM
+        const canvas = document.getElementById('mindmapCanvas');
+        const edgeSvg = document.getElementById('edgeSvg');
+        const addNodeBtn = document.getElementById('addNodeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const layoutBtn = document.getElementById('layoutBtn');
+        const statusMsg = document.getElementById('statusMessage');
+        const contextMenu = document.getElementById('contextMenu');
+        const menuEditBtn = document.getElementById('menuEditBtn');
+        const menuAddChildBtn = document.getElementById('menuAddChildBtn');
+        const menuDeleteBtn = document.getElementById('menuDeleteBtn');
+        const menuDeleteSubtreeBtn = document.getElementById('menuDeleteSubtreeBtn');
+        const layoutModal = document.getElementById('layoutModal');
+        const layoutOptions = document.getElementById('layoutOptions');
+        const colorOptions = document.getElementById('colorOptions');
+        const layoutCancelBtn = document.getElementById('layoutCancelBtn');
+        const layoutApplyBtn = document.getElementById('layoutApplyBtn');
+
+        // 状态
+        let draggingNodeId = null;
+        let dragOffsetX = 0, dragOffsetY = 0;
+        let isDragging = false;
+        let editingNodeId = null;
+        let editInput = null;
+        let selectedNodeId = null;
+        let contextMenuTargetId = null;
+        let pendingLayout = 'vertical';
+        let pendingColor = 'blue';
+
+        // ---------- 工具 ----------
+        function setStatus(text, isError = false) {
+            statusMsg.textContent = text;
+            statusMsg.style.color = isError ? '#b13e3e' : '#4b6e8c';
+            statusMsg.style.background = isError ? '#ffe6e6' : '#ecf3fa';
+            if (text !== '就绪') {
+                clearTimeout(window.statusTimeout);
+                window.statusTimeout = setTimeout(() => {
+                    statusMsg.textContent = '就绪';
+                    statusMsg.style.color = '#4b6e8c';
+                    statusMsg.style.background = '#ecf3fa';
+                }, 3000);
+            }
+        }
+
+        function generateId() { return nextId++; }
+        function getNodeElement(id) { return document.querySelector(`.node[data-id="${id}"]`); }
+        function getNode(id) { return nodes.find(n => n.id === id); }
+        function getRoot() { return nodes.find(n => n.parentId === null); }
+
+        function getSubtreeIds(nodeId) {
+            const ids = [nodeId];
+            let changed = true;
+            while (changed) {
+                changed = false;
+                for (const n of nodes) {
+                    if (n.parentId !== null && ids.includes(n.parentId) && !ids.includes(n.id)) {
+                        ids.push(n.id);
+                        changed = true;
+                    }
+                }
+            }
+            return ids;
+        }
+
+        function getChildren(nodeId) { return nodes.filter(n => n.parentId === nodeId); }
+
+        // ---------- 颜色应用 ----------
+        function applyColorToDOM() {
+            const c = COLOR_MAP[currentColor];
+            // 节点颜色
+            document.querySelectorAll('.node').forEach(el => {
+                el.style.setProperty('--node-accent', c.accent);
+                if (el.classList.contains('root')) {
+                    el.style.setProperty('--root-bg', c.rootBg);
+                    el.style.setProperty('--node-accent', c.rootAccent);
+                }
+            });
+            // 连线颜色
+            document.documentElement.style.setProperty('--edge-color', c.edge);
+            // 布局弹窗中激活色
+            document.querySelectorAll('.layout-chip').forEach(chip => {
+                chip.style.setProperty('--chip-active', c.chipActive);
+                chip.style.setProperty('--chip-bg', c.chipBg);
+            });
+            // 颜色选项的选中光圈颜色跟随
+            document.querySelectorAll('.color-chip').forEach(chip => {
+                const colorName = chip.dataset.color;
+                chip.style.setProperty('--chip-active', COLOR_MAP[colorName].chipActive);
+            });
+        }
+
+        // ---------- 选中 ----------
+        function setSelectedNode(nodeId) {
+            if (selectedNodeId !== null) {
+                const prev = getNodeElement(selectedNodeId);
+                if (prev) prev.classList.remove('selected');
+            }
+            selectedNodeId = nodeId;
+            if (nodeId !== null) {
+                const el = getNodeElement(nodeId);
+                if (el) el.classList.add('selected');
+            }
+            updateDeleteBtnState();
+        }
+
+        function clearSelection() { setSelectedNode(null); }
+
+        function updateDeleteBtnState() {
+            if (selectedNodeId === null) { deleteSelectedBtn.disabled = true; return; }
+            const node = getNode(selectedNodeId);
+            if (node && node.parentId === null && nodes.length === 1) {
+                deleteSelectedBtn.disabled = true;
+            } else {
+                deleteSelectedBtn.disabled = false;
+            }
+        }
+
+        // ---------- 删除 ----------
+        function deleteNode(nodeId, deleteSubtree = false) {
+            const node = getNode(nodeId);
+            if (!node) return false;
+            if (node.parentId === null && nodes.length === 1) {
+                setStatus('无法删除唯一的根节点', true);
+                return false;
+            }
+
+            let idsToRemove;
+            if (deleteSubtree) {
+                idsToRemove = getSubtreeIds(nodeId);
+            } else {
+                idsToRemove = [nodeId];
+                const parentId = node.parentId;
+                for (const n of nodes) {
+                    if (n.parentId === nodeId) n.parentId = parentId;
+                }
+            }
+
+            nodes = nodes.filter(n => !idsToRemove.includes(n.id));
+
+            if (node.parentId === null && nodes.length > 0) {
+                const hasRoot = nodes.some(n => n.parentId === null);
+                if (!hasRoot) nodes[0].parentId = null;
+            }
+
+            if (selectedNodeId !== null && idsToRemove.includes(selectedNodeId)) clearSelection();
+            if (editingNodeId !== null && idsToRemove.includes(editingNodeId)) finishEditing(false);
+
+            render();
+            if (currentLayout !== 'free') applyLayout(currentLayout, false);
+            setStatus(deleteSubtree ? '已删除节点及所有子节点' : '已删除节点（子节点已提升）');
+            return true;
+        }
+
+        function deleteSelectedNode() {
+            if (selectedNodeId === null) { setStatus('请先点击选中一个节点', true); return; }
+            const node = getNode(selectedNodeId);
+            if (node && node.parentId === null && nodes.length === 1) {
+                setStatus('无法删除唯一的根节点', true); return;
+            }
+            deleteNode(selectedNodeId, false);
+        }
+
+        // ---------- 渲染 ----------
+        function render() {
+            canvas.querySelectorAll('.node').forEach(el => el.remove());
+            nodes.forEach(node => {
+                const el = document.createElement('div');
+                el.className = 'node' + (node.parentId === null ? ' root' : '');
+                if (node.id === selectedNodeId) el.classList.add('selected');
+                el.setAttribute('data-id', node.id);
+                el.textContent = node.text;
+                el.style.left = node.x + 'px';
+                el.style.top = node.y + 'px';
+                el.style.userSelect = 'none';
+                canvas.appendChild(el);
+            });
+
+            drawEdges();
+            applyColorToDOM();
+
+            if (editingNodeId !== null) finishEditing(false);
+            updateDeleteBtnState();
+        }
+
+        // ---------- 连线：直角折线 ----------
+        function drawEdges() {
+            edgeSvg.innerHTML = '';
+            const c = COLOR_MAP[currentColor];
+
+            nodes.forEach(node => {
+                if (node.parentId === null) return;
+                const parent = getNode(node.parentId);
+                if (!parent) return;
+                const nodeEl = getNodeElement(node.id);
+                const parentEl = getNodeElement(parent.id);
+                if (!nodeEl || !parentEl) return;
+
+                const nW = nodeEl.offsetWidth, nH = nodeEl.offsetHeight;
+                const pW = parentEl.offsetWidth, pH = parentEl.offsetHeight;
+                const nodeCenterX = node.x + nW / 2;
+                const parentCenterX = parent.x + pW / 2;
+                const nodeCenterY = node.y + nH / 2;
+                const parentCenterY = parent.y + pH / 2;
+
+                let d = '';
+
+                if (currentLayout === 'vertical') {
+                    // 纵向：父在下边缘中点 → 垂直线 → 子在上边缘中点
+                    const startX = parentCenterX;
+                    const startY = parent.y + pH;
+                    const endX = nodeCenterX;
+                    const endY = node.y;
+                    const midY = (startY + endY) / 2;
+                    d = `M ${startX} ${startY} L ${startX} ${midY} L ${endX} ${midY} L ${endX} ${endY}`;
+                } else if (currentLayout === 'horizontal') {
+                    // 横向：父在右边缘中点 → 水平线 → 子在左边缘中点
+                    const startX = parent.x + pW;
+                    const startY = parentCenterY;
+                    const endX = node.x;
+                    const endY = nodeCenterY;
+                    const midX = (startX + endX) / 2;
+                    d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+                } else {
+                    // 自由布局：使用平滑贝塞尔曲线连接
+                    let startX, startY, endX, endY;
+                    if (nodeCenterX >= parentCenterX) {
+                        startX = parent.x + pW;
+                        startY = parentCenterY;
+                        endX = node.x;
+                        endY = nodeCenterY;
+                    } else {
+                        startX = parent.x;
+                        startY = parentCenterY;
+                        endX = node.x + nW;
+                        endY = nodeCenterY;
+                    }
+                    // 根据水平/垂直距离动态调整控制点，使曲线更自然
+                    const dx = (endX - startX) * 0.6;
+                    const dy = (endY - startY) * 0.6;
+                    const ctrl1X = startX + dx;
+                    const ctrl1Y = startY;
+                    const ctrl2X = endX - dx;
+                    const ctrl2Y = endY;
+                    d = `M ${startX} ${startY} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${endX} ${endY}`;
+                }
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('stroke', c.edge);
+                path.setAttribute('stroke-width', '2.5');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linejoin', 'round');
+                edgeSvg.appendChild(path);
+            });
+        }
+
+        // ---------- 布局计算 ----------
+        function computeHorizontalLayout() {
+            const root = getRoot();
+            if (!root) return;
+            const H_GAP = 60, V_GAP = 16;
+            const NODE_H = 50, NODE_W = 120;
+
+            function measure(nodeId) {
+                const children = getChildren(nodeId);
+                if (children.length === 0) return { height: NODE_H + V_GAP, width: NODE_W };
+                let totalHeight = 0, maxChildWidth = 0;
+                for (const child of children) {
+                    const m = measure(child.id);
+                    totalHeight += m.height;
+                    maxChildWidth = Math.max(maxChildWidth, m.width);
+                }
+                return { height: Math.max(NODE_H + V_GAP, totalHeight), width: NODE_W + H_GAP + maxChildWidth };
+            }
+
+            function layout(nodeId, left, top, availableHeight) {
+                const node = getNode(nodeId);
+                if (!node) return;
+                const children = getChildren(nodeId);
+                const centerY = top + availableHeight / 2;
+                node.x = left;
+                node.y = centerY - NODE_H / 2;
+                if (children.length === 0) return;
+                const childMeasures = children.map(c => ({ id: c.id, m: measure(c.id) }));
+                const totalChildHeight = childMeasures.reduce((s, c) => s + c.m.height, 0);
+                let currentTop = top + (availableHeight - totalChildHeight) / 2;
+                const childLeft = left + NODE_W + H_GAP;
+                for (const { id, m } of childMeasures) {
+                    layout(id, childLeft, currentTop, m.height);
+                    currentTop += m.height;
+                }
+            }
+
+            const rootMeasure = measure(root.id);
+            layout(root.id, 40, 40, rootMeasure.height);
+        }
+
+        function computeVerticalLayout() {
+            const root = getRoot();
+            if (!root) return;
+            const H_GAP = 16, V_GAP = 50;
+            const NODE_W = 120, NODE_H = 50;
+
+            function measure(nodeId) {
+                const children = getChildren(nodeId);
+                if (children.length === 0) return { width: NODE_W + H_GAP, height: NODE_H };
+                let totalWidth = 0, maxChildHeight = 0;
+                for (const child of children) {
+                    const m = measure(child.id);
+                    totalWidth += m.width;
+                    maxChildHeight = Math.max(maxChildHeight, m.height);
+                }
+                return { width: Math.max(NODE_W + H_GAP, totalWidth), height: NODE_H + V_GAP + maxChildHeight };
+            }
+
+            function layout(nodeId, left, top, availableWidth) {
+                const node = getNode(nodeId);
+                if (!node) return;
+                const children = getChildren(nodeId);
+                const centerX = left + availableWidth / 2;
+                node.x = centerX - NODE_W / 2;
+                node.y = top;
+                if (children.length === 0) return;
+                const childMeasures = children.map(c => ({ id: c.id, m: measure(c.id) }));
+                const totalChildWidth = childMeasures.reduce((s, c) => s + c.m.width, 0);
+                let currentLeft = left + (availableWidth - totalChildWidth) / 2;
+                const childTop = top + NODE_H + V_GAP;
+                for (const { id, m } of childMeasures) {
+                    layout(id, currentLeft, childTop, m.width);
+                    currentLeft += m.width;
+                }
+            }
+
+            const rootMeasure = measure(root.id);
+            layout(root.id, 40, 40, rootMeasure.width);
+        }
+
+        function applyLayout(layoutType, showStatus = true) {
+            currentLayout = layoutType;
+            if (layoutType === 'horizontal') computeHorizontalLayout();
+            else if (layoutType === 'vertical') computeVerticalLayout();
+            render();
+            if (showStatus) {
+                const names = { free: '自由布局', horizontal: '横向树形', vertical: '纵向树形' };
+                setStatus('已切换为' + names[layoutType]);
+            }
+        }
+
+        function resetToDefault() {
+            // 先复制默认节点
+            nodes = DEFAULT_NODES.map(n => ({ ...n }));
+            const maxId = Math.max(...nodes.map(n => n.id), 0);
+            nextId = maxId + 1;
+            finishEditing(false);
+            clearSelection();
+            currentLayout = 'vertical';
+            currentColor = 'blue';
+
+            // 先按默认布局计算（保证相对位置正确）
+            if (currentLayout === 'vertical') computeVerticalLayout();
+
+            // 计算所有节点的包围盒
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            nodes.forEach(n => {
+                // 节点宽高用估算值即可（布局算法里 NODE_W=120, NODE_H=50）
+                const w = 120, h = 50;
+                minX = Math.min(minX, n.x);
+                minY = Math.min(minY, n.y);
+                maxX = Math.max(maxX, n.x + w);
+                maxY = Math.max(maxY, n.y + h);
+            });
+            const contentW = maxX - minX;
+            const contentH = maxY - minY;
+
+            // 画布可视区域（去掉 padding）
+            const pad = 16;
+            const canvasW = canvas.clientWidth - pad * 2;
+            const canvasH = canvas.clientHeight - pad * 2;
+
+            // 计算居中偏移
+            const offsetX = (canvasW - contentW) / 2 - minX;
+            const offsetY = (canvasH - contentH) / 2 - minY;
+
+            // 应用偏移
+            nodes.forEach(n => { n.x += offsetX; n.y += offsetY; });
+
+            render();
+            setStatus('已重置为默认纵向布局');
+        }
+
+        // ---------- 编辑 ----------
+        function startEditing(nodeId) {
+            if (editingNodeId !== null) finishEditing(true);
+            const nodeEl = getNodeElement(nodeId);
+            if (!nodeEl) return;
+            const node = getNode(nodeId);
+            if (!node) return;
+
+            editingNodeId = nodeId;
+            const originalText = node.text;
+            nodeEl.classList.add('editing');
+            nodeEl.textContent = '';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalText;
+            input.style.cssText = 'width:100%;border:none;background:transparent;font-size:inherit;font-weight:inherit;text-align:center;outline:none;color:#1b2d3f;padding:0;margin:0;font-family:inherit;';
+            input.addEventListener('mousedown', (e) => e.stopPropagation());
+            input.addEventListener('touchstart', (e) => e.stopPropagation());
+            nodeEl.appendChild(input);
+            input.focus();
+            input.select();
+            editInput = input;
+
+            const saveEdit = () => {
+                if (editingNodeId !== nodeId) return;
+                const newText = input.value.trim();
+                if (newText !== '') {
+                    const n = getNode(nodeId);
+                    if (n) n.text = newText;
+                }
+                finishEditing(false);
+                render();
+                if (currentLayout !== 'free') applyLayout(currentLayout, false);
+                setStatus('已更新节点');
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                else if (e.key === 'Escape') { e.preventDefault(); finishEditing(false); render(); setStatus('已取消编辑'); }
+            });
+        }
+
+        function finishEditing(save = true) {
+            if (editingNodeId === null || !editInput) return;
+            const nodeId = editingNodeId;
+            const input = editInput;
+            const nodeEl = getNodeElement(nodeId);
+            const node = getNode(nodeId);
+
+            if (save && node && input) {
+                const newText = input.value.trim();
+                if (newText !== '') node.text = newText;
+            }
+            if (nodeEl) {
+                nodeEl.classList.remove('editing');
+                const inputInside = nodeEl.querySelector('input');
+                if (inputInside) inputInside.remove();
+                nodeEl.textContent = node ? node.text : '';
+            }
+            editInput = null;
+            editingNodeId = null;
+        }
+
+        // ---------- 拖拽 ----------
+        function onMouseDown(e) {
+            hideContextMenu();
+            const nodeEl = e.target.closest('.node');
+            if (!nodeEl) { clearSelection(); return; }
+            if (editingNodeId !== null) return;
+
+            const nodeId = parseInt(nodeEl.dataset.id, 10);
+            const node = getNode(nodeId);
+            if (!node) return;
+
+            setSelectedNode(nodeId);
+            if (e.button === 2) return;
+
+            if (e.shiftKey) {
+                e.preventDefault();
+                const newNode = {
+                    id: generateId(), text: '新节点',
+                    x: node.x + 130, y: node.y + 80, parentId: node.id
+                };
+                nodes.push(newNode);
+                render();
+                if (currentLayout !== 'free') applyLayout(currentLayout, false);
+                setStatus('已添加子节点');
+                return;
+            }
+
+            e.preventDefault();
+            draggingNodeId = nodeId;
+            const rect = nodeEl.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            isDragging = false;
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        function onMouseMove(e) {
+            if (draggingNodeId === null) return;
+            e.preventDefault();
+            const node = getNode(draggingNodeId);
+            const nodeEl = getNodeElement(draggingNodeId);
+            if (!node || !nodeEl) return;
+
+            isDragging = true;
+            const canvasRect = canvas.getBoundingClientRect();
+            let newX = e.clientX - dragOffsetX - canvasRect.left;
+            let newY = e.clientY - dragOffsetY - canvasRect.top;
+            const maxX = canvas.clientWidth - nodeEl.offsetWidth - 5;
+            const maxY = canvas.clientHeight - nodeEl.offsetHeight - 5;
+            newX = Math.max(5, Math.min(newX, maxX));
+            newY = Math.max(5, Math.min(newY, maxY));
+
+            node.x = newX;
+            node.y = newY;
+            nodeEl.style.left = newX + 'px';
+            nodeEl.style.top = newY + 'px';
+            drawEdges();
+        }
+
+        function onMouseUp() {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            draggingNodeId = null;
+            isDragging = false;
+            drawEdges();
+        }
+
+        // ---------- 双击 ----------
+        function onDoubleClick(e) {
+            const nodeEl = e.target.closest('.node');
+            if (!nodeEl) return;
+            if (editingNodeId !== null) return;
+            const nodeId = parseInt(nodeEl.dataset.id, 10);
+            setSelectedNode(nodeId);
+            startEditing(nodeId);
+        }
+
+        // ---------- 右键 ----------
+        function showContextMenu(e, nodeId) {
+            e.preventDefault();
+            e.stopPropagation();
+            contextMenuTargetId = nodeId;
+            setSelectedNode(nodeId);
+
+            const node = getNode(nodeId);
+            if (!node) return;
+            const isOnlyRoot = node.parentId === null && nodes.length === 1;
+            menuDeleteBtn.classList.toggle('disabled', isOnlyRoot);
+            menuDeleteSubtreeBtn.classList.toggle('disabled', isOnlyRoot);
+
+            contextMenu.style.left = e.clientX + 'px';
+            contextMenu.style.top = e.clientY + 'px';
+            contextMenu.classList.add('visible');
+
+            const rect = contextMenu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) contextMenu.style.left = (e.clientX - rect.width) + 'px';
+            if (rect.bottom > window.innerHeight) contextMenu.style.top = (e.clientY - rect.height) + 'px';
+        }
+
+        function hideContextMenu() {
+            contextMenu.classList.remove('visible');
+            contextMenuTargetId = null;
+        }
+
+        function onMenuEdit() { if (contextMenuTargetId !== null) startEditing(contextMenuTargetId); hideContextMenu(); }
+
+        function onMenuAddChild() {
+            if (contextMenuTargetId !== null) {
+                const parent = getNode(contextMenuTargetId);
+                if (parent) {
+                    const newNode = {
+                        id: generateId(), text: '新节点',
+                        x: parent.x + 130, y: parent.y + 90, parentId: parent.id
+                    };
+                    nodes.push(newNode);
+                    render();
+                    if (currentLayout !== 'free') applyLayout(currentLayout, false);
+                    setStatus('已添加子节点');
+                }
+            }
+            hideContextMenu();
+        }
+
+        function onMenuDelete() { if (contextMenuTargetId !== null) deleteNode(contextMenuTargetId, false); hideContextMenu(); }
+        function onMenuDeleteSubtree() { if (contextMenuTargetId !== null) deleteNode(contextMenuTargetId, true); hideContextMenu(); }
+
+        // ---------- 添加节点 ----------
+        function addNewNode() {
+            // 【修改点】如果有选中节点，则在选中节点下添加子节点；否则默认在根节点下添加
+            const targetParent = selectedNodeId !== null ? getNode(selectedNodeId) : getRoot();
+            
+            if (!targetParent) {
+                const newRoot = { id: generateId(), text: '中心主题', x: 400, y: 200, parentId: null };
+                nodes.push(newRoot);
+                render();
+                return;
+            }
+            
+            const newNode = {
+                id: generateId(), text: '新分支',
+                x: targetParent.x + 150, y: targetParent.y + 100, parentId: targetParent.id
+            };
+            nodes.push(newNode);
+            render();
+            if (currentLayout !== 'free') applyLayout(currentLayout, false);
+            setStatus('已添加新分支');
+        }
+
+        // ---------- 弹窗 ----------
+        function openLayoutModal() {
+            pendingLayout = currentLayout;
+            pendingColor = currentColor;
+            updateModalActive();
+            layoutModal.classList.add('visible');
+        }
+
+        function updateModalActive() {
+            document.querySelectorAll('.layout-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.layout === pendingLayout);
+            });
+            document.querySelectorAll('.color-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.color === pendingColor);
+            });
+            // 布局 chip 激活色随颜色变化
+            const c = COLOR_MAP[pendingColor];
+            document.querySelectorAll('.layout-chip').forEach(chip => {
+                chip.style.setProperty('--chip-active', c.chipActive);
+                chip.style.setProperty('--chip-bg', c.chipBg);
+            });
+        }
+
+        function closeLayoutModal() { layoutModal.classList.remove('visible'); }
+
+        function applyPending() {
+            const layoutChanged = pendingLayout !== currentLayout;
+            const colorChanged = pendingColor !== currentColor;
+
+            if (colorChanged) {
+                currentColor = pendingColor;
+                applyColorToDOM();
+            }
+            if (layoutChanged) {
+                applyLayout(pendingLayout);
+            } else {
+                render(); // 颜色变了需要重绘
+            }
+
+            if (colorChanged && !layoutChanged) setStatus('已切换颜色');
+            if (layoutChanged && !colorChanged) {
+                const names = { free: '自由布局', horizontal: '横向树形', vertical: '纵向树形' };
+                setStatus('已切换为' + names[pendingLayout]);
+            }
+            if (colorChanged && layoutChanged) setStatus('已应用布局和颜色');
+            closeLayoutModal();
+        }
+
+        // ---------- 复制 PNG ----------
+        async function copyAsPNG() {
+            setStatus('正在生成图片...');
+            if (editingNodeId !== null) { finishEditing(true); render(); }
+            const wasSelected = selectedNodeId;
+            if (selectedNodeId !== null) {
+                const el = getNodeElement(selectedNodeId);
+                if (el) el.classList.remove('selected');
+            }
+            const originalBg = canvas.style.background;
+            canvas.style.background = '#ffffff';
+
+            try {
+                const canvasEl = await html2canvas(canvas, {
+                    backgroundColor: '#ffffff', scale: 2,
+                    allowTaint: false, useCORS: true, logging: false,
+                    windowWidth: canvas.scrollWidth, windowHeight: canvas.scrollHeight,
+                });
+
+                canvasEl.toBlob(async (blob) => {
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.write) {
+                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                            setStatus('✅ PNG已复制到剪贴板');
+                        } else {
+                            downloadBlob(blob, 'mindmap.png');
+                            setStatus('⚠️ 剪贴板不可用，已触发下载', true);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        downloadBlob(blob, 'mindmap.png');
+                        setStatus('⚠️ 复制失败，已触发下载', true);
+                    } finally {
+                        canvas.style.background = originalBg;
+                        if (wasSelected !== null && getNodeElement(wasSelected)) setSelectedNode(wasSelected);
+                    }
+                }, 'image/png', 1.0);
+            } catch (err) {
+                console.error(err);
+                setStatus('❌ 生成图片失败', true);
+                canvas.style.background = originalBg;
+                if (wasSelected !== null && getNodeElement(wasSelected)) setSelectedNode(wasSelected);
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        // ---------- 键盘 ----------
+        function onKeyDown(e) {
+            if (editingNodeId !== null) return;
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (selectedNodeId !== null) { e.preventDefault(); deleteSelectedNode(); }
+            }
+            if (e.key === 'Escape') { clearSelection(); hideContextMenu(); closeLayoutModal(); }
+        }
+
+        // ---------- 初始化 ----------
+        function init() {
+            // 先设置默认值，再 reset
+            currentLayout = 'vertical';
+            currentColor = 'blue';
+            resetToDefault();
+
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('dblclick', onDoubleClick);
+            canvas.addEventListener('contextmenu', (e) => {
+                const nodeEl = e.target.closest('.node');
+                if (nodeEl) {
+                    const nodeId = parseInt(nodeEl.dataset.id, 10);
+                    showContextMenu(e, nodeId);
+                } else hideContextMenu();
+            });
+            canvas.addEventListener('dragstart', (e) => e.preventDefault());
+
+            addNodeBtn.addEventListener('click', addNewNode);
+            resetBtn.addEventListener('click', resetToDefault);
+            copyBtn.addEventListener('click', copyAsPNG);
+            deleteSelectedBtn.addEventListener('click', deleteSelectedNode);
+            layoutBtn.addEventListener('click', openLayoutModal);
+
+            menuEditBtn.addEventListener('click', onMenuEdit);
+            menuAddChildBtn.addEventListener('click', onMenuAddChild);
+            menuDeleteBtn.addEventListener('click', onMenuDelete);
+            menuDeleteSubtreeBtn.addEventListener('click', onMenuDeleteSubtree);
+
+            layoutOptions.addEventListener('click', (e) => {
+                const chip = e.target.closest('.layout-chip');
+                if (chip) { pendingLayout = chip.dataset.layout; updateModalActive(); }
+            });
+            colorOptions.addEventListener('click', (e) => {
+                const chip = e.target.closest('.color-chip');
+                if (chip) { pendingColor = chip.dataset.color; updateModalActive(); }
+            });
+            layoutCancelBtn.addEventListener('click', closeLayoutModal);
+            layoutApplyBtn.addEventListener('click', applyPending);
+            layoutModal.addEventListener('click', (e) => { if (e.target === layoutModal) closeLayoutModal(); });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.context-menu') && !e.target.closest('.node')) hideContextMenu();
+            });
+
+            document.addEventListener('keydown', onKeyDown);
+            window.addEventListener('resize', () => drawEdges());
+
+            // ✅ 延迟一次重新居中（确保 canvas 已经有真实尺寸）
+            requestAnimationFrame(() => {
+                if (nodes.length) resetToDefault();
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
