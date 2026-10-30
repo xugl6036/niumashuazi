@@ -6,6 +6,7 @@
 <title>牛马刷子 - 打工人工具合集</title>
 <link rel="icon" type="image/png" href="./favicon.png">
 <style>
+    /* ================== 主题变量 ================== */
     :root { --primary-color: #5a9bd4; --primary-hover: #4884ba; --primary-light: #7eb8e6; --bg-color: #eef6fc; --sidebar-bg: #ffffff; --sidebar-header-bg: #f4f9fe; --text-main: #3b5b7e; --text-muted: #8a9bb5; --border-color: #e2edf7; --content-bg: #f7fbff; --box-bg: #ffffff; --box-border: #dbe9f4; --quote-bg: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%); --quote-mark: #e6f2fc; --shadow: rgba(100, 150, 200, 0.08); --shadow-hover: rgba(90, 155, 212, 0.15); }
     [data-theme="mint"] { --primary-color: #4eb598; --primary-hover: #3d9b7f; --primary-light: #75caae; --bg-color: #f0f9f6; --sidebar-bg: #ffffff; --sidebar-header-bg: #f2faf7; --text-main: #2c5a4a; --text-muted: #7a9e92; --border-color: #d5ede4; --content-bg: #f7fcfa; --box-bg: #ffffff; --box-border: #d5ede4; --quote-bg: linear-gradient(135deg, #f0faf6 0%, #ffffff 100%); --quote-mark: #dff5eb; --shadow: rgba(100, 200, 170, 0.08); --shadow-hover: rgba(78, 181, 152, 0.15); }
     [data-theme="peach"] { --primary-color: #f09b8f; --primary-hover: #e07f71; --primary-light: #f5b8ae; --bg-color: #fdf4f2; --sidebar-bg: #ffffff; --sidebar-header-bg: #fef8f6; --text-main: #7a4b45; --text-muted: #a98c87; --border-color: #f7e3de; --content-bg: #fffafa; --box-bg: #ffffff; --box-border: #f7e3de; --quote-bg: linear-gradient(135deg, #fef5f3 0%, #ffffff 100%); --quote-mark: #fce9e5; --shadow: rgba(200, 150, 140, 0.08); --shadow-hover: rgba(240, 155, 143, 0.15); }
@@ -76,8 +77,6 @@
     /* 内容区 */
     .content-area { flex: 1; padding: 0; overflow-y: auto; background-color: var(--content-bg); display: flex; flex-direction: column; position: relative; }
     .content-inner { padding: 24px; display: flex; flex-direction: column; flex: 1; }
-    
-    /* 针对首页占满，其他工具页有内边距 */
     .content-inner.is-tool { padding: 0; }
 
     .page-title { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
@@ -90,20 +89,8 @@
     .placeholder-box .p-desc { font-size: 14px; margin-top: 10px; }
 
     /* ================== Iframe 样式 ================== */
-    .iframe-wrapper {
-        flex: 1;
-        width: 100%;
-        height: 100%;
-        border: none;
-        background: var(--box-bg);
-        overflow: hidden;
-    }
-    .iframe-wrapper iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        display: block;
-    }
+    .iframe-wrapper { flex: 1; width: 100%; height: 100%; border: none; background: var(--box-bg); overflow: hidden; }
+    .iframe-wrapper iframe { width: 100%; height: 100%; border: none; display: block; }
 </style>
 </head>
 <body>
@@ -151,7 +138,6 @@
                     <div class="popover-title">🎨 选择主题颜色</div>
                     <div class="theme-options">
                         <div class="theme-dot light" onclick="changeTheme('light', this)"></div>
-                        <div class="theme-dot dark" onclick="changeTheme('dark', this)"></div>
                         <div class="theme-dot gray active" onclick="changeTheme('gray', this)"></div>
                         <div class="theme-dot blue" onclick="changeTheme('blue', this)"></div>
                         <div class="theme-dot mint" onclick="changeTheme('mint', this)"></div>
@@ -162,11 +148,9 @@
             </div>
         </div>
 
-        <!-- 滚动文字 -->
+        <!-- 滚动文字（内容通过 JS 动态注入） -->
         <div class="marquee-container" id="marqueeContainer">
-            <div class="marquee-content">
-                📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：距离周末还有 2 天，牛马们加油！
-            </div>
+            <div class="marquee-content" id="marqueeContent"></div>
         </div>
 
         <!-- 内容主体 -->
@@ -190,69 +174,55 @@
 
     /* ================== 全局菜单数据 ================== */
     const menuData = [
-        {
-            title: "首页",
-            icon: "🏠",
-            subs: [
-                { icon: "✨", name: "胡言乱语", url: "" }
-            ]
-        },
-        {
-            title: "图形",
-            icon: "🎨",
-            subs: [
-                { icon: "💧", name: "自定义水印", url: "./pages/watermark.html" }, 
-                { icon: "🧠", name: "思维导图", url: "./pages/mindmap.html" },
-                { icon: "🖼️", name: "图片去水印", url: "./pages/remove-wm.html" },
-                { icon: "📊", name: "图表制作", url: "./pages/chart.html" }
-            ]
-        },
-        {
-            title: "制表",
-            icon: "📗",
-            subs: [
-                { icon: "📑", name: "Excel公式库", url: "" },
-                { icon: "📝", name: "财务报表", url: "" },
-                { icon: "📅", name: "排班表生成", url: "" }
-            ]
-        },
-        {
-            title: "效率",
-            icon: "⚡",
-            subs: [
-                { icon: "⌨️", name: "快捷短语", url: "" },
-                { icon: "🕒", name: "时间管理", url: "" },
-                { icon: "📋", name: "剪贴板历史", url: "" }
-            ]
-        },
-        {
-            title: "Wiki",
-            icon: "📚",
-            subs: [
-                { icon: "💡", name: "摸鱼指南", url: "" },
-                { icon: "🛠️", name: "办公技巧", url: "" }
-            ]
-        },
-        {
-            title: "摸鱼",
-            icon: "🐟",
-            subs: [
-                { icon: "🎮", name: "小游戏", url: "" },
-                { icon: "📰", name: "今日热搜", url: "" },
-                { icon: "🎵", name: "白噪音", url: "" }
-            ]
-        },
-        {
-            title: "support",
-            icon: "🛡️",
-            subs: [
-                { icon: "✉️", name: "联系作者", url: "" },
-                { icon: "📄", name: "关于牛马", url: "" }
-            ]
-        }
+        { title: "首页", icon: "🏠", subs: [{ icon: "✨", name: "胡言乱语", url: "" }] },
+        { title: "图形", icon: "🎨", subs: [
+            { icon: "💧", name: "自定义水印", url: "./pages/watermark.html" }, 
+            { icon: "🧠", name: "思维导图", url: "./pages/mindmap.html" },
+            { icon: "🖼️", name: "图片去水印", url: "./pages/remove-wm.html" },
+            { icon: "📊", name: "图表制作", url: "./pages/chart.html" }
+        ]},
+        { title: "制表", icon: "📗", subs: [
+            { icon: "📑", name: "Excel公式库", url: "" },
+            { icon: "📝", name: "财务报表", url: "" },
+            { icon: "📅", name: "排班表生成", url: "" }
+        ]},
+        { title: "效率", icon: "⚡", subs: [
+            { icon: "⌨️", name: "快捷短语", url: "" },
+            { icon: "🕒", name: "时间管理", url: "" },
+            { icon: "📋", name: "剪贴板历史", url: "" }
+        ]},
+        { title: "Wiki", icon: "📚", subs: [
+            { icon: "💡", name: "摸鱼指南", url: "" },
+            { icon: "🛠️", name: "办公技巧", url: "" }
+        ]},
+        { title: "摸鱼", icon: "🐟", subs: [
+            { icon: "🎮", name: "小游戏", url: "" },
+            { icon: "📰", name: "今日热搜", url: "" },
+            { icon: "🎵", name: "白噪音", url: "" }
+        ]},
+        { title: "support", icon: "🛡️", subs: [
+            { icon: "✉️", name: "联系作者", url: "" },
+            { icon: "📄", name: "关于牛马", url: "" }
+        ]}
     ];
 
+    /* ================== 计算距离周末的天数 ================== */
+    function getWeekendCountdown() {
+        const today = new Date().getDay(); // 0是周日，1-6是周一到周六
+        if (today === 0) return "今天是周日，明天又要开始拉磨啦！🐂";
+        if (today === 6) return "今天是周六，尽情享受属于你的周末吧！🎉";
+        const daysToSaturday = 6 - today;
+        return `距离周末还有 ${daysToSaturday} 天，牛马们加油！`;
+    }
+
     /* ================== 初始化渲染 ================== */
+    function initMarquee() {
+        const countdownText = getWeekendCountdown();
+        document.getElementById('marqueeContent').innerHTML = 
+            `📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：${countdownText}`;
+    }
+
+    initMarquee();
     renderPrimaryNav();
     renderSubMenu(0);
 
@@ -300,27 +270,25 @@
         }
     }
 
-    /* ================== 内容路由================== */
+    /* ================== 内容路由 ================== */
     function renderContent(parentName, childName) {
         document.getElementById('breadcrumb-child').textContent = childName;
         const contentCard = document.getElementById('contentCard');
         const contentInner = document.getElementById('contentInner');
         const marqueeContainer = document.getElementById('marqueeContainer');
 
-        // 查找当前点击的菜单项的数据
         const parentData = menuData.find(m => m.title === parentName);
         const subData = parentData.subs.find(s => s.name === childName);
 
-        // 逻辑1：判断是否显示滚动条（只在首页显示）
+        // 只在首页显示滚动通知
         if (parentName === '首页') {
             marqueeContainer.style.display = 'flex';
-            contentInner.classList.remove('is-tool'); // 去掉工具页的特权样式
+            contentInner.classList.remove('is-tool');
         } else {
             marqueeContainer.style.display = 'none';
-            contentInner.classList.add('is-tool'); // 加上工具页的满屏样式
+            contentInner.classList.add('is-tool');
         }
 
-        // 逻辑2：渲染内容
         if (parentName === '首页') {
             contentCard.innerHTML = `
                 <div class="full-quote-container">
@@ -328,14 +296,12 @@
                 </div>
             `;
         } else if (subData && subData.url) {
-            // 【核心逻辑】加载 iframe，且移除了原本重复的标题行
             contentCard.innerHTML = `
                 <div class="iframe-wrapper">
                     <iframe src="${subData.url}" title="${childName}"></iframe>
                 </div>
             `;
         } else {
-            // 没有 url 的继续显示占位提示
             contentCard.innerHTML = `
                 <div class="page-title" style="margin: 24px 24px 0 24px;">${parentData.icon} ${parentName} · ${childName}</div>
                 <div class="placeholder-box" style="margin: 24px;">
