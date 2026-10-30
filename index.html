@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
-<!-- ... 前面的 head 和 style 保持完全不变 ... -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>牛马刷子 - 打工人工具合集</title>
+<link rel="icon" type="image/png" href="./favicon.png">
 <style>
-    /* 你的原有 CSS 样式全部保留，不需要改动 */
     :root { --primary-color: #5a9bd4; --primary-hover: #4884ba; --primary-light: #7eb8e6; --bg-color: #eef6fc; --sidebar-bg: #ffffff; --sidebar-header-bg: #f4f9fe; --text-main: #3b5b7e; --text-muted: #8a9bb5; --border-color: #e2edf7; --content-bg: #f7fbff; --box-bg: #ffffff; --box-border: #dbe9f4; --quote-bg: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%); --quote-mark: #e6f2fc; --shadow: rgba(100, 150, 200, 0.08); --shadow-hover: rgba(90, 155, 212, 0.15); }
     [data-theme="mint"] { --primary-color: #4eb598; --primary-hover: #3d9b7f; --primary-light: #75caae; --bg-color: #f0f9f6; --sidebar-bg: #ffffff; --sidebar-header-bg: #f2faf7; --text-main: #2c5a4a; --text-muted: #7a9e92; --border-color: #d5ede4; --content-bg: #f7fcfa; --box-bg: #ffffff; --box-border: #d5ede4; --quote-bg: linear-gradient(135deg, #f0faf6 0%, #ffffff 100%); --quote-mark: #dff5eb; --shadow: rgba(100, 200, 170, 0.08); --shadow-hover: rgba(78, 181, 152, 0.15); }
     [data-theme="peach"] { --primary-color: #f09b8f; --primary-hover: #e07f71; --primary-light: #f5b8ae; --bg-color: #fdf4f2; --sidebar-bg: #ffffff; --sidebar-header-bg: #fef8f6; --text-main: #7a4b45; --text-muted: #a98c87; --border-color: #f7e3de; --content-bg: #fffafa; --box-bg: #ffffff; --box-border: #f7e3de; --quote-bg: linear-gradient(135deg, #fef5f3 0%, #ffffff 100%); --quote-mark: #fce9e5; --shadow: rgba(200, 150, 140, 0.08); --shadow-hover: rgba(240, 155, 143, 0.15); }
@@ -300,7 +299,7 @@
         }
     }
 
-    /* ================== 内容路由（重要修改：支持加载独立页面） ================== */
+    /* ================== 内容路由================== */
     function renderContent(parentName, childName) {
         document.getElementById('breadcrumb-child').textContent = childName;
         const contentCard = document.getElementById('contentCard');
