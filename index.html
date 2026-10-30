@@ -6,7 +6,6 @@
 <title>牛马刷子 - 打工人工具合集</title>
 <link rel="icon" type="image/png" href="./favicon.png">
 <style>
-    /* ================== 主题变量 ================== */
     :root { --primary-color: #5a9bd4; --primary-hover: #4884ba; --primary-light: #7eb8e6; --bg-color: #eef6fc; --sidebar-bg: #ffffff; --sidebar-header-bg: #f4f9fe; --text-main: #3b5b7e; --text-muted: #8a9bb5; --border-color: #e2edf7; --content-bg: #f7fbff; --box-bg: #ffffff; --box-border: #dbe9f4; --quote-bg: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%); --quote-mark: #e6f2fc; --shadow: rgba(100, 150, 200, 0.08); --shadow-hover: rgba(90, 155, 212, 0.15); }
     [data-theme="mint"] { --primary-color: #4eb598; --primary-hover: #3d9b7f; --primary-light: #75caae; --bg-color: #f0f9f6; --sidebar-bg: #ffffff; --sidebar-header-bg: #f2faf7; --text-main: #2c5a4a; --text-muted: #7a9e92; --border-color: #d5ede4; --content-bg: #f7fcfa; --box-bg: #ffffff; --box-border: #d5ede4; --quote-bg: linear-gradient(135deg, #f0faf6 0%, #ffffff 100%); --quote-mark: #dff5eb; --shadow: rgba(100, 200, 170, 0.08); --shadow-hover: rgba(78, 181, 152, 0.15); }
     [data-theme="peach"] { --primary-color: #f09b8f; --primary-hover: #e07f71; --primary-light: #f5b8ae; --bg-color: #fdf4f2; --sidebar-bg: #ffffff; --sidebar-header-bg: #fef8f6; --text-main: #7a4b45; --text-muted: #a98c87; --border-color: #f7e3de; --content-bg: #fffafa; --box-bg: #ffffff; --box-border: #f7e3de; --quote-bg: linear-gradient(135deg, #fef5f3 0%, #ffffff 100%); --quote-mark: #fce9e5; --shadow: rgba(200, 150, 140, 0.08); --shadow-hover: rgba(240, 155, 143, 0.15); }
@@ -14,11 +13,11 @@
     [data-theme="dark"] { --primary-color: #a88bfa; --primary-hover: #8e6cf0; --primary-light: #c3b0fd; --bg-color: #121212; --sidebar-bg: #1e1e1e; --sidebar-header-bg: #2d2d2d; --text-main: #e0e0e0; --text-muted: #888888; --border-color: #333333; --content-bg: #121212; --box-bg: #1e1e1e; --box-border: #333333; --quote-bg: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%); --quote-mark: #2a2a2a; --shadow: rgba(0, 0, 0, 0.4); --shadow-hover: rgba(168, 139, 250, 0.2); }
     [data-theme="light"] { --primary-color: #555555; --primary-hover: #333333; --primary-light: #888888; --bg-color: #f9f9f9; --sidebar-bg: #ffffff; --sidebar-header-bg: #f5f5f5; --text-main: #333333; --text-muted: #999999; --border-color: #eeeeee; --content-bg: #fcfcfc; --box-bg: #ffffff; --box-border: #eeeeee; --quote-bg: linear-gradient(135deg, #fafafa 0%, #ffffff 100%); --quote-mark: #f0f0f0; --shadow: rgba(0, 0, 0, 0.04); --shadow-hover: rgba(0, 0, 0, 0.08); }
     [data-theme="gray"] { --primary-color: #6c7a89; --primary-hover: #56626e; --primary-light: #8e9daa; --bg-color: #2f3640; --sidebar-bg: #353b48; --sidebar-header-bg: #2f3640; --text-main: #dcdde1; --text-muted: #9aa0a6; --border-color: #414852; --content-bg: #2f3640; --box-bg: #353b48; --box-border: #414852; --quote-bg: linear-gradient(135deg, #353b48 0%, #2f3640 100%); --quote-mark: #3e4652; --shadow: rgba(0, 0, 0, 0.3); --shadow-hover: rgba(108, 122, 137, 0.25); }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif; }
     body { background-color: var(--bg-color); height: 100vh; overflow: hidden; transition: background-color 0.3s ease; }
     #mainSystem { display: flex; height: 100vh; overflow: hidden; }
-    
+
     /* 侧边栏 */
     .sidebar { width: 320px; background-color: var(--sidebar-bg); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; transition: width 0.3s; border-right: 1px solid var(--border-color); z-index: 20; }
     .sidebar.collapsed { width: 80px; }
@@ -52,7 +51,7 @@
     .icon-btn { font-size: 18px; background: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 50%; color: var(--text-main); position: relative; }
     .icon-btn:hover { background-color: var(--content-bg); }
     .badge-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background-color: #f56c6c; border-radius: 50%; border: 2px solid var(--sidebar-bg); }
-    
+
     /* 弹窗 */
     .popover { position: absolute; top: 45px; right: 0; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2); display: none; z-index: 100; color: var(--text-main); }
     .popover.show { display: block; animation: fadeIn 0.2s ease; }
@@ -79,7 +78,6 @@
     .content-inner { padding: 24px; display: flex; flex-direction: column; flex: 1; }
     .content-inner.is-tool { padding: 0; }
 
-    .page-title { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
     .full-quote-container { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--quote-bg); position: relative; overflow: hidden; padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); }
     .full-quote-container::before { content: '“'; position: absolute; top: 40px; left: 80px; font-size: 240px; color: var(--quote-mark); font-family: serif; line-height: 1; z-index: 0; }
     .quote-text { font-size: 38px; font-weight: 600; color: var(--text-main); line-height: 1.6; position: relative; z-index: 1; letter-spacing: 2px; text-align: center; max-width: 1000px; }
@@ -88,16 +86,13 @@
     .placeholder-box .p-title { font-size: 18px; font-weight: 600; color: var(--primary-color); }
     .placeholder-box .p-desc { font-size: 14px; margin-top: 10px; }
 
-    /* ================== Iframe 样式 ================== */
     .iframe-wrapper { flex: 1; width: 100%; height: 100%; border: none; background: var(--box-bg); overflow: hidden; }
     .iframe-wrapper iframe { width: 100%; height: 100%; border: none; display: block; }
 </style>
 </head>
 <body>
 
-<!-- ================== 主系统 ================== -->
 <div id="mainSystem">
-    <!-- 侧边栏 -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <span class="icon">🐂</span>
@@ -105,259 +100,257 @@
         </div>
         <div class="sidebar-content">
             <div class="primary-nav" id="primaryNav"></div>
-            <div class="secondary-nav" id="secondary-nav"></div>
+            <div class="secondary-nav" id="secondaryNav"></div>
         </div>
     </div>
 
-    <!-- 右侧主体 -->
     <div class="main-wrapper">
-        <!-- 路径导航 -->
         <div class="top-header">
             <div class="header-left">
-                <div class="collapse-btn" id="collapse-btn">☰</div>
+                <div class="collapse-btn" id="collapseBtn">☰</div>
                 <div class="breadcrumb">
-                    <span id="breadcrumb-parent">首页</span>
+                    <span id="breadcrumbParent">首页</span>
                     <span style="color: #ccc;">/</span>
-                    <span class="current-path" id="breadcrumb-child">胡言乱语</span>
+                    <span class="current-path" id="breadcrumbChild">胡言乱语</span>
                 </div>
             </div>
-            
             <div class="header-right">
-                <span class="version-text">v2.0.0</span>
-                <button class="icon-btn" id="notifyBtn">
-                    🔔
-                    <span class="badge-dot"></span>
-                </button>
+                <span class="version-text">v2.1.0</span>
+                <button class="icon-btn" id="notifyBtn">🔔<span class="badge-dot"></span></button>
                 <div class="popover notify-popover" id="notifyPopover">
                     <div class="popover-title">🔔 消息通知</div>
-                    <div class="notify-item"><div>系统已更新至 v2.0.0</div><div class="time">10分钟前</div></div>
+                    <div class="notify-item"><div>系统已更新至 v2.1.0</div><div class="time">10分钟前</div></div>
                     <div class="notify-item"><div>摸鱼提醒：起来喝杯水，走动一下~</div><div class="time">1小时前</div></div>
                 </div>
                 <button class="icon-btn" id="themeBtn">🎨</button>
                 <div class="popover theme-popover" id="themePopover">
                     <div class="popover-title">🎨 选择主题颜色</div>
                     <div class="theme-options">
-                        <div class="theme-dot light" onclick="changeTheme('light', this)"></div>
-                        <div class="theme-dot gray active" onclick="changeTheme('gray', this)"></div>
-                        <div class="theme-dot blue" onclick="changeTheme('blue', this)"></div>
-                        <div class="theme-dot mint" onclick="changeTheme('mint', this)"></div>
-                        <div class="theme-dot peach" onclick="changeTheme('peach', this)"></div>
-                        <div class="theme-dot orange" onclick="changeTheme('orange', this)"></div>
+                        <div class="theme-dot light" data-theme="light"></div>
+                        <div class="theme-dot gray active" data-theme="gray"></div>
+                        <div class="theme-dot blue" data-theme="blue"></div>
+                        <div class="theme-dot mint" data-theme="mint"></div>
+                        <div class="theme-dot peach" data-theme="peach"></div>
+                        <div class="theme-dot orange" data-theme="orange"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 滚动文字（内容通过 JS 动态注入） -->
         <div class="marquee-container" id="marqueeContainer">
             <div class="marquee-content" id="marqueeContent"></div>
         </div>
 
-        <!-- 内容主体 -->
         <div class="content-area" id="contentArea">
             <div class="content-inner" id="contentInner">
-                <div class="content-card" id="contentCard" style="flex: 1; display: flex; flex-direction: column;"></div>
+                <div class="content-card" id="contentCard" style="flex:1; display:flex; flex-direction:column;"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    /* ================== 名言库 ================== */
-    const quotes = [
-        "人生是旷野，不是轨道。不必按别人的节奏赶路。",
-        "接纳无常，才是安稳的开始。得到是幸运，失去是常态。",
-        "我们终其一生，不是为了满足所有人的期待，而是取悦自己。",
-        "世事本无好坏，是我们的念头，赋予它悲欢。",
-        "慢慢来，好戏都在烟火里。"
-    ];
+/* ================== 名言库 ================== */
+const quotes = [
+    "人生是旷野，不是轨道。不必按别人的节奏赶路。",
+    "接纳无常，才是安稳的开始。得到是幸运，失去是常态。",
+    "我们终其一生，不是为了满足所有人的期待，而是取悦自己。",
+    "世事本无好坏，是我们的念头，赋予它悲欢。",
+    "慢慢来，好戏都在烟火里。"
+];
 
-    /* ================== 全局菜单数据 ================== */
-    const menuData = [
-        { title: "首页", icon: "🏠", subs: [{ icon: "✨", name: "胡言乱语", url: "" }] },
-        { title: "图形", icon: "🎨", subs: [
-            { icon: "💧", name: "自定义水印", url: "./pages/watermark.html" }, 
-            { icon: "🧠", name: "思维导图", url: "./pages/mindmap.html" },
-            { icon: "🖼️", name: "图片去水印", url: "./pages/remove-wm.html" },
-            { icon: "📊", name: "图表制作", url: "./pages/chart.html" }
-        ]},
-        { title: "制表", icon: "📗", subs: [
-            { icon: "📑", name: "Excel公式库", url: "" },
-            { icon: "📝", name: "财务报表", url: "" },
-            { icon: "📅", name: "排班表生成", url: "" }
-        ]},
-        { title: "效率", icon: "⚡", subs: [
-            { icon: "⌨️", name: "快捷短语", url: "" },
-            { icon: "🕒", name: "时间管理", url: "" },
-            { icon: "📋", name: "剪贴板历史", url: "" }
-        ]},
-        { title: "Wiki", icon: "📚", subs: [
-            { icon: "💡", name: "摸鱼指南", url: "" },
-            { icon: "🛠️", name: "办公技巧", url: "" }
-        ]},
-        { title: "摸鱼", icon: "🐟", subs: [
-            { icon: "🎮", name: "小游戏", url: "" },
-            { icon: "📰", name: "今日热搜", url: "" },
-            { icon: "🎵", name: "白噪音", url: "" }
-        ]},
-        { title: "support", icon: "🛡️", subs: [
-            { icon: "✉️", name: "联系作者", url: "" },
-            { icon: "📄", name: "关于牛马", url: "" }
-        ]}
-    ];
+/* ================== 全局菜单数据 ==================
+   注意：每个 sub 对象是唯一数据源，渲染与点击都直接引用它，
+   不再用 name 字符串二次查找，杜绝错位/错配。
+*/
+const menuData = [
+    { title: "首页", icon: "🏠", subs: [
+        { icon: "✨", name: "胡言乱语", url: "" }
+    ]},
+    { title: "图形", icon: "🎨", subs: [
+        { icon: "🖼️", name: "图片编辑",   url: "./pages/image-edit.html" },
+        { icon: "💧", name: "自定义水印", url: "./pages/watermark.html" },
+        { icon: "🧠", name: "思维导图",   url: "./pages/mindmap.html" },
+        { icon: "📷", name: "图文识别",   url: "./pages/decode.html" },
+        { icon: "💮", name: "电子印章",   url: "./pages/seal.html" }
+    ]},
+    { title: "制表", icon: "📗", subs: [
+        { icon: "📑", name: "Excel公式库", url: "" },
+        { icon: "📝", name: "财务报表",   url: "" },
+        { icon: "📅", name: "排班表生成", url: "" }
+    ]},
+    { title: "效率", icon: "⚡", subs: [
+        { icon: "⌨️", name: "快捷短语",   url: "" },
+        { icon: "🕒", name: "时间管理",   url: "" },
+        { icon: "📋", name: "剪贴板历史", url: "" }
+    ]},
+    { title: "Wiki", icon: "📚", subs: [
+        { icon: "💡", name: "摸鱼指南", url: "" },
+        { icon: "🛠️", name: "办公技巧", url: "" }
+    ]},
+    { title: "摸鱼", icon: "🐟", subs: [
+        { icon: "🎮", name: "小游戏",   url: "" },
+        { icon: "📰", name: "今日热搜", url: "" },
+        { icon: "🎵", name: "白噪音",   url: "" }
+    ]},
+    { title: "support", icon: "🛡️", subs: [
+        { icon: "✉️", name: "联系作者", url: "" },
+        { icon: "📄", name: "关于牛马", url: "" }
+    ]}
+];
 
-    /* ================== 计算距离周末的天数 ================== */
-    function getWeekendCountdown() {
-        const today = new Date().getDay(); // 0是周日，1-6是周一到周六
-        if (today === 0) return "今天是周日，明天又要开始拉磨啦！🐂";
-        if (today === 6) return "今天是周六，尽情享受属于你的周末吧！🎉";
-        const daysToSaturday = 6 - today;
-        return `距离周末还有 ${daysToSaturday} 天，牛马们加油！`;
-    }
+/* ================== 周末倒计时 ================== */
+function getWeekendCountdown() {
+    const today = new Date().getDay();
+    if (today === 0) return "今天是周日，明天又要开始拉磨啦！🐂";
+    if (today === 6) return "今天是周六，尽情享受属于你的周末吧！🎉";
+    return `距离周末还有 ${6 - today} 天，牛马们加油！`;
+}
 
-    /* ================== 初始化渲染 ================== */
-    function initMarquee() {
-        const countdownText = getWeekendCountdown();
-        document.getElementById('marqueeContent').innerHTML = 
-            `📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：${countdownText}`;
-    }
+/* ================== 滚动通知 ================== */
+function initMarquee() {
+    document.getElementById('marqueeContent').innerHTML =
+        `📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：${getWeekendCountdown()}`;
+}
 
-    initMarquee();
-    renderPrimaryNav();
-    renderSubMenu(0);
-
-    /* ================== 侧边栏渲染 ================== */
-    function renderPrimaryNav() {
-        const primaryNav = document.getElementById('primaryNav');
-        primaryNav.innerHTML = '';
-        
-        menuData.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = `primary-item ${index === 0 ? 'active' : ''}`;
-            div.setAttribute('data-index', index);
-            div.innerHTML = `<span class="icon">${item.icon}</span><span class="item-text">${item.title}</span>`;
-            
-            div.addEventListener('click', function () {
-                document.querySelectorAll('.primary-item').forEach(el => el.classList.remove('active'));
-                this.classList.add('active');
-                renderSubMenu(parseInt(this.getAttribute('data-index')));
-            });
-            primaryNav.appendChild(div);
+/* ================== 一级菜单 ================== */
+function renderPrimaryNav() {
+    const primaryNav = document.getElementById('primaryNav');
+    primaryNav.innerHTML = '';
+    menuData.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = `primary-item ${index === 0 ? 'active' : ''}`;
+        div.dataset.index = index;
+        div.innerHTML = `<span class="icon">${item.icon}</span><span class="item-text">${item.title}</span>`;
+        div.addEventListener('click', function () {
+            document.querySelectorAll('.primary-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+            renderSubMenu(index, false);
         });
-    }
+        primaryNav.appendChild(div);
+    });
+}
 
-    function renderSubMenu(index) {
-        const data = menuData[index];
-        const secondaryNav = document.getElementById('secondary-nav');
-        secondaryNav.innerHTML = '';
-        document.getElementById('breadcrumb-parent').textContent = data.title;
+/* ================== 二级菜单 ==================
+   点击时直接使用闭包里的 subItem 对象，不存在字符串查找或索引错位。
+*/
+function renderSubMenu(primaryIndex, triggerRender = false) {
+    const group = menuData[primaryIndex];
+    const secondaryNav = document.getElementById('secondaryNav');
+    secondaryNav.innerHTML = '';
 
-        data.subs.forEach((subItem, subIndex) => {
-            const div = document.createElement('div');
-            div.className = `secondary-item ${subIndex === 0 ? 'active' : ''}`;
-            div.innerHTML = `<span class="icon">${subItem.icon}</span> <span>${subItem.name}</span>`;
-            
-            div.addEventListener('click', function () {
-                document.querySelectorAll('.secondary-item').forEach(el => el.classList.remove('active'));
-                this.classList.add('active');
-                renderContent(data.title, subItem.name);
-            });
-            secondaryNav.appendChild(div);
+    group.subs.forEach((subItem, subIndex) => {
+        const div = document.createElement('div');
+        div.className = `secondary-item ${triggerRender && subIndex === 0 ? 'active' : ''}`;
+        div.innerHTML = `<span class="icon">${subItem.icon}</span><span>${subItem.name}</span>`;
+        div.addEventListener('click', function () {
+            document.querySelectorAll('.secondary-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+            renderContent(group, subItem);   // 直接传对象，最可靠
         });
+        secondaryNav.appendChild(div);
+    });
 
-        if (data.subs.length > 0) {
-            renderContent(data.title, data.subs[0].name);
-        }
+    if (triggerRender && group.subs.length > 0) {
+        renderContent(group, group.subs[0]);
+    }
+}
+
+/* ================== 内容路由（接收对象，不做字符串匹配） ================== */
+function renderContent(group, subItem) {
+    document.getElementById('breadcrumbParent').textContent = group.title;
+    document.getElementById('breadcrumbChild').textContent = subItem.name;
+
+    const contentCard = document.getElementById('contentCard');
+    const contentInner = document.getElementById('contentInner');
+    const marqueeContainer = document.getElementById('marqueeContainer');
+
+    // 首页
+    if (group.title === '首页') {
+        marqueeContainer.style.display = 'flex';
+        contentInner.classList.remove('is-tool');
+        contentCard.innerHTML = `
+            <div class="full-quote-container">
+                <div class="quote-text">${getRandomQuote()}</div>
+            </div>
+        `;
+        return;
     }
 
-    /* ================== 内容路由 ================== */
-    function renderContent(parentName, childName) {
-        document.getElementById('breadcrumb-child').textContent = childName;
-        const contentCard = document.getElementById('contentCard');
-        const contentInner = document.getElementById('contentInner');
-        const marqueeContainer = document.getElementById('marqueeContainer');
+    marqueeContainer.style.display = 'none';
+    contentInner.classList.add('is-tool');
 
-        const parentData = menuData.find(m => m.title === parentName);
-        const subData = parentData.subs.find(s => s.name === childName);
-
-        // 只在首页显示滚动通知
-        if (parentName === '首页') {
-            marqueeContainer.style.display = 'flex';
-            contentInner.classList.remove('is-tool');
-        } else {
-            marqueeContainer.style.display = 'none';
-            contentInner.classList.add('is-tool');
-        }
-
-        if (parentName === '首页') {
-            contentCard.innerHTML = `
-                <div class="full-quote-container">
-                    <div class="quote-text">${getRandomQuote()}</div>
-                </div>
-            `;
-        } else if (subData && subData.url) {
-            contentCard.innerHTML = `
-                <div class="iframe-wrapper">
-                    <iframe src="${subData.url}" title="${childName}"></iframe>
-                </div>
-            `;
-        } else {
-            contentCard.innerHTML = `
-                <div class="page-title" style="margin: 24px 24px 0 24px;">${parentData.icon} ${parentName} · ${childName}</div>
-                <div class="placeholder-box" style="margin: 24px;">
-                    <div class="p-icon">🚧</div>
-                    <div class="p-title">「${childName}」工具开发中</div>
-                    <div class="p-desc">牛马正在疯狂写代码，马上上线...</div>
-                </div>
-            `;
-        }
+    // 有 url 的工具页
+    if (subItem.url && subItem.url.trim() !== '') {
+        contentCard.innerHTML = `
+            <div class="iframe-wrapper">
+                <iframe src="${subItem.url}" title="${subItem.name}"
+                        onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-box&quot; style=&quot;margin:24px&quot;><div class=&quot;p-icon&quot;>⚠️</div><div class=&quot;p-title&quot;>「${subItem.name}」页面加载失败</div><div class=&quot;p-desc&quot;>请检查文件是否存在：${subItem.url}</div></div>'">
+                </iframe>
+            </div>
+        `;
+        return;
     }
 
-    function getRandomQuote() {
-        return quotes[Math.floor(Math.random() * quotes.length)];
-    }
+    // 占位
+    contentCard.innerHTML = `
+        <div class="placeholder-box" style="margin: 24px;">
+            <div class="p-icon">🚧</div>
+            <div class="p-title">「${subItem.name}」工具开发中</div>
+            <div class="p-desc">牛马正在疯狂写代码，马上上线...</div>
+        </div>
+    `;
+}
 
-    /* ================== 事件绑定 ================== */
-    document.getElementById('collapse-btn').addEventListener('click', function () {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-    });
+function getRandomQuote() {
+    return quotes[Math.floor(Math.random() * quotes.length)];
+}
 
-    const notifyBtn = document.getElementById('notifyBtn');
-    const notifyPopover = document.getElementById('notifyPopover');
-    const themeBtn = document.getElementById('themeBtn');
-    const themePopover = document.getElementById('themePopover');
+/* ================== 事件绑定 ================== */
+document.getElementById('collapseBtn').addEventListener('click', function () {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
 
-    notifyBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        themePopover.classList.remove('show');
-        notifyPopover.classList.toggle('show');
-    });
+const notifyBtn = document.getElementById('notifyBtn');
+const notifyPopover = document.getElementById('notifyPopover');
+const themeBtn = document.getElementById('themeBtn');
+const themePopover = document.getElementById('themePopover');
 
-    themeBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        notifyPopover.classList.remove('show');
-        themePopover.classList.toggle('show');
-    });
+notifyBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    themePopover.classList.remove('show');
+    notifyPopover.classList.toggle('show');
+});
 
-    document.addEventListener('click', function (e) {
-        if (!notifyPopover.contains(e.target) && e.target !== notifyBtn) {
-            notifyPopover.classList.remove('show');
-        }
-        if (!themePopover.contains(e.target) && e.target !== themeBtn) {
-            themePopover.classList.remove('show');
-        }
-    });
+themeBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    notifyPopover.classList.remove('show');
+    themePopover.classList.toggle('show');
+});
 
-    function changeTheme(themeName, el) {
-        document.querySelectorAll('.theme-dot').forEach(dot => dot.classList.remove('active'));
-        el.classList.add('active');
+document.addEventListener('click', function (e) {
+    if (!notifyPopover.contains(e.target) && e.target !== notifyBtn) notifyPopover.classList.remove('show');
+    if (!themePopover.contains(e.target) && e.target !== themeBtn) themePopover.classList.remove('show');
+});
 
-        if (themeName === 'blue') {
+/* 主题切换：用 data-theme 属性统一处理 */
+document.querySelectorAll('.theme-dot').forEach(dot => {
+    dot.addEventListener('click', function () {
+        document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+        this.classList.add('active');
+        const name = this.dataset.theme;
+        if (name === 'blue') {
             document.documentElement.removeAttribute('data-theme');
         } else {
-            document.documentElement.setAttribute('data-theme', themeName);
+            document.documentElement.setAttribute('data-theme', name);
         }
-    }
+    });
+});
+
+/* ================== 初始化 ================== */
+initMarquee();
+renderPrimaryNav();
+renderSubMenu(0, true);
 </script>
 
 </body>
