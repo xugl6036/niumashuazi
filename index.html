@@ -76,6 +76,10 @@
     /* 内容区 */
     .content-area { flex: 1; padding: 0; overflow-y: auto; background-color: var(--content-bg); display: flex; flex-direction: column; position: relative; }
     .content-inner { padding: 24px; display: flex; flex-direction: column; flex: 1; }
+    
+    /* 针对首页占满，其他工具页有内边距 */
+    .content-inner.is-tool { padding: 0; }
+
     .page-title { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
     .full-quote-container { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--quote-bg); position: relative; overflow: hidden; padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); }
     .full-quote-container::before { content: '“'; position: absolute; top: 40px; left: 80px; font-size: 240px; color: var(--quote-mark); font-family: serif; line-height: 1; z-index: 0; }
@@ -85,16 +89,13 @@
     .placeholder-box .p-title { font-size: 18px; font-weight: 600; color: var(--primary-color); }
     .placeholder-box .p-desc { font-size: 14px; margin-top: 10px; }
 
-    /* ================== 新增：Iframe 样式 ================== */
+    /* ================== Iframe 样式 ================== */
     .iframe-wrapper {
         flex: 1;
         width: 100%;
         height: 100%;
         border: none;
-        border-radius: 12px;
         background: var(--box-bg);
-        box-shadow: 0 2px 8px var(--shadow);
-        border: 1px solid var(--border-color);
         overflow: hidden;
     }
     .iframe-wrapper iframe {
@@ -130,7 +131,7 @@
                 <div class="breadcrumb">
                     <span id="breadcrumb-parent">首页</span>
                     <span style="color: #ccc;">/</span>
-                    <span class="current-path" id="breadcrumb-child">每日寄语</span>
+                    <span class="current-path" id="breadcrumb-child">胡言乱语</span>
                 </div>
             </div>
             
@@ -162,7 +163,7 @@
         </div>
 
         <!-- 滚动文字 -->
-        <div class="marquee-container">
+        <div class="marquee-container" id="marqueeContainer">
             <div class="marquee-content">
                 📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：距离周末还有 2 天，牛马们加油！
             </div>
@@ -170,7 +171,7 @@
 
         <!-- 内容主体 -->
         <div class="content-area" id="contentArea">
-            <div class="content-inner">
+            <div class="content-inner" id="contentInner">
                 <div class="content-card" id="contentCard" style="flex: 1; display: flex; flex-direction: column;"></div>
             </div>
         </div>
@@ -193,7 +194,7 @@
             title: "首页",
             icon: "🏠",
             subs: [
-                { icon: "✨", name: "胡言乱语", url: "" } // url 留空则走默认渲染
+                { icon: "✨", name: "胡言乱语", url: "" }
             ]
         },
         {
@@ -203,7 +204,7 @@
                 { icon: "💧", name: "自定义水印", url: "./pages/watermark.html" }, 
                 { icon: "🧠", name: "思维导图", url: "./pages/mindmap.html" },
                 { icon: "🖼️", name: "图片去水印", url: "./pages/remove-wm.html" },
-                { icon: "📊", name: "图表制作", url: "./pages/chart.html" } // 指向你的独立html
+                { icon: "📊", name: "图表制作", url: "./pages/chart.html" }
             ]
         },
         {
@@ -303,11 +304,23 @@
     function renderContent(parentName, childName) {
         document.getElementById('breadcrumb-child').textContent = childName;
         const contentCard = document.getElementById('contentCard');
+        const contentInner = document.getElementById('contentInner');
+        const marqueeContainer = document.getElementById('marqueeContainer');
 
         // 查找当前点击的菜单项的数据
         const parentData = menuData.find(m => m.title === parentName);
         const subData = parentData.subs.find(s => s.name === childName);
 
+        // 逻辑1：判断是否显示滚动条（只在首页显示）
+        if (parentName === '首页') {
+            marqueeContainer.style.display = 'flex';
+            contentInner.classList.remove('is-tool'); // 去掉工具页的特权样式
+        } else {
+            marqueeContainer.style.display = 'none';
+            contentInner.classList.add('is-tool'); // 加上工具页的满屏样式
+        }
+
+        // 逻辑2：渲染内容
         if (parentName === '首页') {
             contentCard.innerHTML = `
                 <div class="full-quote-container">
@@ -315,9 +328,8 @@
                 </div>
             `;
         } else if (subData && subData.url) {
-            // 【核心逻辑】如果有 url 配置，则加载 iframe
+            // 【核心逻辑】加载 iframe，且移除了原本重复的标题行
             contentCard.innerHTML = `
-                <div class="page-title">${parentData.icon} ${parentName} · ${childName}</div>
                 <div class="iframe-wrapper">
                     <iframe src="${subData.url}" title="${childName}"></iframe>
                 </div>
@@ -325,8 +337,8 @@
         } else {
             // 没有 url 的继续显示占位提示
             contentCard.innerHTML = `
-                <div class="page-title">${parentData.icon} ${parentName} · ${childName}</div>
-                <div class="placeholder-box">
+                <div class="page-title" style="margin: 24px 24px 0 24px;">${parentData.icon} ${parentName} · ${childName}</div>
+                <div class="placeholder-box" style="margin: 24px;">
                     <div class="p-icon">🚧</div>
                     <div class="p-title">「${childName}」工具开发中</div>
                     <div class="p-desc">牛马正在疯狂写代码，马上上线...</div>
