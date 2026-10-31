@@ -14,29 +14,63 @@
     [data-theme="light"] { --primary-color: #555555; --primary-hover: #333333; --primary-light: #888888; --bg-color: #f9f9f9; --sidebar-bg: #ffffff; --sidebar-header-bg: #f5f5f5; --text-main: #333333; --text-muted: #999999; --border-color: #eeeeee; --content-bg: #fcfcfc; --box-bg: #ffffff; --box-border: #eeeeee; --quote-bg: linear-gradient(135deg, #fafafa 0%, #ffffff 100%); --quote-mark: #f0f0f0; --shadow: rgba(0, 0, 0, 0.04); --shadow-hover: rgba(0, 0, 0, 0.08); }
     [data-theme="gray"] { --primary-color: #6c7a89; --primary-hover: #56626e; --primary-light: #8e9daa; --bg-color: #2f3640; --sidebar-bg: #353b48; --sidebar-header-bg: #2f3640; --text-main: #dcdde1; --text-muted: #9aa0a6; --border-color: #414852; --content-bg: #2f3640; --box-bg: #353b48; --box-border: #414852; --quote-bg: linear-gradient(135deg, #353b48 0%, #2f3640 100%); --quote-mark: #3e4652; --shadow: rgba(0, 0, 0, 0.3); --shadow-hover: rgba(108, 122, 137, 0.25); }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif; }
+    /* 全局添加 user-select: none 禁止文本选中及光标闪烁 */
+    * { 
+        box-sizing: border-box; 
+        margin: 0; 
+        padding: 0; 
+        font-family: "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif; 
+        user-select: none; 
+        -webkit-user-select: none;
+    }
+    
+    /* 针对顶部和侧边栏进一步确保光标隐藏 */
+    .sidebar, .top-header, .primary-item, .secondary-item, .floating-menu, .breadcrumb {
+        caret-color: transparent;
+        outline: none;
+    }
+
+    /* 如果需要允许文本选中的区域（比如 iframe 或正文），可单独开启 */
+    iframe, input, textarea {
+        user-select: auto;
+        -webkit-user-select: auto;
+    }
+
     body { background-color: var(--bg-color); height: 100vh; overflow: hidden; transition: background-color 0.3s ease; }
     #mainSystem { display: flex; height: 100vh; overflow: hidden; }
 
-    /* 侧边栏 */
-    .sidebar { width: 320px; background-color: var(--sidebar-bg); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; transition: width 0.3s; border-right: 1px solid var(--border-color); z-index: 20; }
+    /* 侧边栏主体 */
+    .sidebar { width: 320px; background-color: var(--sidebar-bg); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; transition: width 0.3s; border-right: 1px solid var(--border-color); z-index: 20; position: relative; }
     .sidebar.collapsed { width: 80px; }
     .sidebar-header { height: 72px; background-color: var(--sidebar-header-bg); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
     .sidebar-header .icon { font-size: 28px; }
     .sidebar-header .title-text { margin-left: 10px; transition: opacity 0.3s; }
     .sidebar.collapsed .title-text { opacity: 0; width: 0; overflow: hidden; }
     .sidebar-content { display: flex; flex: 1; overflow: hidden; }
+    
+    /* 一级菜单 */
     .primary-nav { width: 85px; background-color: var(--sidebar-header-bg); border-right: 1px solid var(--border-color); overflow-y: auto; padding-top: 15px; }
     .primary-item { height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; position: relative; }
     .primary-item .icon { font-size: 26px; margin-bottom: 4px; }
     .primary-item.active { color: var(--text-main); background-color: var(--sidebar-bg); font-weight: 600; }
     .primary-item.active::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background-color: var(--primary-color); }
-    .secondary-nav { flex: 1; padding-top: 15px; overflow-y: auto; white-space: nowrap; }
-    .sidebar.collapsed .secondary-nav { opacity: 0; pointer-events: none; }
-    .secondary-item { height: 54px; padding: 0 20px; display: flex; align-items: center; cursor: pointer; font-size: 15px; color: var(--text-main); border-radius: 0 27px 27px 0; margin-right: 12px; margin-bottom: 5px; transition: 0.2s; }
+
+    /* 正常二级菜单 */
+    .secondary-nav { flex: 1; padding-top: 15px; overflow-y: auto; white-space: nowrap; transition: opacity 0.2s; }
+    .sidebar.collapsed .secondary-nav { opacity: 0; pointer-events: none; visibility: hidden; }
+    .secondary-item { height: 54px; padding: 0 20px; display: flex; align-items: center; cursor: pointer; font-size: 15px; color: var(--text-main); border-radius: 0 27px 27px 0; margin-right: 12px; margin-bottom: 5px; transition: background-color 0.2s; }
     .secondary-item .icon { margin-right: 12px; font-size: 18px; width: 22px; text-align: center; }
     .secondary-item:hover { background-color: var(--content-bg); }
     .secondary-item.active { background-color: var(--primary-color); color: #fff; }
+
+    /* 折叠状态下的悬浮二级菜单 */
+    .floating-menu { position: absolute; left: 85px; background: var(--sidebar-bg); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15); padding: 8px; min-width: 170px; z-index: 100; display: none; flex-direction: column; gap: 4px; }
+    .sidebar.collapsed .floating-menu.show { display: flex; animation: fadeInMenu 0.15s ease-out; }
+    @keyframes fadeInMenu { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+    .floating-item { padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text-main); display: flex; align-items: center; white-space: nowrap; transition: background-color 0.2s; }
+    .floating-item:hover { background-color: var(--content-bg); }
+    .floating-item.active { background-color: var(--primary-color); color: #fff; }
+    .floating-item .icon { margin-right: 10px; font-size: 16px; }
 
     /* 右侧主体 */
     .main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -78,9 +112,6 @@
     .content-inner { padding: 24px; display: flex; flex-direction: column; flex: 1; }
     .content-inner.is-tool { padding: 0; }
 
-    .full-quote-container { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--quote-bg); position: relative; overflow: hidden; padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); }
-    .full-quote-container::before { content: '“'; position: absolute; top: 40px; left: 80px; font-size: 240px; color: var(--quote-mark); font-family: serif; line-height: 1; z-index: 0; }
-    .quote-text { font-size: 38px; font-weight: 600; color: var(--text-main); line-height: 1.6; position: relative; z-index: 1; letter-spacing: 2px; text-align: center; max-width: 1000px; }
     .placeholder-box { background: var(--box-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 80px 40px; text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
     .placeholder-box .p-icon { font-size: 56px; margin-bottom: 20px; }
     .placeholder-box .p-title { font-size: 18px; font-weight: 600; color: var(--primary-color); }
@@ -101,6 +132,9 @@
         <div class="sidebar-content">
             <div class="primary-nav" id="primaryNav"></div>
             <div class="secondary-nav" id="secondaryNav"></div>
+            
+            <!-- 折叠状态下的悬浮二级菜单容器 -->
+            <div class="floating-menu" id="floatingMenu"></div>
         </div>
     </div>
 
@@ -150,22 +184,10 @@
 </div>
 
 <script>
-/* ================== 名言库 ================== */
-const quotes = [
-    "人生是旷野，不是轨道。不必按别人的节奏赶路。",
-    "接纳无常，才是安稳的开始。得到是幸运，失去是常态。",
-    "我们终其一生，不是为了满足所有人的期待，而是取悦自己。",
-    "世事本无好坏，是我们的念头，赋予它悲欢。",
-    "慢慢来，好戏都在烟火里。"
-];
-
-/* ================== 全局菜单数据 ==================
-   注意：每个 sub 对象是唯一数据源，渲染与点击都直接引用它，
-   不再用 name 字符串二次查找，杜绝错位/错配。
-*/
+/* ================== 全局菜单数据 ================== */
 const menuData = [
     { title: "首页", icon: "🏠", subs: [
-        { icon: "✨", name: "胡言乱语", url: "" }
+        { icon: "✨", name: "胡言乱语", url: "./pages/homepage.html" }
     ]},
     { title: "图形", icon: "🎨", subs: [
         { icon: "🖼️", name: "图片编辑",   url: "./pages/image-edit.html" },
@@ -213,6 +235,41 @@ function initMarquee() {
         `📢 欢迎使用牛马刷子工具合集！今日语录：只要思想不滑坡，办法总比困难多。摸鱼虽好，可不要贪杯哦~ 🐟 友情提示：${getWeekendCountdown()}`;
 }
 
+/* ================== 悬浮二级菜单渲染 ================== */
+function showFloatingMenu(primaryIndex, targetElement) {
+    const group = menuData[primaryIndex];
+    const fMenu = document.getElementById('floatingMenu');
+    fMenu.innerHTML = '';
+    
+    // 计算悬浮位置（紧贴被点击的一级菜单右侧）
+    const rect = targetElement.getBoundingClientRect();
+    const contentTop = document.querySelector('.sidebar-content').getBoundingClientRect().top;
+    fMenu.style.top = (rect.top - contentTop) + 'px';
+
+    group.subs.forEach((subItem, subIndex) => {
+        const div = document.createElement('div');
+        let isActive = false;
+        if (document.getElementById('breadcrumbChild').textContent === subItem.name) {
+            isActive = true;
+        }
+        div.className = `floating-item ${isActive ? 'active' : ''}`;
+        div.innerHTML = `<span class="icon">${subItem.icon}</span><span>${subItem.name}</span>`;
+        div.addEventListener('click', function (e) {
+            e.stopPropagation();
+            renderContent(group, subItem);
+            fMenu.classList.remove('show'); // 选中后隐藏
+        });
+        fMenu.appendChild(div);
+    });
+
+    fMenu.classList.add('show');
+}
+
+/* 隐藏悬浮菜单 */
+function hideFloatingMenu() {
+    document.getElementById('floatingMenu').classList.remove('show');
+}
+
 /* ================== 一级菜单 ================== */
 function renderPrimaryNav() {
     const primaryNav = document.getElementById('primaryNav');
@@ -222,18 +279,28 @@ function renderPrimaryNav() {
         div.className = `primary-item ${index === 0 ? 'active' : ''}`;
         div.dataset.index = index;
         div.innerHTML = `<span class="icon">${item.icon}</span><span class="item-text">${item.title}</span>`;
-        div.addEventListener('click', function () {
+        
+        // 点击事件
+        div.addEventListener('click', function (e) {
+            e.stopPropagation();
             document.querySelectorAll('.primary-item').forEach(el => el.classList.remove('active'));
             this.classList.add('active');
-            renderSubMenu(index, false);
+
+            const isCollapsed = document.getElementById('sidebar').classList.contains('collapsed');
+            if (isCollapsed) {
+                // 折叠状态下弹出悬浮菜单
+                showFloatingMenu(index, this);
+            } else {
+                // 展开状态下切换右侧二级菜单
+                hideFloatingMenu();
+                renderSubMenu(index, false);
+            }
         });
         primaryNav.appendChild(div);
     });
 }
 
-/* ================== 二级菜单 ==================
-   点击时直接使用闭包里的 subItem 对象，不存在字符串查找或索引错位。
-*/
+/* ================== 正常二级菜单 ================== */
 function renderSubMenu(primaryIndex, triggerRender = false) {
     const group = menuData[primaryIndex];
     const secondaryNav = document.getElementById('secondaryNav');
@@ -246,7 +313,7 @@ function renderSubMenu(primaryIndex, triggerRender = false) {
         div.addEventListener('click', function () {
             document.querySelectorAll('.secondary-item').forEach(el => el.classList.remove('active'));
             this.classList.add('active');
-            renderContent(group, subItem);   // 直接传对象，最可靠
+            renderContent(group, subItem); 
         });
         secondaryNav.appendChild(div);
     });
@@ -256,7 +323,7 @@ function renderSubMenu(primaryIndex, triggerRender = false) {
     }
 }
 
-/* ================== 内容路由（接收对象，不做字符串匹配） ================== */
+/* ================== 内容路由 ================== */
 function renderContent(group, subItem) {
     document.getElementById('breadcrumbParent').textContent = group.title;
     document.getElementById('breadcrumbChild').textContent = subItem.name;
@@ -265,34 +332,38 @@ function renderContent(group, subItem) {
     const contentInner = document.getElementById('contentInner');
     const marqueeContainer = document.getElementById('marqueeContainer');
 
-    // 首页
-    if (group.title === '首页') {
-        marqueeContainer.style.display = 'flex';
-        contentInner.classList.remove('is-tool');
-        contentCard.innerHTML = `
-            <div class="full-quote-container">
-                <div class="quote-text">${getRandomQuote()}</div>
-            </div>
-        `;
+    // 如果是指向带有 url 的页面
+    if (subItem.url && subItem.url.trim() !== '') {
+        if (subItem.name === '胡言乱语') {
+            // 保留滚动通知，并保留外围呼吸感
+            marqueeContainer.style.display = 'flex';
+            contentInner.classList.remove('is-tool');
+            contentInner.style.padding = '24px';
+            contentCard.innerHTML = `
+                <div class="iframe-wrapper" style="border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 12px var(--shadow);">
+                    <iframe src="${subItem.url}" title="${subItem.name}"></iframe>
+                </div>
+            `;
+        } else {
+            // 其他工具：隐藏滚动通知，全屏显示
+            marqueeContainer.style.display = 'none';
+            contentInner.classList.add('is-tool');
+            contentInner.style.padding = '0';
+            contentCard.innerHTML = `
+                <div class="iframe-wrapper">
+                    <iframe src="${subItem.url}" title="${subItem.name}"
+                            onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-box&quot; style=&quot;margin:24px&quot;><div class=&quot;p-icon&quot;>⚠️</div><div class=&quot;p-title&quot;>「${subItem.name}」页面加载失败</div><div class=&quot;p-desc&quot;>请检查文件是否存在：${subItem.url}</div></div>'">
+                    </iframe>
+                </div>
+            `;
+        }
         return;
     }
 
+    // 占位提示
     marqueeContainer.style.display = 'none';
     contentInner.classList.add('is-tool');
-
-    // 有 url 的工具页
-    if (subItem.url && subItem.url.trim() !== '') {
-        contentCard.innerHTML = `
-            <div class="iframe-wrapper">
-                <iframe src="${subItem.url}" title="${subItem.name}"
-                        onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-box&quot; style=&quot;margin:24px&quot;><div class=&quot;p-icon&quot;>⚠️</div><div class=&quot;p-title&quot;>「${subItem.name}」页面加载失败</div><div class=&quot;p-desc&quot;>请检查文件是否存在：${subItem.url}</div></div>'">
-                </iframe>
-            </div>
-        `;
-        return;
-    }
-
-    // 占位
+    contentInner.style.padding = '0';
     contentCard.innerHTML = `
         <div class="placeholder-box" style="margin: 24px;">
             <div class="p-icon">🚧</div>
@@ -302,13 +373,22 @@ function renderContent(group, subItem) {
     `;
 }
 
-function getRandomQuote() {
-    return quotes[Math.floor(Math.random() * quotes.length)];
-}
-
 /* ================== 事件绑定 ================== */
-document.getElementById('collapseBtn').addEventListener('click', function () {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+document.getElementById('collapseBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('collapsed');
+    hideFloatingMenu(); // 切换折叠状态时，关闭悬浮菜单
+});
+
+// 点击页面其他空白区域，关闭悬浮菜单
+document.addEventListener('click', function (e) {
+    if (!document.getElementById('floatingMenu').contains(e.target)) {
+        hideFloatingMenu();
+    }
+    // 关闭右上角弹窗
+    if (!notifyPopover.contains(e.target) && e.target !== notifyBtn) notifyPopover.classList.remove('show');
+    if (!themePopover.contains(e.target) && e.target !== themeBtn) themePopover.classList.remove('show');
 });
 
 const notifyBtn = document.getElementById('notifyBtn');
@@ -328,12 +408,7 @@ themeBtn.addEventListener('click', function (e) {
     themePopover.classList.toggle('show');
 });
 
-document.addEventListener('click', function (e) {
-    if (!notifyPopover.contains(e.target) && e.target !== notifyBtn) notifyPopover.classList.remove('show');
-    if (!themePopover.contains(e.target) && e.target !== themeBtn) themePopover.classList.remove('show');
-});
-
-/* 主题切换：用 data-theme 属性统一处理 */
+/* 主题切换 */
 document.querySelectorAll('.theme-dot').forEach(dot => {
     dot.addEventListener('click', function () {
         document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
