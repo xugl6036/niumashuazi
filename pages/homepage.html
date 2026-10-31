@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>每日寄语 · 如梦令</title>
+  <!-- 引入农历转换库 -->
+  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.13/lunar.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'KaiTi', '华文楷体', 'STKaiti', 'Georgia', '宋体', serif;
+      background-color: #f8f6f0;
+    }
+
+    /* 主容器 */
+    .app {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      background: linear-gradient(135deg, #fdfcf9 0%, #f2efe9 100%);
+      position: relative;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 10% 20%, rgba(200, 180, 150, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(200, 180, 150, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    /* 左侧名言区域 */
+    .left-panel {
+      flex: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 2rem 1rem 2rem 1rem;
+      border: 1px solid rgba(200, 180, 160, 0.25);
+      box-shadow: 0 15px 35px -15px rgba(100, 80, 60, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::after {
+      content: "";
+      position: absolute;
+      inset: 1.2rem;
+      border-radius: 1.5rem 0.5rem 1.5rem 0.5rem;
+      border: 1px dashed rgba(180, 160, 140, 0.25);
+      pointer-events: none;
+    }
+
+    .quote-container {
+      max-width: 90%;
+      text-align: center;
+      transform: translateY(-0.5rem);
+    }
+
+    .quote-text {
+      font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+      line-height: 1.5;
+      color: #2c2825; 
+      text-shadow: 0 4px 15px rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.05em;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .quote-signature {
+      margin-top: 2rem;
+      font-size: 1.1rem;
+      color: rgba(120, 100, 80, 0.6);
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      font-style: italic;
+      font-family: 'Georgia', serif;
+    }
+
+    .quote-signature::before {
+      content: "—— ✦ ——";
+      display: block;
+      margin-bottom: 0.8rem;
+      color: rgba(160, 140, 120, 0.4);
+      font-style: normal;
+      letter-spacing: 0.2rem;
+      font-size: 0.9rem;
+    }
+
+    /* 右侧卡片区域 */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      min-width: 240px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      border: 1px solid rgba(200, 180, 160, 0.25);
+      box-shadow: 0 10px 25px -10px rgba(100, 80, 60, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      padding: 1.2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      color: #3a3530;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(210, 180, 140, 0.8);
+      box-shadow: 0 15px 35px -8px rgba(180, 150, 110, 0.2), 
+                  0 0 0 1px rgba(210, 180, 140, 0.3), 
+                  inset 0 1px 0 rgba(255, 255, 255, 1);
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .card-top { flex: 3; justify-content: flex-start; }
+    .card-middle { flex: 3; justify-content: flex-start; }
+    
+    .card-bottom {
+      flex: 4;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.45);
+      border-color: rgba(200, 180, 160, 0.2);
+      padding-bottom: 2rem;
+    }
+    .card-bottom:hover {
+      border-color: rgba(210, 180, 140, 0.5);
+      background: rgba(255, 255, 255, 0.65);
+      transform: translateY(-2px);
+    }
+
+    .ci-title {
+      font-size: 1.1rem;
+      color: rgba(110, 90, 70, 0.8);
+      letter-spacing: 0.2em;
+      font-weight: 600;
+      align-self: flex-start;
+      margin-bottom: 1rem;
+      padding-left: 0.2rem;
+      font-family: 'KaiTi', '华文楷体', serif;
+    }
+
+    /* 诗词容器 */
+    .ci-content {
+      text-align: center;
+      color: #2c2825;
+      font-family: 'KaiTi', '华文楷体', 'STKaiti', 'Georgia', serif;
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.05em;
+      width: 100%;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem; /* 修改这里：将原来的 0.4rem 加大到 1rem，增加行间距 */
+    }
+
+    .card-top:hover .ci-content,
+    .card-middle:hover .ci-content {
+      transform: translateY(-8px);
+    }
+
+    /* 强制单行显示 */
+    .ci-content .line {
+      display: block;
+      white-space: nowrap;
+      /* 初始给个合理的字号，随后由 JS 接管缩放 */
+      font-size: 1.2rem; /* 微调初始字号 */
+    }
+
+    /* --- 右下角时间日期 --- */
+    .time-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+      font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+      font-weight: bold;
+    }
+
+    .time-clock {
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      color: #2c2825;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      margin-bottom: 3.5rem;
+    }
+
+    .date-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .time-date {
+      font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+      color: #2c2825;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+    }
+
+    .time-lunar {
+      font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+      color: #2c2825;
+      letter-spacing: 0.08em;
+    }
+
+    /* 屏幕适配微调 */
+    @media (max-width: 1000px) {
+      .right-panel { min-width: 200px; }
+      .time-clock { font-size: 1.8rem; margin-bottom: 2.5rem; }
+      .time-date { font-size: 1rem; }
+      .time-lunar { font-size: 1rem; }
+      .ci-title { font-size: 1rem; padding-left: 0.4rem; }
+      .card { padding: 1rem 0.5rem; }
+      .ci-content { gap: 0.6rem; } /* 小屏幕下调小一点行距 */
+    }
+
+    @media (max-height: 600px) {
+      .app { padding: 1rem; gap: 1rem; }
+      .quote-text { font-size: 2rem; }
+      .quote-signature { margin-top: 1rem; font-size: 0.9rem; }
+      .ci-title { font-size: 0.9rem; margin-bottom: 0.5rem; }
+      .card-bottom { padding-bottom: 1.5rem; }
+      .time-clock { font-size: 1.6rem; margin-bottom: 2rem; }
+      .time-date { font-size: 0.9rem; }
+      .time-lunar { font-size: 0.9rem; }
+      .ci-content { gap: 0.4rem; } /* 高度受限时调小行距 */
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 左侧 -->
+    <div class="left-panel">
+      <div class="quote-container">
+        <div class="quote-text" id="quoteDisplay">上善若水，水善利万物而不争。</div>
+        <div class="quote-signature">每日寄语</div>
+      </div>
+    </div>
+
+    <!-- 右侧 -->
+    <div class="right-panel">
+      <!-- 第一行 -->
+      <div class="card card-top">
+        <div class="ci-title">如梦令</div>
+        <div class="ci-content" id="content1">
+          <span class="line">常记溪亭日暮，沉醉不知归路。</span>
+          <span class="line">兴尽晚回舟，误入藕花深处。</span>
+          <span class="line">争渡，争渡，惊起一滩鸥鹭。</span>
+        </div>
+      </div>
+
+      <!-- 第二行 -->
+      <div class="card card-middle">
+        <div class="ci-title">如梦令</div>
+        <div class="ci-content" id="content2">
+          <span class="line">昨夜雨疏风骤，浓睡不消残酒。</span>
+          <span class="line">试问卷帘人，却道海棠依旧。</span>
+          <span class="line">知否，知否？应是绿肥红瘦。</span>
+        </div>
+      </div>
+
+      <!-- 第三行：时间与日期 -->
+      <div class="card card-bottom">
+        <div class="time-container">
+          <div class="time-clock" id="clock">00:00:00</div>
+          
+          <div class="date-group">
+            <div class="time-date">
+              <span id="date-main">1月1日</span>
+              <span id="date-week" style="font-size: 0.9em; opacity: 0.85;">周一</span>
+            </div>
+            <div class="time-lunar" id="lunar">农历</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      /* ================= 名言与时间逻辑 ================= */
+      const quotes = [
+        "人生没有白走的路，每一步都算数。", "心若向阳，何惧忧伤。", "慢慢来，比较快。",
+        "知足者常乐，能忍者自安。", "不忘初心，方得始终。", "世间万物，唯有变化不变。",
+        "少即是多，简即是美。", "苦难是化了妆的祝福。", "你只管努力，剩下的交给时间。",
+        "向内求，向外修。", "放下执念，方能自在。", "路虽远，行则将至。",
+        "不困于心，不乱于情。", "低调做人，高调做事。", "与其抱怨，不如改变。",
+        "静水流深，人贵语迟。", "一切都是最好的安排。", "悦人者众，悦己者王。",
+        "世界是自己的，与他人无关。", "当下即是全部。", "山高自有客行路，水深自有渡船人。",
+        "命由己造，相由心生。", "万物皆有裂痕，那是光照进来的地方。", "莫问收获，但问耕耘。",
+        "心安即是归处。", "大智若愚，大巧若拙。", "顺其自然，争其必然。",
+        "过去不可追，未来不可期，当下最真。", "低头要有勇气，抬头要有底气。", "人生如逆旅，我亦是行人。",
+        "不以物喜，不以己悲。", "退一步海阔天空。", "水深不语，人稳不言。",
+        "得失随缘，心无增减。", "把自己活成一道光。", "少问别人为什么，多问自己凭什么。",
+        "熬得住出众，熬不住出局。", "万般皆苦，唯有自渡。", "慢品人间烟火色，闲观万事岁月长。",
+        "心宽一寸，路宽一丈。", "人无远虑，必有近忧。", "己所不欲，勿施于人。",
+        "三人行，必有我师焉。", "学而不思则罔，思而不学则殆。", "君子坦荡荡，小人长戚戚。",
+        "不积跬步，无以至千里。", "千里之行，始于足下。", "祸兮福所倚，福兮祸所伏。",
+        "知人者智，自知者明。", "胜人者有力，自胜者强。", "上善若水，水善利万物而不争。",
+        "合抱之木，生于毫末。", "天行健，君子以自强不息。", "地势坤，君子以厚德载物。",
+        "穷则变，变则通，通则久。", "满招损，谦受益。", "玉不琢，不成器。",
+        "人非圣贤，孰能无过。", "前事不忘，后事之师。", "亡羊补牢，为时未晚。",
+        "塞翁失马，焉知非福。", "水滴石穿，绳锯木断。", "宝剑锋从磨砺出，梅花香自苦寒来。",
+        "不经一番寒彻骨，怎得梅花扑鼻香。", "书山有路勤为径，学海无涯苦作舟。", "业精于勤，荒于嬉。",
+        "一寸光阴一寸金，寸金难买寸光阴。", "少壮不努力，老大徒伤悲。", "黑发不知勤学早，白首方悔读书迟。",
+        "莫等闲，白了少年头，空悲切。", "天生我材必有用。", "长风破浪会有时，直挂云帆济沧海。",
+        "沉舟侧畔千帆过，病树前头万木春。", "山重水复疑无路，柳暗花明又一村。", "会当凌绝顶，一览众山小。",
+        "欲穷千里目，更上一层楼。", "不识庐山真面目，只缘身在此山中。", "问渠那得清如许，为有源头活水来。",
+        "纸上得来终觉浅，绝知此事要躬行。", "世事洞明皆学问，人情练达即文章。", "海纳百川，有容乃大。",
+        "壁立千仞，无欲则刚。", "静以修身，俭以养德。", "非淡泊无以明志，非宁静无以致远。",
+        "勿以恶小而为之，勿以善小而不为。", "良药苦口利于病，忠言逆耳利于行。", "近朱者赤，近墨者黑。",
+        "当局者迷，旁观者清。", "智者千虑，必有一失。", "愚者千虑，必有一得。",
+        "尺有所短，寸有所长。", "金无足赤，人无完人。", "路遥知马力，日久见人心。",
+        "疾风知劲草，烈火见真金。", "忍一时风平浪静，退一步海阔天空。", "宰相肚里能撑船。",
+        "吃得苦中苦，方为人上人。", "台上一分钟，台下十年功。", "冰冻三尺，非一日之寒。",
+        "功夫不负有心人。"
+      ];
+
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      document.getElementById('quoteDisplay').textContent = quotes[randomIndex];
+
+      // ---------- 时间日期逻辑 ----------
+      const clockEl = document.getElementById('clock');
+      const dateMainEl = document.getElementById('date-main');
+      const dateWeekEl = document.getElementById('date-week');
+      const lunarEl = document.getElementById('lunar');
+      const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+      function updateTime() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        clockEl.textContent = `${h}:${m}:${s}`;
+
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const weekDay = weekDays[now.getDay()];
+        dateMainEl.textContent = `${month}月${day}日`;
+        dateWeekEl.textContent = weekDay;
+
+        if (window.Lunar) {
+          try {
+            const lunar = Lunar.fromDate(now);
+            lunarEl.textContent = `${lunar.getYearInGanZhi()}年${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+          } catch (e) {
+            lunarEl.textContent = "农历获取失败";
+          }
+        } else {
+          lunarEl.textContent = "农历加载中...";
+        }
+      }
+
+      updateTime();
+      setInterval(updateTime, 1000);
+
+
+      /* ================= 核心：文字大小自适应缩放 (FitText) ================= */
+      // 精确计算并设置字体大小，保证永远不截断且视觉美观
+      function fitTextToContainer() {
+        const contents = [document.getElementById('content1'), document.getElementById('content2')];
+        
+        contents.forEach(contentDiv => {
+          if (!contentDiv) return;
+          
+          const lines = contentDiv.querySelectorAll('.line');
+          if (lines.length === 0) return;
+
+          // 重置为较大的初始字体以便测量
+          lines.forEach(line => line.style.fontSize = '100px');
+
+          // 获取父容器的实际可用宽度 (减去一点内边距，防止贴边)
+          const containerWidth = contentDiv.clientWidth - 16; 
+          
+          let minRatio = 1; // 记录最宽的那一行
+
+          lines.forEach(line => {
+            const lineWidth = line.getBoundingClientRect().width;
+            // 计算当前行宽度相对于可用宽度的比例
+            const ratio = containerWidth / lineWidth;
+            if (ratio < minRatio) {
+              minRatio = ratio;
+            }
+          });
+
+          // 100px * 最小的缩放比例 = 最合适的字体像素大小
+          let finalSize = 100 * minRatio;
+
+          // 限制一下字号的最大值与最小值（防止过大或极其瘦长时过小）
+          finalSize = Math.max(9, Math.min(finalSize, 22)); 
+
+          // 应用到所有行
+          lines.forEach(line => {
+            line.style.fontSize = finalSize + 'px';
+          });
+        });
+      }
+
+      // 初始化时执行一次，并监听窗口及外层容器大小变化
+      window.addEventListener('load', fitTextToContainer);
+      window.addEventListener('resize', fitTextToContainer);
+
+      // 为了防止外层菜单折叠动画导致的重排延迟，可以加一个短延迟的反复测（确保初次加载完美）
+      setTimeout(fitTextToContainer, 100);
+      setTimeout(fitTextToContainer, 500);
+
+      // 使用 ResizeObserver 监听容器本身的尺寸变化（这是解决菜单开合影响的最优解）
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          fitTextToContainer();
+        });
+        ro.observe(document.querySelector('.right-panel'));
+      }
+
+    })();
+  </script>
+</body>
+</html>
