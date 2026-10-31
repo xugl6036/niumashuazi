@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2048 · 小游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #faf8ef;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            touch-action: pan-y;
+        }
+
+        /* 主布局：左右两栏等高 */
+        .layout {
+            display: flex;
+            gap: 36px; /* 拉开两个窗口左右空隙 */
+            align-items: stretch; /* 等高 */
+            justify-content: center;
+            max-width: 1200px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        /* 左侧游戏区域 */
+        .game-container {
+            background: #bbada0;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 18px 30px rgba(0, 0, 0, 0.15);
+            width: fit-content;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 10px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: 800;
+            color: #776e65;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .score-area {
+            display: flex;
+            gap: 8px;
+            background: #bbada0;
+            border-radius: 12px;
+            padding: 8px 0;
+        }
+
+        .score-box {
+            background: #9e8c7e;
+            padding: 8px 18px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.1);
+        }
+
+        .score-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #eee4da;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .grid-wrapper {
+            position: relative;
+            background: #bbada0;
+            border-radius: 16px;
+            padding: 10px;
+            margin-bottom: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            background: #bbada0;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: rgba(238, 228, 218, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 32px;
+            transition: background 0.1s ease, color 0.1s ease, box-shadow 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: #776e65;
+            position: relative;
+            cursor: default;
+        }
+
+        /* 金手指模式下，方块的可点击样式 */
+        .grid.golden-active .cell {
+            cursor: crosshair;
+        }
+        .grid.golden-active .cell[data-value]:not([data-value="0"]) {
+            outline: 3px dashed #f67c5f;
+            outline-offset: -3px;
+            animation: pulse-border 1s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { outline-color: #f67c5f; }
+            50% { outline-color: #edc22e; }
+            100% { outline-color: #f67c5f; }
+        }
+
+        /* 合并弹跳动画 */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .cell.pop {
+            animation: pop 0.2s ease-in-out;
+        }
+
+        /* 新方块出现动画 */
+        @keyframes appear {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .cell.appear {
+            animation: appear 0.2s ease-out;
+        }
+
+        @media (max-width: 480px) {
+            .cell { width: 65px; height: 65px; font-size: 26px; }
+            .grid { gap: 8px; }
+            .game-container { padding: 16px; }
+            .title { font-size: 36px; }
+            .score-box { padding: 6px 12px; min-width: 65px; }
+            .score-value { font-size: 22px; }
+        }
+
+        @media (max-width: 380px) {
+            .cell { width: 55px; height: 55px; font-size: 22px; }
+        }
+
+        /* 数字块配色 */
+        .cell[data-value="2"] { background: #eee4da; color: #776e65; }
+        .cell[data-value="4"] { background: #ede0c8; color: #776e65; }
+        .cell[data-value="8"] { background: #f2b179; color: #f9f6f2; }
+        .cell[data-value="16"] { background: #f59563; color: #f9f6f2; }
+        .cell[data-value="32"] { background: #f67c5f; color: #f9f6f2; }
+        .cell[data-value="64"] { background: #f65e3b; color: #f9f6f2; }
+        .cell[data-value="128"] { background: #edcf72; color: #f9f6f2; font-size: 28px; }
+        .cell[data-value="256"] { background: #edcc61; color: #f9f6f2; font-size: 28px; }
+        .cell[data-value="512"] { background: #edc850; color: #f9f6f2; font-size: 28px; }
+        .cell[data-value="1024"] { background: #edc53f; color: #f9f6f2; font-size: 24px; }
+        .cell[data-value="2048"] { background: #edc22e; color: #f9f6f2; font-size: 24px; box-shadow: 0 0 20px #edc22e; }
+        .cell[data-value="4096"] { background: #3c3a32; color: #f9f6f2; font-size: 22px; }
+        .cell[data-value="8192"] { background: #2f2b23; color: #f9f6f2; font-size: 22px; }
+
+        @media (max-width: 480px) {
+            .cell[data-value="128"], .cell[data-value="256"], .cell[data-value="512"] { font-size: 22px; }
+            .cell[data-value="1024"], .cell[data-value="2048"] { font-size: 20px; }
+            .cell[data-value="4096"], .cell[data-value="8192"] { font-size: 16px; }
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        .btn {
+            background: #8f7a66;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #f9f6f2;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #6b5a4c;
+            transition: 0.05s linear;
+            letter-spacing: 0.5px;
+            flex: 1;
+            text-align: center;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #6b5a4c;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 5px 0 #6b5a4c;
+        }
+
+        .btn-undo {
+            background: #9e8c7e;
+            box-shadow: 0 5px 0 #7a6a5c;
+        }
+        .btn-undo:active:not(:disabled) {
+            box-shadow: 0 2px 0 #7a6a5c;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #776e65;
+            padding: 8px 0 0;
+            min-height: 30px;
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 13px;
+            color: #9e8c7e;
+            margin-top: 10px;
+        }
+
+        /* 右侧广告位 */
+        .ad-container {
+            flex: 1;
+            min-width: 260px;
+            max-width: 340px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 18px 30px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 3px dashed #bbada0;
+            background: repeating-linear-gradient(
+                45deg,
+                #faf8ef,
+                #faf8ef 10px,
+                #f5f0e8 10px,
+                #f5f0e8 20px
+            );
+            position: relative;
+        }
+
+        .ad-container::before {
+            content: "AD";
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #bbada0;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 2px;
+        }
+
+        .ad-emoji {
+            font-size: 64px;
+            margin-bottom: 10px;
+            animation: wobble 2s infinite ease-in-out;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(8deg); }
+            75% { transform: rotate(-8deg); }
+        }
+
+        .ad-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #776e65;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            letter-spacing: 2px;
+        }
+
+        .ad-sub {
+            font-size: 16px;
+            color: #9e8c7e;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .ad-contact {
+            background: #bbada0;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 0 #9e8c7e;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .ad-contact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #9e8c7e;
+        }
+
+        /* 悬停文字提示气泡 */
+        .ad-contact::after, .golden-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #776e65;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .ad-contact::before, .golden-btn::before {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #776e65 transparent transparent transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .ad-contact:hover::after,
+        .ad-contact:hover::before,
+        .golden-btn:hover::after,
+        .golden-btn:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .ad-small {
+            font-size: 12px;
+            color: #bbada0;
+            margin-top: 14px;
+        }
+
+        .ad-badge {
+            display: inline-block;
+            background: #f2b179;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* 金手指按钮 */
+        .golden-btn {
+            display: none;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #776e65;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(253, 160, 133, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            animation: glow 2s infinite;
+        }
+
+        .golden-btn.active {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(238, 90, 36, 0.8);
+            transform: scale(1.05);
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 4px 15px rgba(253, 160, 133, 0.4); }
+            50% { box-shadow: 0 4px 25px rgba(253, 160, 133, 0.8); }
+            100% { box-shadow: 0 4px 15px rgba(253, 160, 133, 0.4); }
+        }
+
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(238, 228, 218, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .overlay-content {
+            background: #faf8ef;
+            padding: 28px 40px;
+            border-radius: 40px;
+            text-align: center;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+        }
+
+        .overlay h2 {
+            font-size: 36px;
+            font-weight: 800;
+            color: #776e65;
+            margin-bottom: 20px;
+        }
+
+        .overlay button {
+            background: #8f7a66;
+            border: none;
+            border-radius: 40px;
+            padding: 16px 40px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #f9f6f2;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #6b5a4c;
+            transition: 0.05s linear;
+        }
+
+        .overlay button:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #6b5a4c;
+        }
+
+        /* 彩蛋弹窗 Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(60, 58, 50, 0.95);
+            color: #fff;
+            padding: 24px 36px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 2px solid #fda085;
+            line-height: 1.5;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .toast span {
+            display: block;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 响应式：窄屏时广告位移到下方 */
+        @media (max-width: 800px) {
+            .layout {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            .ad-container {
+                max-width: 100%;
+                width: 100%;
+                min-height: 200px;
+            }
+            .ad-emoji {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- 左侧游戏区域 -->
+        <div class="game-container">
+            <div class="header">
+                <div class="title">2048</div>
+                <div class="score-area">
+                    <div class="score-box">
+                        <div class="score-label">得分</div>
+                        <div class="score-value" id="score">0</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="score-label">最高</div>
+                        <div class="score-value" id="best">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-wrapper">
+                <div class="grid" id="grid"></div>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-undo" id="undo-btn" disabled>↩ 回退上一步</button>
+                <button class="btn" id="new-game">重新开始</button>
+            </div>
+            <div class="message" id="message"></div>
+            <div class="hint">⬆ ⬇ ⬅ ➡ 或 滑动屏幕</div>
+        </div>
+
+        <!-- 右侧广告位 -->
+        <div class="ad-container">
+            <div class="ad-emoji">📢</div>
+            <div class="ad-badge">黄金广告位</div>
+            <div class="ad-title">广告位招租</div>
+            <div class="ad-sub">你的品牌，值得被看见！</div>
+            
+            <div class="ad-contact" id="ad-contact" data-tooltip="阿珍，你不会来真的吧？">
+                📞 联系 130-1699-5222
+            </div>
+            
+            <div class="ad-small">（玩笑归玩笑，本游戏无真实广告）</div>
+            <div class="ad-small" style="margin-top: 20px; font-size: 11px; color: #c0b5a8;">* 此广告位只接受虚拟币支付</div>
+
+            <!-- 金手指按钮 -->
+            <button class="golden-btn" id="golden-btn" data-tooltip="点哪里消哪里">✨ 金手指</button>
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="overlay hidden" id="overlay">
+        <div class="overlay-content">
+            <h2 id="overlay-title">游戏结束</h2>
+            <button id="overlay-btn">再来一局</button>
+        </div>
+    </div>
+
+    <!-- 彩蛋弹窗 -->
+    <div class="toast" id="toast">
+        <span>🎁</span>
+        恭喜获得隐藏功能<br>——金手指
+    </div>
+
+    <!-- 第二段代码（<script> 标签）将接在下面 -->
+    <script>
+        (function(){
+            const SIZE = 4;
+            let board = [];
+            let score = 0;
+            let bestScore = 0;
+            let gameOver = false;
+            let won = false;
+            let keepPlaying = false;
+
+            // 金手指状态
+            let isGoldenActive = false;
+            let isGoldenUnlocked = false;
+
+            // 历史记录栈 (完整保存状态快照)
+            let historyStack = [];
+            const MAX_HISTORY = 10;
+
+            // DOM 元素
+            const gridEl = document.getElementById('grid');
+            const scoreEl = document.getElementById('score');
+            const bestEl = document.getElementById('best');
+            const overlayEl = document.getElementById('overlay');
+            const overlayTitleEl = document.getElementById('overlay-title');
+            const overlayBtn = document.getElementById('overlay-btn');
+            const newGameBtn = document.getElementById('new-game');
+            const undoBtn = document.getElementById('undo-btn');
+            const adContactBtn = document.getElementById('ad-contact');
+            const goldenBtn = document.getElementById('golden-btn');
+            const toastEl = document.getElementById('toast');
+            const messageEl = document.getElementById('message');
+
+            // 读取最高分
+            try {
+                const saved = localStorage.getItem('2048_best_score');
+                if (saved) bestScore = parseInt(saved, 10) || 0;
+            } catch(e) {}
+            bestEl.textContent = bestScore;
+
+            // 创建网格
+            function createGridCells() {
+                gridEl.innerHTML = '';
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        cell.textContent = '';
+                        cell.dataset.value = '';
+                        gridEl.appendChild(cell);
+                    }
+                }
+            }
+
+            function getCellElements() {
+                return Array.from(gridEl.children);
+            }
+
+            // 渲染棋盘
+            function renderBoard(mergedPositions = [], newTilePos = null) {
+                const cells = getCellElements();
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        const idx = r * SIZE + c;
+                        const cell = cells[idx];
+                        const val = board[r][c];
+                        
+                        cell.classList.remove('pop', 'appear');
+                        
+                        if (val === 0) {
+                            cell.textContent = '';
+                            cell.dataset.value = '';
+                        } else {
+                            cell.textContent = val;
+                            cell.dataset.value = val;
+                            
+                            if (mergedPositions.some(p => p.r === r && p.c === c)) {
+                                cell.classList.add('pop');
+                            }
+                            if (newTilePos && newTilePos.r === r && newTilePos.c === c) {
+                                cell.classList.add('appear');
+                            }
+                        }
+                    }
+                }
+                scoreEl.textContent = score;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestEl.textContent = bestScore;
+                    try {
+                        localStorage.setItem('2048_best_score', bestScore);
+                    } catch(e) {}
+                }
+                updateUndoButtonState();
+            }
+
+            function updateUndoButtonState() {
+                if (gameOver && !won) {
+                    undoBtn.disabled = true;
+                    return;
+                }
+                undoBtn.disabled = historyStack.length === 0;
+            }
+
+            function getEmptyCells() {
+                const empty = [];
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (board[r][c] === 0) empty.push({r, c});
+                    }
+                }
+                return empty;
+            }
+
+            function spawnRandomTile() {
+                const empty = getEmptyCells();
+                if (empty.length === 0) return null;
+                const {r, c} = empty[Math.floor(Math.random() * empty.length)];
+                board[r][c] = Math.random() < 0.9 ? 2 : 4;
+                return {r, c};
+            }
+            // 保存完整快照到历史栈
+            function saveHistory() {
+                const state = {
+                    board: board.map(row => [...row]),
+                    score: score,
+                    gameOver: gameOver,
+                    won: won,
+                    keepPlaying: keepPlaying
+                };
+                historyStack.push(state);
+                if (historyStack.length > MAX_HISTORY) {
+                    historyStack.shift();
+                }
+            }
+
+            // 撤销上一步（完美读取快照还原，解决合并数值异常）
+            function undo() {
+                if (historyStack.length === 0) return;
+                
+                overlayEl.classList.add('hidden');
+                
+                const prev = historyStack.pop();
+                board = prev.board.map(row => [...row]);
+                score = prev.score;
+                gameOver = prev.gameOver;
+                won = prev.won;
+                keepPlaying = prev.keepPlaying;
+                
+                renderBoard([], null);
+                getCellElements().forEach(cell => cell.classList.remove('pop', 'appear'));
+                updateUndoButtonState();
+            }
+
+            function initGame() {
+                board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+                score = 0;
+                gameOver = false;
+                won = false;
+                keepPlaying = false;
+                historyStack = [];
+                overlayEl.classList.add('hidden');
+                messageEl.textContent = '';
+                
+                // 重置金手指激活状态
+                isGoldenActive = false;
+                goldenBtn.classList.remove('active');
+                gridEl.classList.remove('golden-active');
+
+                const pos1 = spawnRandomTile();
+                const pos2 = spawnRandomTile();
+
+                renderBoard([], pos1);
+                const cells = getCellElements();
+                [pos1, pos2].forEach(pos => {
+                    if (pos) {
+                        const idx = pos.r * SIZE + pos.c;
+                        cells[idx].classList.add('appear');
+                    }
+                });
+                cells.forEach(cell => cell.classList.remove('pop'));
+                
+                updateUndoButtonState();
+            }
+
+            // 旋转棋盘
+            function rotateBoard(board, times) {
+                let newBoard = board.map(row => [...row]);
+                for (let t = 0; t < times; t++) {
+                    const rotated = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+                    for (let r = 0; r < SIZE; r++) {
+                        for (let c = 0; c < SIZE; c++) {
+                            rotated[c][SIZE - 1 - r] = newBoard[r][c];
+                        }
+                    }
+                    newBoard = rotated;
+                }
+                return newBoard;
+            }
+
+            function slideAndMerge(row) {
+                let nonZero = row.filter(v => v !== 0);
+                let gained = 0;
+                const merged = [];
+                const mergedIndices = [];
+                let i = 0;
+                let outIndex = 0;
+                while (i < nonZero.length) {
+                    if (i + 1 < nonZero.length && nonZero[i] === nonZero[i+1]) {
+                        const sum = nonZero[i] * 2;
+                        merged.push(sum);
+                        mergedIndices.push(outIndex);
+                        gained += sum;
+                        i += 2;
+                    } else {
+                        merged.push(nonZero[i]);
+                        i += 1;
+                    }
+                    outIndex++;
+                }
+                while (merged.length < SIZE) merged.push(0);
+
+                const changed = row.some((v, idx) => v !== merged[idx]);
+                return { newRow: merged, gained, changed, mergedIndices };
+            }
+            function move(direction) {
+                if (gameOver) return;
+                if (won && !keepPlaying) return;
+                if (isGoldenActive) return; // 金手指模式下禁止滑动
+
+                const rotateMap = [3, 2, 1, 0];
+                const rotateIn = rotateMap[direction];
+                const rotateOut = (4 - rotateIn) % 4;
+
+                let rotated = rotateBoard(board, rotateIn);
+
+                let moved = false;
+                let totalGained = 0;
+                let mergedPositionsRotated = [];
+
+                for (let r = 0; r < SIZE; r++) {
+                    const { newRow, gained, changed, mergedIndices } = slideAndMerge(rotated[r]);
+                    if (changed) moved = true;
+                    rotated[r] = newRow;
+                    totalGained += gained;
+                    mergedIndices.forEach(c => {
+                        mergedPositionsRotated.push({ r, c });
+                    });
+                }
+
+                board = rotateBoard(rotated, rotateOut);
+
+                if (moved) {
+                    saveHistory(); // 移动前保存状态快照
+                    score += totalGained;
+
+                    let mergedPositions = mergedPositionsRotated.map(pos => {
+                        let {r, c} = pos;
+                        for (let t = 0; t < rotateOut; t++) {
+                            const newR = c;
+                            const newC = SIZE - 1 - r;
+                            r = newR;
+                            c = newC;
+                        }
+                        return {r, c};
+                    });
+
+                    const newTilePos = spawnRandomTile();
+                    renderBoard(mergedPositions, newTilePos);
+
+                    if (!won && !keepPlaying && checkForWin()) {
+                        won = true;
+                        showOverlay('你赢了！', '继续游戏');
+                    } else if (checkGameOver()) {
+                        gameOver = true;
+                        showOverlay('游戏结束', '再来一局');
+                    }
+                } else {
+                    if (checkGameOver()) {
+                        gameOver = true;
+                        showOverlay('游戏结束', '再来一局');
+                    }
+                }
+                updateUndoButtonState();
+                scoreEl.textContent = score;
+            }
+
+            function checkForWin() {
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (board[r][c] === 2048) return true;
+                    }
+                }
+                return false;
+            }
+
+            function checkGameOver() {
+                if (getEmptyCells().length > 0) return false;
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        const val = board[r][c];
+                        if (r + 1 < SIZE && board[r+1][c] === val) return false;
+                        if (c + 1 < SIZE && board[r][c+1] === val) return false;
+                    }
+                }
+                return true;
+            }
+
+            function showOverlay(title, btnText) {
+                overlayTitleEl.textContent = title;
+                overlayBtn.textContent = btnText;
+                overlayEl.classList.remove('hidden');
+                updateUndoButtonState();
+            }
+
+            function hideOverlay() {
+                overlayEl.classList.add('hidden');
+            }
+
+            function handleOverlayBtn() {
+                if (overlayTitleEl.textContent === '你赢了！') {
+                    keepPlaying = true;
+                    hideOverlay();
+                    if (checkGameOver()) {
+                        gameOver = true;
+                        showOverlay('游戏结束', '再来一局');
+                    }
+                    updateUndoButtonState();
+                } else {
+                    hideOverlay();
+                    initGame();
+                }
+            }
+
+            // --- 广告按钮点击（解锁彩蛋） ---
+            adContactBtn.addEventListener('click', () => {
+                toastEl.classList.add('show');
+                setTimeout(() => {
+                    toastEl.classList.remove('show');
+                }, 3000);
+
+                if (!isGoldenUnlocked) {
+                    isGoldenUnlocked = true;
+                    goldenBtn.style.display = 'block';
+                }
+            });
+
+            // --- 金手指按钮点击（切换激活状态） ---
+            goldenBtn.addEventListener('click', () => {
+                isGoldenActive = !isGoldenActive;
+                if (isGoldenActive) {
+                    goldenBtn.classList.add('active');
+                    gridEl.classList.add('golden-active');
+                } else {
+                    goldenBtn.classList.remove('active');
+                    gridEl.classList.remove('golden-active');
+                }
+            });
+
+            // --- 金手指点击格子消除功能 ---
+            gridEl.addEventListener('click', (e) => {
+                if (!isGoldenActive) return;
+                const cell = e.target.closest('.cell');
+                if (!cell) return;
+
+                const row = parseInt(cell.dataset.row, 10);
+                const col = parseInt(cell.dataset.col, 10);
+
+                // 如果格子里有数字才消除
+                if (board[row][col] !== 0) {
+                    saveHistory(); // 消除前保存快照，支持撤销
+                    board[row][col] = 0;
+                    renderBoard([], null);
+                    
+                    // 消除后退出金手指模式
+                    isGoldenActive = false;
+                    goldenBtn.classList.remove('active');
+                    gridEl.classList.remove('golden-active');
+                    
+                    // 检查是否因为消除而让游戏又能继续了
+                    if (gameOver) {
+                        gameOver = false;
+                        overlayEl.classList.add('hidden');
+                        updateUndoButtonState();
+                    }
+                }
+            });
+
+            // --- 键盘事件 ---
+            function handleKeyDown(e) {
+                const key = e.key;
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    e.preventDefault();
+                }
+                if (!overlayEl.classList.contains('hidden')) return;
+                if (won && !keepPlaying) return;
+                if (gameOver) return;
+                if (isGoldenActive) return;
+
+                switch (key) {
+                    case 'ArrowUp': move(0); break;
+                    case 'ArrowRight': move(1); break;
+                    case 'ArrowDown': move(2); break;
+                    case 'ArrowLeft': move(3); break;
+                    default: return;
+                }
+            }
+
+            // --- 触摸事件 ---
+            let touchStartX = 0, touchStartY = 0;
+            let touchMoved = false;
+
+            function handleTouchStart(e) {
+                if (!overlayEl.classList.contains('hidden') || isGoldenActive) return;
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                touchMoved = false;
+            }
+
+            function handleTouchMove(e) {
+                if (!overlayEl.classList.contains('hidden') || isGoldenActive) return;
+                if (touchStartX === 0 && touchStartY === 0) return;
+                const touch = e.touches[0];
+                const dx = touch.clientX - touchStartX;
+                const dy = touch.clientY - touchStartY;
+
+                if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+                    e.preventDefault();
+                }
+
+                if (touchMoved) return;
+
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 25) {
+                    if (dx > 0) { move(1); } else { move(3); }
+                    touchMoved = true;
+                } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 25) {
+                    if (dy > 0) { move(2); } else { move(0); }
+                    touchMoved = true;
+                }
+            }
+
+            function handleTouchEnd() {
+                touchStartX = 0;
+                touchStartY = 0;
+                touchMoved = false;
+            }
+
+            // --- 绑定事件与启动 ---
+            function bindEvents() {
+                window.addEventListener('keydown', handleKeyDown);
+
+                const gameContainer = document.querySelector('.game-container');
+                gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+                gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+                gameContainer.addEventListener('touchend', handleTouchEnd);
+                gameContainer.addEventListener('touchcancel', handleTouchEnd);
+
+                newGameBtn.addEventListener('click', () => {
+                    initGame();
+                });
+
+                undoBtn.addEventListener('click', () => {
+                    undo();
+                });
+
+                overlayBtn.addEventListener('click', handleOverlayBtn);
+            }
+
+            function start() {
+                createGridCells();
+                initGame();
+                bindEvents();
+                scoreEl.textContent = '0';
+                bestEl.textContent = bestScore;
+            }
+
+            start();
+        })();
+    </script>
+</body>
+</html>
