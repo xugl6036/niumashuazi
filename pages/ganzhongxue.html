@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>浅色 · 三行</title>
+    <style>
+        /* 重置边距，全屏撑满 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;   /* 避免滚动，纯全屏文字 */
+        }
+
+        body {
+            /* 浅色系基调：柔和米白/浅灰渐变，不刺眼 */
+            background: linear-gradient(145deg, #f9f7f3 0%, #f0f2f5 100%);
+            /* 后备纯色 */
+            background-color: #f7f5f0;
+            /* 使用 flex 列布局，垂直居中，水平居中 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* 字体：优先系统无衬线，干净现代 */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            /* 全屏尺寸下防止移动端点击高亮 */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 三行文字的容器，不额外设置宽度，让文字自然决定 */
+        .lines {
+            display: flex;
+            flex-direction: column;
+            align-items: center;    /* 水平居中 */
+            justify-content: center;
+            /* 轻微的呼吸感留白 */
+            gap: 2rem;
+            /* 防止窄屏时文字太挤，增加适当内边距 */
+            padding: 1.5rem;
+            text-align: center;
+            /* 全屏下不超出视口宽度 */
+            max-width: 100%;
+        }
+
+        /* 每一行采用块级或flex，确保可独立设置样式 */
+        .line {
+            display: block;
+            /* 默认字号灵动，浅色风格需要足够优雅 */
+            font-size: clamp(2.5rem, 12vw, 6rem);
+            font-weight: 350;          /* 轻盈字重，但保留可读性 */
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            color: #2c2c2e;           /* 深灰偏暖，而非纯黑，更柔和 */
+            text-shadow: 1px 2px 8px rgba(0, 0, 0, 0.02); /* 若有若无的立体感 */
+            word-break: break-word;    /* 防止非常长的字符串溢出 */
+        }
+
+        /* 第一行“摸鱼？”稍微大一点或调整字重？可以不变，但可设计微差 */
+        .line-1 {
+            font-weight: 380;
+            color: #3b3b3d;
+            /* 字距稍微放松 */
+            letter-spacing: 0.03em;
+        }
+
+        /* 第二行是“空”，视觉上留白，但既然是“空”，可以稍微收一点颜色 */
+        .line-2 {
+            /* 维持和其余行一致，避免真的"消失"，但可以更浅一点灰色，暗示空 */
+            color: #5e5e60;
+            font-weight: 330;
+            /* 它只有单个字，所以视觉自然小，但字号同样，只是字少 */
+            /* 保证“空”这个字符语义和视觉都轻盈 */
+            opacity: 0.9;
+            /* 但注意不要让它看起来像disabled，所以保持字体大小 */
+            font-size: clamp(2.5rem, 12vw, 6rem);
+            /* 特殊处理：保持单字，但不会因为字少而显得过小 */
+        }
+
+        /* 第三行“胆子真实肥嘟嘟”，富有节奏，可以用稍深的颜色平衡 */
+        .line-3 {
+            font-weight: 350;
+            color: #2f2f31;
+            letter-spacing: 0.02em;
+            /* 略微紧凑，保持整体平衡 */
+            word-break: break-word;
+        }
+
+        /* 针对不同屏幕，微调间距 */
+        @media (max-width: 600px) {
+            .lines {
+                gap: 1.6rem;
+                padding: 1rem;
+            }
+            .line {
+                font-size: clamp(2.2rem, 13vw, 4.5rem);
+            }
+        }
+
+        /* 极窄屏 (如小手机) 防止文字贴边 */
+        @media (max-width: 380px) {
+            .lines {
+                gap: 1.2rem;
+                padding: 0.8rem;
+            }
+            .line {
+                font-size: clamp(2rem, 12vw, 3.8rem);
+            }
+        }
+
+        /* 横屏大屏时字体可稍大，但保持舒适 */
+        @media (min-width: 1200px) {
+            .line {
+                font-size: 6rem;   /* 稳定尺寸，不至于太大 */
+            }
+            .lines {
+                gap: 2.2rem;
+            }
+        }
+
+        /* 支持深色模式？需求是浅色系，但我们依旧保持浅色系不变 */
+        /* 确保文字选中样式不要太突兀 */
+        ::selection {
+            background: rgba(200, 200, 200, 0.3);
+            color: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div class="lines">
+        <!-- 第一行 -->
+        <div class="line line-1">哪有什么技巧</div>
+        <!-- 第二行：空（只有一个字，保留语义） -->
+        <div class="line line-2"></div>
+        <!-- 第三行 -->
+        <div class="line line-3">全都是干中学</div>
+    </div>
+</body>
+</html>
