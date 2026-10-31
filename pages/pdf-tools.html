@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 极客工具箱</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #f4f7f9;
+      --panel-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --theme-merge: #3b82f6;
+      --theme-split: #8b5cf6;
+      --theme-image: #10b981;
+      --theme-convert: #f59e0b;
+      --active-color: var(--theme-merge);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+    }
+    .app-wrapper {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+      gap: 20px;
+      height: calc(100vh - 50px);
+    }
+    .glass-card {
+      background: var(--panel-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.03);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .tabs { display: flex; padding: 15px 20px 0; gap: 8px; border-bottom: 1px solid var(--border-color); background: #f8fafc; }
+    .tab-btn { padding: 12px 24px; border: none; background: transparent; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 12px 12px 0 0; display: flex; align-items: center; gap: 8px; transition: all 0.2s; position: relative; bottom: -1px; }
+    .tab-btn svg { width: 18px; height: 18px; }
+    .tab-btn:hover { color: var(--text-main); background: #f1f5f9; }
+    .tab-btn.active { color: var(--active-color); background: white; border: 1px solid var(--border-color); border-bottom-color: white; }
+    .panels-container { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; }
+    .panel { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.3s ease; }
+    .panel.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .upload-zone { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px 20px; text-align: center; background: #f8fafc; transition: all 0.2s; cursor: pointer; margin-bottom: 16px; flex-shrink: 0; }
+    .upload-zone:hover { border-color: var(--active-color); background: #f0f9ff; }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-zone label { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .icon-circle { width: 48px; height: 48px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 12px; color: var(--active-color); transition: transform 0.2s; }
+    .upload-zone:hover .icon-circle { transform: scale(1.1); }
+    .icon-circle svg { width: 24px; height: 24px; }
+    .file-list {
+      flex-grow: 0; flex-shrink: 1; max-height: 200px; min-height: 80px;
+      background: #f8fafc; border-radius: 16px; border: 1px solid var(--border-color);
+      padding: 8px; overflow-y: auto; margin-bottom: 16px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .empty-state { color: var(--text-muted); font-size: 0.9rem; text-align: center; margin: auto; }
+    .file-item { display: flex; align-items: center; background: white; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); gap: 10px; }
+    .file-item span { flex: 1; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-item button { background: #f1f5f9; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--text-muted); transition: 0.1s; }
+    .file-item button:hover { background: #e2e8f0; color: var(--text-main); }
+    .file-item button.remove:hover { background: #fee2e2; color: #ef4444; }
+    .input-group { display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; font-size: 0.95rem; }
+    .input-group input { width: 70px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; outline: none; }
+    .input-group input:focus { border-color: var(--active-color); }
+    .action-btn { background: var(--active-color); color: white; border: none; border-radius: 12px; padding: 14px 20px; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px var(--active-color)44; width: 100%; }
+    .action-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px var(--active-color)66; }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; background: #cbd5e1; }
+    .action-btn.secondary { background: white; color: var(--text-main); border: 1px solid var(--border-color); box-shadow: none; }
+    .action-btn.secondary:hover:not(:disabled) { border-color: var(--active-color); color: var(--active-color); }
+    .action-btn.secondary.active-mode { background: var(--active-color); color: white; border-color: var(--active-color); }
+    .flex-row { display: flex; gap: 10px; width: 100%; }
+    .status-msg { padding: 10px 16px; border-radius: 10px; font-size: 0.85rem; background: #f1f5f9; color: var(--text-muted); border-left: 4px solid #94a3b8; }
+    .status-msg.success { background: #dcfce7; color: #166534; border-left-color: #22c55e; }
+    .status-msg.error { background: #fee2e2; color: #991b1b; border-left-color: #ef4444; }
+    .status-msg.info { background: #eff6ff; color: #1e40af; border-left-color: #3b82f6; }
+      .action-area {
+    margin-top: auto; 
+    padding-top: 16px; 
+    border-top: 1px solid var(--border-color); 
+    flex-shrink: 0;
+  }
+    .right-panel { background: #f8fafc; position: relative; }
+    .preview-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); background: white; flex-shrink: 0; }
+    .header-title { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+    .header-title svg { width: 22px; height: 22px; flex-shrink: 0; }
+    .header-title h2 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .preview-tip { font-size: 0.85rem; color: var(--text-muted); background: #f1f5f9; padding: 6px 12px; border-radius: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+    .preview-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; position: relative; align-items: center; justify-content: center; }
+    .img-preview-container { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; justify-content: center; }
+    .img-preview-container canvas, .img-preview-container img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .illustration { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; width: 80%; max-width: 300px; text-align: center; }
+    .illustration svg { width: 100px; height: 100px; margin-bottom: 16px; animation: float 4s ease-in-out infinite; }
+    .illustration p { color: var(--text-muted); font-size: 0.95rem; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .preview-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .preview-card { background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; width: 100%; }
+    .preview-card .num { width: 24px; height: 24px; border-radius: 50%; background: var(--active-color); color: white; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .preview-card .name { flex: 1; font-size: 0.9rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .grid-thumbnails { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; width: 100%; align-content: start; }
+    .thumb-item { background: white; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .thumb-item img { width: 100%; height: auto; border-radius: 6px; border: 1px solid #eee; }
+    .thumb-actions { display: flex; gap: 6px; width: 100%; }
+    .thumb-actions button { flex: 1; font-size: 0.75rem; padding: 6px; border-radius: 6px; border: none; background: #f1f5f9; cursor: pointer; font-weight: 600; }
+    .thumb-actions button:hover { background: var(--active-color); color: white; }
+    .footer-tip { text-align: center; padding: 12px; font-size: 0.85rem; color: var(--text-muted); }
+    @media (max-width: 900px) {
+      .app-wrapper { flex-direction: column; padding: 10px; height: auto; overflow: auto; }
+      .left-panel, .right-panel { min-height: 400px; }
+      .right-panel { margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrapper">
+    <div class="glass-card left-panel" style="flex: 1.1; min-width: 380px;">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="merge" data-color="var(--theme-merge)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>合并
+        </button>
+        <button class="tab-btn" data-tab="split" data-color="var(--theme-split)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M14 10l6.5-6.5M8 21H3v-5M10 14l-6.5 6.5"/></svg>拆分
+        </button>
+        <button class="tab-btn" data-tab="image" data-color="var(--theme-image)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>导图
+        </button>
+        <button class="tab-btn" data-tab="convert" data-color="var(--theme-convert)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12M17 20l4-4M17 20l-4-4"/></svg>转换
+        </button>
+      </div>
+      <div class="panels-container">
+        <!-- 合并面板 -->
+        <div class="panel active" id="panel-merge">
+          <div class="upload-zone" id="mergeDropArea">
+            <input type="file" id="mergeFileInput" accept=".pdf" multiple>
+            <label for="mergeFileInput">
+              <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+              <h3>点击或拖拽文件到这里</h3><p>支持多选，合并顺序见下方列表</p>
+            </label>
+          </div>
+          <div class="file-list" id="mergeFileList"><div class="empty-state">暂无文件</div></div>
+          <div class="action-area" id="mergeActionBar">
+            <div class="status-msg" id="mergeStatus">等待添加文件</div>
+            <div class="flex-row" style="margin-top: 12px;">
+              <button class="action-btn secondary" id="mergeClearBtn" style="flex: 1;">清空文件</button>
+              <button class="action-btn" id="mergeBtn" style="flex: 2;">合并下载</button>
+            </div>
+          </div>
+        </div>
+        <!-- 拆分面板 -->
+        <div class="panel" id="panel-split">
+          <div class="upload-zone" id="splitDropArea">
+            <input type="file" id="splitFileInput" accept=".pdf">
+            <label for="splitFileInput">
+              <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg></div>
+              <h3>选择一个 PDF 文件</h3><p>提取指定范围内的页面生成新文件</p>
+            </label>
+          </div>
+          <div class="file-list" id="splitFileInfo"><div class="empty-state">未选择文件</div></div>
+          <div class="input-group">
+            <label>提取范围：</label>
+            <input type="number" id="splitFromPage" min="1" value="1">
+            <span>—</span>
+            <input type="number" id="splitToPage" min="1" value="1">
+          </div>
+          <div class="flex-row">
+            <button class="action-btn secondary" id="splitClearBtn" disabled>清空文件</button>
+            <button class="action-btn" id="splitBtn" disabled>提取下载</button>
+          </div>
+        </div>
+        <!-- 导图面板 -->
+        <div class="panel" id="panel-image">
+          <div class="upload-zone" id="imageDropArea">
+            <input type="file" id="imageFileInput" accept=".pdf">
+            <label for="imageFileInput">
+              <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.5"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+              <h3>选择 PDF 导出图片</h3><p>支持导出高清 PNG</p>
+            </label>
+          </div>
+          <div class="file-list" id="imageFileInfo"><div class="empty-state">未选择文件</div></div>
+          <div class="input-group">
+            <label>选择页面：</label>
+            <input type="number" id="imagePage" min="1" value="1" style="width:60px"><span>/</span><span id="imagePageTotal">-</span>
+          </div>
+          <div class="flex-row">
+            <button class="action-btn secondary" id="previewBtn" disabled>预览</button>
+            <button class="action-btn" id="imageBtn" disabled>导出</button>
+            <button class="action-btn secondary" id="imageClearBtn" disabled>清空</button>
+          </div>
+        </div>
+        <!-- 转换面板 -->
+        <div class="panel" id="panel-convert">
+          <div class="flex-row" style="margin-bottom: 15px; gap: 10px;">
+            <button class="action-btn secondary active-mode" id="convertModePdf2Word" style="flex:1;">PDF 转 Word</button>
+            <button class="action-btn secondary" id="convertModeWord2Pdf" style="flex:1;">Word 转 PDF</button>
+          </div>
+          <div class="upload-zone" id="convertDropArea">
+            <input type="file" id="convertFileInput" accept=".pdf">
+            <label for="convertFileInput">
+              <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <h3 id="convertFileHint">选择 PDF 文件</h3><p>功能测试中，错误率极高，不推荐使用</p>
+            </label>
+          </div>
+          <div class="file-list" id="convertFileInfo"><div class="empty-state">未选择文件</div></div>
+          <div class="flex-row">
+            <button class="action-btn secondary" id="convertClearBtn" disabled>清空文件</button>
+            <button class="action-btn" id="convertBtn" disabled>开始转换</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 右侧预览 -->
+    <div class="glass-card right-panel" style="flex: 1; min-width: 350px;">
+      <div class="preview-header">
+        <div class="header-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--active-color)" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <h2>实时预览</h2>
+        </div>
+        <div class="preview-tip" id="previewTip">请添加文件</div>
+      </div>
+      <div class="preview-content" id="globalPreviewArea">
+        <div class="illustration" id="defaultIllustration">
+          <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="80" fill="var(--active-color)" fill-opacity="0.1"/>
+            <path d="M70 60H130C135.523 60 140 64.4772 140 70V130C140 135.523 135.523 140 130 140H70C64.4772 140 60 135.523 60 130V70C60 64.4772 64.4772 60 70 60Z" fill="var(--active-color)" fill-opacity="0.2"/>
+            <path d="M85 85H115M85 100H115M85 115H100" stroke="var(--active-color)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="150" cy="150" r="20" fill="var(--active-color)"/>
+            <path d="M145 150L148 153L155 146" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>添加文件后即可进行预览</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-tip">全部在浏览器本地完成，绝不上传云端</div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function setStatus(id, msg, type = 'info') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+    }
+
+    const globalPreviewArea = document.getElementById('globalPreviewArea');
+    const defaultIllustration = document.getElementById('defaultIllustration');
+    const previewTip = document.getElementById('previewTip');
+    const mergeActionBar = document.getElementById('mergeActionBar');
+
+    function updateTip(text) { previewTip.textContent = text; }
+
+    function updatePreview(content) {
+      defaultIllustration.style.display = 'none';
+      globalPreviewArea.innerHTML = '';
+      if (typeof content === 'string') {
+        globalPreviewArea.innerHTML = content;
+      } else if (content instanceof Node) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'img-preview-container';
+        wrapper.appendChild(content);
+        globalPreviewArea.appendChild(wrapper);
+      }
+    }
+
+    function resetPreview() {
+      globalPreviewArea.innerHTML = '';
+      globalPreviewArea.appendChild(defaultIllustration);
+      defaultIllustration.style.display = 'flex';
+    }
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.panel');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-tab');
+        document.getElementById('panel-' + target).classList.add('active');
+        
+        const color = btn.getAttribute('data-color');
+        document.documentElement.style.setProperty('--active-color', color);
+        
+        resetPreview();
+        if (target === 'merge') { updateMergePreview(); }
+        if (target === 'split') { updateSplitPreview(); }
+        if (target === 'image') { updateImagePreview(); }
+        if (target === 'convert') { updateConvertPreview(); }
+      });
+    });
+
+    ['dragover', 'drop'].forEach(evt => {
+      window.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    function setupDropZone(zoneId, inputId) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = 'var(--active-color)'; });
+      zone.addEventListener('dragleave', () => { zone.style.borderColor = '#cbd5e1'; });
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.style.borderColor = '#cbd5e1';
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const dt = new DataTransfer();
+          for (let i = 0; i < e.dataTransfer.files.length; i++) dt.items.add(e.dataTransfer.files[i]);
+          input.files = dt.files;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+  </script>
+
+  <script>
+    setupDropZone('mergeDropArea', 'mergeFileInput');
+    setupDropZone('splitDropArea', 'splitFileInput');
+    setupDropZone('imageDropArea', 'imageFileInput');
+    setupDropZone('convertDropArea', 'convertFileInput');
+
+    // ===== 合并 =====
+    let mergeFiles = [];
+    const mergeFileInput = document.getElementById('mergeFileInput');
+    const mergeFileList = document.getElementById('mergeFileList');
+    const mergeBtn = document.getElementById('mergeBtn');
+    const mergeClearBtn = document.getElementById('mergeClearBtn');
+
+    function renderMergeList() {
+if (mergeFiles.length === 0) {
+  mergeFileList.innerHTML = '<div class="empty-state">还没有添加文件</div>';
+  mergeBtn.disabled = true;
+  mergeClearBtn.disabled = true;
+  setStatus('mergeStatus', '等待添加文件', 'info');
+  updateTip('请添加文件');
+  resetPreview();
+  return;
+}
+      mergeFileList.innerHTML = mergeFiles.map((file, index) => `
+        <div class="file-item">
+          <span title="${file.name}">${index + 1}. ${file.name}</span>
+          <div class="btn-group">
+            <button data-up="${index}" ${index === 0 ? 'disabled' : ''}>↑</button>
+            <button data-down="${index}" ${index === mergeFiles.length - 1 ? 'disabled' : ''}>↓</button>
+            <button class="remove" data-idx="${index}">✕</button>
+          </div>
+        </div>
+      `).join('');
+      mergeBtn.disabled = false;
+      mergeClearBtn.disabled = false;
+      setStatus('mergeStatus', `已添加 ${mergeFiles.length} 个文件`, 'success');
+      updateTip(`共 ${mergeFiles.length} 个文件待合并`);
+      mergeActionBar.style.display = 'block';
+
+      mergeFileList.querySelectorAll('button[data-up]').forEach(b => b.onclick = (e) => {
+        const i = +e.target.dataset.up;
+        if (i > 0) { [mergeFiles[i-1], mergeFiles[i]] = [mergeFiles[i], mergeFiles[i-1]]; renderMergeList(); }
+      });
+      mergeFileList.querySelectorAll('button[data-down]').forEach(b => b.onclick = (e) => {
+        const i = +e.target.dataset.down;
+        if (i < mergeFiles.length - 1) { [mergeFiles[i+1], mergeFiles[i]] = [mergeFiles[i], mergeFiles[i+1]]; renderMergeList(); }
+      });
+      mergeFileList.querySelectorAll('button.remove').forEach(b => b.onclick = (e) => {
+        mergeFiles.splice(+e.target.dataset.idx, 1); renderMergeList();
+      });
+    }
+
+    mergeFileInput.onchange = (e) => {
+      const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+      if (files.length) { mergeFiles.push(...files); renderMergeList(); }
+      mergeFileInput.value = '';
+    };
+
+    mergeClearBtn.onclick = () => { mergeFiles = []; renderMergeList(); };
+    function updateMergePreview() { resetPreview(); }
+  </script>
+
+  <script>
+    mergeBtn.onclick = async () => {
+      if (!mergeFiles.length) return;
+      mergeBtn.disabled = true;
+      setStatus('mergeStatus', '正在合并...', 'info');
+      updateTip('正在合并处理中...');
+      try {
+        const { PDFDocument } = PDFLib;
+        const mergedPdf = await PDFDocument.create();
+        for (const file of mergeFiles) {
+          const pdf = await PDFDocument.load(await file.arrayBuffer());
+          const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+          pages.forEach(p => mergedPdf.addPage(p));
+        }
+        const bytes = await mergedPdf.save();
+        downloadBlob(new Blob([bytes], {type: 'application/pdf'}), 'merged.pdf');
+        setStatus('mergeStatus', '✅ 合并完成，已下载', 'success');
+        updateTip('合并已完成');
+      } catch (err) {
+        setStatus('mergeStatus', '❌ 错误: ' + err.message, 'error');
+        updateTip('合并失败');
+      } finally { mergeBtn.disabled = false; }
+    };
+  </script>
+
+  <script>
+    // ===== 拆分 =====
+    let splitPdfDoc = null, splitTotalPages = 0;
+    const splitFileInput = document.getElementById('splitFileInput');
+    const splitFileInfo = document.getElementById('splitFileInfo');
+    const splitBtn = document.getElementById('splitBtn');
+    const splitClearBtn = document.getElementById('splitClearBtn');
+    const splitFromPage = document.getElementById('splitFromPage');
+    const splitToPage = document.getElementById('splitToPage');
+
+    splitClearBtn.onclick = () => {
+      splitFileInput.value = '';
+      splitPdfDoc = null; splitTotalPages = 0;
+      splitFileInfo.innerHTML = '<div class="empty-state">未选择文件</div>';
+      splitBtn.disabled = true; splitClearBtn.disabled = true;
+      splitFromPage.value = 1; splitToPage.value = 1;
+      resetPreview();
+      updateTip('请选择 PDF 文件');
+    };
+
+    async function updateSplitPreview() {
+      if (!splitPdfDoc) { resetPreview(); updateTip('请选择文件'); return; }
+      updateTip(`共 ${splitTotalPages} 页，可单页下载或提取范围`);
+      updatePreview('<div style="text-align:center; padding:20px; color:var(--text-muted);">正在生成缩略图预览，请稍候...</div>');
+
+      let html = `<div style="margin-bottom:15px; text-align:center;">
+                    <button class="action-btn" id="downloadAllBtn" style="padding:8px 16px; width:auto; display:inline-flex; margin:0 auto;">📦 全部打包下载 (ZIP)</button>
+                  </div>
+                  <div class="grid-thumbnails">`;
+      
+      for (let i = 1; i <= splitTotalPages; i++) {
+        try {
+          const page = await splitPdfDoc.getPage(i);
+          const viewport = page.getViewport({ scale: 0.3 });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+          
+          html += `
+            <div class="thumb-item">
+              <img src="${canvas.toDataURL('image/jpeg')}" alt="Page ${i}">
+              <div class="thumb-actions">
+                <button class="single-download" data-page="${i}">下载此页</button>
+              </div>
+            </div>
+          `;
+        } catch (e) {}
+      }
+      html += `</div>`;
+      updatePreview(html);
+
+      document.querySelectorAll('.single-download').forEach(btn => {
+        btn.onclick = async (e) => {
+          const pageNum = parseInt(e.target.dataset.page);
+          await downloadSinglePage(pageNum);
+        };
+      });
+
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+      if (downloadAllBtn) {
+        downloadAllBtn.onclick = async () => await downloadAllPagesAsZip();
+      }
+    }
+
+    async function getSinglePagePdfBytes(pageNum) {
+      const { PDFDocument } = PDFLib;
+      const arrayBuffer = await splitFileInput.files[0].arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const newPdf = await PDFDocument.create();
+      const [copiedPage] = await newPdf.copyPages(pdfDoc, [pageNum - 1]);
+      newPdf.addPage(copiedPage);
+      return await newPdf.save();
+    }
+
+    async function downloadSinglePage(pageNum) {
+      try {
+        updateTip(`正在提取第 ${pageNum} 页...`);
+        const bytes = await getSinglePagePdfBytes(pageNum);
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `page_${pageNum}.pdf`);
+        updateTip(`第 ${pageNum} 页已下载`);
+      } catch (err) {
+        updateTip(`下载失败: ${err.message}`);
+      }
+    }
+
+    async function downloadAllPagesAsZip() {
+      if (!splitFileInput.files[0]) return;
+      updateTip('正在打包生成 ZIP...');
+      try {
+        const zip = new JSZip();
+        for (let i = 1; i <= splitTotalPages; i++) {
+          const bytes = await getSinglePagePdfBytes(i);
+          zip.file(`page_${i}.pdf`, bytes);
+        }
+        const content = await zip.generateAsync({ type: "blob" });
+        downloadBlob(content, `split_${splitTotalPages}_pages.zip`);
+        updateTip('打包下载成功');
+      } catch (err) {
+        updateTip(`打包失败: ${err.message}`);
+      }
+    }
+
+    splitBtn.onclick = async () => {
+      if (!splitFileInput.files[0]) return;
+      const from = parseInt(splitFromPage.value);
+      const to = parseInt(splitToPage.value);
+      if (isNaN(from) || isNaN(to) || from < 1 || to > splitTotalPages || from > to) {
+        updateTip('请输入有效页码范围'); return;
+      }
+      splitBtn.disabled = true;
+      updateTip('正在提取...');
+      try {
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.load(await splitFileInput.files[0].arrayBuffer());
+        const newPdf = await PDFDocument.create();
+        const indices = [];
+        for (let i = from - 1; i <= to - 1; i++) indices.push(i);
+        const pages = await newPdf.copyPages(pdfDoc, indices);
+        pages.forEach(p => newPdf.addPage(p));
+        const bytes = await newPdf.save();
+        downloadBlob(new Blob([bytes], {type: 'application/pdf'}), `split_${from}-${to}.pdf`);
+        updateTip('提取完成，已下载');
+      } catch (err) {
+        updateTip('提取失败: ' + err.message);
+      } finally { splitBtn.disabled = false; }
+    };
+
+    splitFileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      splitFileInfo.innerHTML = `<div class="file-item"><span>${file.name}</span></div>`;
+      updateTip('正在读取 PDF 信息...');
+      try {
+        const buffer = await file.arrayBuffer();
+        splitPdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer).slice() }).promise;
+        splitTotalPages = splitPdfDoc.numPages;
+        splitFromPage.value = 1;
+        splitToPage.value = splitTotalPages;
+        splitFromPage.max = splitTotalPages;
+        splitToPage.max = splitTotalPages;
+        splitBtn.disabled = false;
+        splitClearBtn.disabled = false;
+        updateSplitPreview();
+      } catch (err) {
+        updateTip('读取失败: ' + err.message);
+        splitPdfDoc = null; splitTotalPages = 0;
+        splitBtn.disabled = true; splitClearBtn.disabled = true;
+        resetPreview();
+      }
+      splitFileInput.value = '';
+    };
+  </script>
+
+  <script>
+    // ===== 导图 =====
+    let imagePdfDoc = null, imageTotalPages = 0;
+    const imageFileInput = document.getElementById('imageFileInput');
+    const imageFileInfo = document.getElementById('imageFileInfo');
+    const imageBtn = document.getElementById('imageBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const imageClearBtn = document.getElementById('imageClearBtn');
+    const imagePageInput = document.getElementById('imagePage');
+    const imagePageTotal = document.getElementById('imagePageTotal');
+
+    imageClearBtn.onclick = () => {
+      imageFileInput.value = '';
+      imagePdfDoc = null; imageTotalPages = 0;
+      imageFileInfo.innerHTML = '<div class="empty-state">未选择文件</div>';
+      imageBtn.disabled = true; previewBtn.disabled = true; imageClearBtn.disabled = true;
+      imagePageInput.value = 1; imagePageInput.max = 1; imagePageTotal.textContent = '-';
+      resetPreview();
+      updateTip('请选择 PDF 文件');
+    };
+
+    function updateImagePreview() {
+      if (!imagePdfDoc) { resetPreview(); updateTip('请选择文件'); return; }
+      updateTip(`PDF 已加载，共 ${imageTotalPages} 页`);
+      updatePreview(`<div class="preview-list"><div class="preview-card"><div class="num" style="background:var(--theme-image)">✓</div><div class="name">PDF 已加载，共 ${imageTotalPages} 页</div></div><p style="text-align:center; color:var(--text-muted); margin-top:10px;">点击左侧“预览”查看大图</p></div>`);
+    }
+
+    imageFileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      imageFileInfo.innerHTML = `<div class="file-item"><span>${file.name}</span></div>`;
+      updateTip('正在解析 PDF...');
+      try {
+        const buffer = await file.arrayBuffer();
+        const task = pdfjsLib.getDocument({ 
+          data: new Uint8Array(buffer).slice(),
+          disableRange: true, disableStream: true, disableAutoFetch: true
+        });
+        imagePdfDoc = await Promise.race([task.promise, new Promise((_, r) => setTimeout(() => r(new Error('超时')), 30000))]);
+        imageTotalPages = imagePdfDoc.numPages;
+        imagePageInput.max = imageTotalPages;
+        imagePageInput.value = 1;
+        imagePageTotal.textContent = imageTotalPages;
+        imageBtn.disabled = false; previewBtn.disabled = false; imageClearBtn.disabled = false;
+        updateImagePreview();
+      } catch (err) {
+        updateTip('加载失败: ' + err.message);
+        imagePdfDoc = null; imageTotalPages = 0;
+        imageBtn.disabled = true; previewBtn.disabled = true; imageClearBtn.disabled = true;
+        resetPreview();
+      }
+      imageFileInput.value = '';
+    };
+
+    async function renderToCanvas(pageNum, scale) {
+      const page = await imagePdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return canvas;
+    }
+
+    previewBtn.onclick = async () => {
+      const pageNum = parseInt(imagePageInput.value);
+      if (!imagePdfDoc || pageNum < 1 || pageNum > imageTotalPages) return;
+      previewBtn.disabled = true;
+      updateTip('生成预览中...');
+      try {
+        const canvas = await renderToCanvas(pageNum, 1.5);
+        updatePreview(canvas);
+        updateTip(`已预览第 ${pageNum} 页`);
+      } catch (err) {
+        updateTip('预览失败');
+      } finally { previewBtn.disabled = false; }
+    };
+
+    imageBtn.onclick = async () => {
+      const pageNum = parseInt(imagePageInput.value);
+      if (!imagePdfDoc || pageNum < 1 || pageNum > imageTotalPages) return;
+      imageBtn.disabled = true;
+      updateTip('正在导出高清图片...');
+      try {
+        const canvas = await renderToCanvas(pageNum, 2.5);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            downloadBlob(blob, `page_${pageNum}.png`);
+            updateTip('图片已下载');
+          }
+          imageBtn.disabled = false;
+        }, 'image/png');
+      } catch (err) {
+        updateTip('导出失败: ' + err.message);
+        imageBtn.disabled = false;
+      }
+    };
+  </script>
+
+  <script>
+    // ===== 转换 =====
+    let convertMode = 'pdf2word', convertFile = null;
+    const convertFileInput = document.getElementById('convertFileInput');
+    const convertFileInfo = document.getElementById('convertFileInfo');
+    const convertBtn = document.getElementById('convertBtn');
+    const convertClearBtn = document.getElementById('convertClearBtn');
+    const convertFileHint = document.getElementById('convertFileHint');
+    const convertModePdf2Word = document.getElementById('convertModePdf2Word');
+    const convertModeWord2Pdf = document.getElementById('convertModeWord2Pdf');
+
+    convertClearBtn.onclick = () => {
+      convertFile = null; convertFileInput.value = '';
+      convertFileInfo.innerHTML = '<div class="empty-state">未选择文件</div>';
+      convertBtn.disabled = true; convertClearBtn.disabled = true;
+      resetPreview();
+      updateTip('请选择文件');
+    };
+
+    function updateConvertPreview() {
+      if (!convertFile) { resetPreview(); return; }
+      const iconColor = convertMode === 'pdf2word' ? 'var(--theme-convert)' : '#2563eb';
+      const html = `<div class="preview-list">
+        <div class="preview-card">
+          <div class="num" style="background:${iconColor}">1</div>
+          <div class="name" title="${convertFile.name}">${convertFile.name}</div>
+        </div>
+        <p style="text-align:center; color:var(--text-muted); margin-top:10px;">准备转换为 ${convertMode === 'pdf2word' ? 'Word 文档' : 'PDF 文档'}</p>
+      </div>`;
+      updatePreview(html);
+      updateTip(`已选择文件，准备转换`);
+    }
+
+    function setConvertMode(mode) {
+      convertMode = mode;
+      convertFile = null; convertFileInput.value = '';
+      convertFileInfo.innerHTML = '<div class="empty-state">未选择文件</div>';
+      convertBtn.disabled = true; convertClearBtn.disabled = true;
+      
+      if (mode === 'pdf2word') {
+        convertModePdf2Word.classList.add('active-mode');
+        convertModeWord2Pdf.classList.remove('active-mode');
+        convertFileInput.accept = '.pdf';
+        convertFileHint.textContent = '选择 PDF 文件 (转为 Word)';
+      } else {
+        convertModeWord2Pdf.classList.add('active-mode');
+        convertModePdf2Word.classList.remove('active-mode');
+        convertFileInput.accept = '.docx';
+        convertFileHint.textContent = '选择 Word 文件 (转为 PDF)';
+      }
+      updateConvertPreview();
+      updateTip('请选择文件');
+    }
+
+    convertModePdf2Word.onclick = () => setConvertMode('pdf2word');
+    convertModeWord2Pdf.onclick = () => setConvertMode('word2pdf');
+
+    convertFileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const isPdf = file.name.toLowerCase().endsWith('.pdf');
+      const isDocx = file.name.toLowerCase().endsWith('.docx');
+      if (convertMode === 'pdf2word' && !isPdf) { updateTip('请选择 PDF 文件'); return; }
+      if (convertMode === 'word2pdf' && !isDocx) { updateTip('请选择 .docx 格式文件'); return; }
+
+      convertFile = file;
+      convertFileInfo.innerHTML = `<div class="file-item"><span>${file.name}</span></div>`;
+      convertBtn.disabled = false; convertClearBtn.disabled = false;
+      updateConvertPreview();
+    };
+
+    async function pdfToWord(file) {
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
+      let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>body{margin:0;padding:0;} .page{position:relative; width:100%; height:1122px; background:white; page-break-after:always; overflow:hidden;} .text-item{position:absolute; white-space:pre; line-height:1; font-family:sans-serif;}</style></head><body>`;
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        updateTip(`正在提取第 ${i}/${pdf.numPages} 页...`);
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.0 });
+        const textContent = await page.getTextContent();
+        
+        htmlContent += `<div class="page">`;
+        textContent.items.forEach(item => {
+          if (item.str && item.str.trim() !== '') {
+            const [scaleX, skewY, skewX, scaleY, x, y] = item.transform;
+            const top = viewport.height - y - (item.height || 12);
+            const fontSize = Math.sqrt(scaleY * scaleY + skewY * skewY) || 12;
+            const safeStr = item.str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            htmlContent += `<span class="text-item" style="left:${x}px; top:${top}px; font-size:${fontSize}px;">${safeStr}</span>`;
+          }
+        });
+        htmlContent += `</div>`;
+      }
+      htmlContent += `</body></html>`;
+      return new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    }
+
+    async function wordToPdf(file) {
+      updateTip('正在解析 Word 内容...');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      const htmlBody = result.value || '<p>(空文档)</p>';
+      
+      const printHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>打印为 PDF</title>
+            <style>
+              body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; padding: 20px; }
+              p { margin-bottom: 10pt; }
+              table { border-collapse: collapse; width: 100%; }
+              td, th { border: 1px solid #000; padding: 8px; }
+              @media print {
+                @page { margin: 2cm; }
+                body { padding: 0; }
+              }
+            </style>
+          </head>
+          <body>${htmlBody}</body>
+        </html>
+      `;
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '100vw';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(printHtml);
+      iframeDoc.close();
+
+      updateTip('正在唤起打印面板...');
+      
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+        updateTip('请在打印面板选择“另存为 PDF”');
+      }, 500);
+    }
+
+    convertBtn.onclick = async () => {
+      if (!convertFile) return;
+      convertBtn.disabled = true;
+      updateTip('开始处理...');
+      try {
+        if (convertMode === 'pdf2word') {
+          const blob = await pdfToWord(convertFile);
+          downloadBlob(blob, convertFile.name.replace(/\.pdf$/i, '') + '.doc');
+          updateTip('PDF 转 Word 成功，已下载');
+        } else {
+          await wordToPdf(convertFile);
+        }
+      } catch (err) {
+        updateTip('转换失败: ' + err.message);
+      } finally {
+        convertBtn.disabled = false;
+      }
+    };
+    
+    setConvertMode('pdf2word');
+  </script>
+</body>
+</html>
