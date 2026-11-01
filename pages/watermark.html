@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>图片水印 · 全屏版</title>
+  <title>工程水印 · 牛马刷子工具合集</title>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     * {
@@ -52,7 +52,7 @@
     .function-area::-webkit-scrollbar-track { background: transparent; }
     .function-area::-webkit-scrollbar-thumb { background: #dcdfe6; border-radius: 3px; }
 
-    /* 统一的标题行样式 */
+    /* 统一的标题行样式 —— 调整后：清空按钮整合到右侧 */
     .section-header {
       display: flex;
       align-items: center;
@@ -61,6 +61,7 @@
       padding-bottom: 8px;
       border-bottom: 2px solid #2f80ed;
       flex-shrink: 0;
+      position: relative;
     }
 
     .section-header h2 {
@@ -73,7 +74,9 @@
     .clear-action-wrapper {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
+      margin-left: auto;
     }
 
     .clear-toast {
@@ -236,38 +239,111 @@
       background: #fff;
     }
 
-    .time-checkbox-wrapper {
+    /* ========== 重新设计的滑动开关 (Toggle Switch) ========== */
+    .toggle-switch-wrapper {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-left: 6px;
+      margin-left: 10px;
       flex-shrink: 0;
     }
 
-    .time-checkbox-wrapper input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
+    .toggle-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 80px;       /* 略微加宽，让内部空间更充裕 */
+      height: 34px;
       cursor: pointer;
-      accent-color: #2f80ed;
+      user-select: none;
     }
 
-    .time-checkbox-wrapper label {
-      font-size: 13px;
-      color: #4a5568;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #e2e8f0;
+      border-radius: 34px;
+      transition: background-color 0.3s;
+    }
+
+    .toggle-text {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      transition: opacity 0.3s, color 0.3s;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* 关闭状态：文字靠右，避开左侧的圆球 */
+    .toggle-text-off {
+      right: 14px; 
+      color: #64748b;
+      opacity: 1;
+    }
+
+    /* 开启状态：文字靠左，避开右侧的圆球 */
+    .toggle-text-on {
+      left: 14px; 
+      color: #ffffff;
+      opacity: 0;
+    }
+
+    .toggle-slider::before {
+      position: absolute;
+      content: "";
+      height: 28px;
+      width: 28px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+      z-index: 1;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #2f80ed;
+    }
+
+    /* 圆球移动到最右侧 */
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(46px); 
+    }
+
+    .toggle-switch input:checked ~ .toggle-text-on {
+      opacity: 1;
+    }
+    
+    .toggle-switch input:checked ~ .toggle-text-off {
+      opacity: 0;
     }
 
     /* ========== 变形器区域（紧接在表单下方） ========== */
     .transform-section {
-      margin-top: 24px;
+      margin-top: 30px;
     }
 
     .slider-row {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 22px;
+    }
+
+    .slider-row:last-child {
+      margin-bottom: 0;
     }
 
     .slider-row label {
@@ -282,39 +358,47 @@
       flex: 1;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
+    /* 美化 range 滑块 */
     .slider-wrapper input[type="range"] {
       flex: 1;
-      height: 6px;
+      height: 8px;
       -webkit-appearance: none;
       appearance: none;
-      background: #dcdfe6;
-      border-radius: 3px;
+      background: linear-gradient(90deg, #2f80ed, #6ea8fe);
+      border-radius: 6px;
       outline: none;
       cursor: pointer;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .slider-wrapper input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
-      background: #2f80ed;
+      background: #ffffff;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(47, 128, 237, 0.4);
-      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(47, 128, 237, 0.5), 0 0 0 2px #2f80ed;
+      border: none;
+      transition: transform 0.15s;
+    }
+
+    .slider-wrapper input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
     }
 
     .slider-wrapper input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
-      background: #2f80ed;
+      background: #ffffff;
       cursor: pointer;
-      border: 2px solid #fff;
+      border: 2px solid #2f80ed;
+      box-shadow: 0 2px 8px rgba(47, 128, 237, 0.4);
     }
 
     .slider-value-badge {
@@ -322,10 +406,12 @@
       font-weight: 700;
       color: #2f80ed;
       background: #eef4ff;
-      padding: 3px 10px;
+      padding: 5px 12px;
       border-radius: 20px;
-      min-width: 50px;
+      min-width: 58px;
       text-align: center;
+      transition: background 0.2s;
+      box-shadow: inset 0 1px 2px rgba(47,128,237,0.1);
     }
 
     /* ========== 底部操作区 ========== */
@@ -740,11 +826,16 @@
     <!-- 统一功能区（滚动区） -->
     <div class="function-area">
       
-      <!-- 1. 水印内容设置 -->
+      <!-- 1. 水印内容设置 —— 清空按钮放在这一行的最右侧 -->
       <div class="section-header">
-        <h2>水印内容设置</h2>
+        <h2>内容设置</h2>
         <div class="clear-action-wrapper">
           <span class="clear-toast" id="clear-toast">已清空</span>
+          <button class="btn-icon" id="btn-clear-content" title="一键清空水印内容">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -766,6 +857,7 @@
         </div>
       </div>
 
+      <!-- 时间行，内嵌文字滑动开关 -->
       <div class="form-group">
         <label>时间：</label>
         <div class="time-group">
@@ -773,9 +865,13 @@
           <span style="color:#4a5568; font-weight:600; font-size:14px;">:</span>
           <select id="input-time-minute" style="flex:1;"></select>
         </div>
-        <div class="time-checkbox-wrapper">
-          <input type="checkbox" id="checkbox-show-time">
-          <label for="checkbox-show-time">显示</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-switch" title="默认显示星期，开启显示时间">
+            <input type="checkbox" id="checkbox-show-time">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text toggle-text-on">显示</span>
+            <span class="toggle-text toggle-text-off">隐藏</span>
+          </label>
         </div>
       </div>
 
@@ -800,21 +896,17 @@
       <!-- 2. 水印变形器 -->
       <div class="transform-section">
         <div class="section-header">
-          <h2>水印变形器</h2>
+          <h2>变形器</h2>
           <div class="clear-action-wrapper">
             <button class="btn-icon" id="btn-reset-transform" title="复位透明度与尺寸">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/>
               </svg>
             </button>
-            <button class="btn-icon" id="btn-clear-content" title="一键清空水印内容">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-              </svg>
-            </button>
           </div>
         </div>
         
+        <!-- 透明度滑块 -->
         <div class="slider-row">
           <label>透明度：</label>
           <div class="slider-wrapper">
@@ -823,6 +915,7 @@
           </div>
         </div>
 
+        <!-- 尺寸滑块 -->
         <div class="slider-row">
           <label>尺寸：</label>
           <div class="slider-wrapper">
@@ -1588,7 +1681,7 @@
       const cardRect = watermarkCard.getBoundingClientRect();
       watermarkCard.style.left = '16px';
       watermarkCard.style.top = (wrapperRect.height - cardRect.height - 16) + 'px';
-      watermarkCard.style.bottom = 'auto';
+    watermarkCard.style.bottom = 'auto';
       watermarkCard.style.right = 'auto';
     }, 100);
 
