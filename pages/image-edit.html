@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎨 图片处理工具 · 全屏裁剪 & 滤镜</title>
+  <title> 图片处理工具 · 牛马刷子工具合集</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* 真正的全屏无滚动 */
     html, body {
       width: 100vw;
       height: 100vh;
@@ -29,6 +28,14 @@
       padding: 1rem 1.5rem 1.5rem;
     }
 
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.2rem;
+      flex-shrink: 0;
+    }
+
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
@@ -36,8 +43,6 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin-bottom: 0.2rem;
-      flex-shrink: 0;
     }
 
     h1 span {
@@ -46,6 +51,31 @@
       background-clip: text;
       color: transparent;
       font-weight: 700;
+    }
+
+    .standalone-btn {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .standalone-btn:hover {
+      background: #f8fafc;
+      border-color: #a78bfa;
+      color: #4f46e5;
+    }
+    .standalone-btn svg {
+      width: 1rem;
+      height: 1rem;
+      stroke: currentColor;
     }
 
     .subhead {
@@ -57,7 +87,6 @@
       flex-shrink: 0;
     }
 
-    /* 主区域 */
     .editor-grid {
       display: grid;
       grid-template-columns: 1fr 380px;
@@ -66,71 +95,13 @@
       min-height: 0;
     }
 
-    /* 左侧 */
     .left-panel {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
       min-height: 0;
     }
 
-    .upload-area {
-      background: #ffffffd9;
-      border: 2px dashed #cbd5e1;
-      border-radius: 1rem;
-      padding: 0.8rem 1.2rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      transition: border 0.2s;
-      flex-shrink: 0;
-    }
-
-    .upload-area.dragover {
-      border-color: #8b5cf6;
-      background: #f5f3ff;
-    }
-
-    .file-input-label {
-      background: #ffffff;
-      padding: 0.5rem 1.2rem;
-      border-radius: 60px;
-      font-weight: 500;
-      color: #1e293b;
-      border: 1px solid #e2e8f0;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .file-input-label:hover {
-      background: #f8fafc;
-      border-color: #a78bfa;
-      transform: scale(1.02);
-    }
-
-    .file-input-label svg { width: 1.1rem; height: 1.1rem; stroke: #4f46e5; }
-    #fileInput { display: none; }
-
-    .filename-badge {
-      color: #334155;
-      background: #eef2f6;
-      padding: 0.3rem 0.8rem;
-      border-radius: 40px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      max-width: 300px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    /* 移除独立上传区域，集成到预览面板 */
     .preview-panel {
       background: #ffffffd9;
       border-radius: 1rem;
@@ -139,9 +110,9 @@
       flex-direction: column;
       flex: 1;
       min-height: 0;
+      position: relative;
     }
 
-    /* 画布容器 */
     .canvas-wrapper {
       background: #f1f5f9;
       border-radius: 0.75rem;
@@ -150,11 +121,21 @@
       align-items: center;
       overflow: hidden;
       position: relative;
-      border: 1px solid #e2e8f0;
+      border: 2px dashed #cbd5e1;
       margin-bottom: 0.5rem;
       flex: 1;
       min-height: 0;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
     }
+
+    .canvas-wrapper.dragover {
+      border-color: #8b5cf6;
+      background: #f5f3ff;
+    }
+
+    /* 隐藏文件输入 */
+    #fileInput { display: none; }
 
     #imageCanvas {
       max-width: 100%;
@@ -163,6 +144,23 @@
       width: auto;
       height: auto;
       object-fit: contain;
+    }
+
+    /* 空白占位提示 */
+    .placeholder-message {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: #94a3b8;
+      padding: 1rem;
+      text-align: center;
+      pointer-events: none; /* 让点击穿透到 wrapper */
+    }
+    .placeholder-message svg {
+      width: 3rem;
+      height: 3rem;
     }
 
     .preview-footer {
@@ -177,6 +175,9 @@
     .hint-inline {
       font-size: 0.8rem;
       color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
 
     .action-buttons {
@@ -214,7 +215,6 @@
     .btn-danger:hover { background: #fecaca; }
     .btn:disabled { opacity: 0.45; pointer-events: none; filter: grayscale(0.5); }
 
-    /* 右侧面板 */
     .control-panel {
       display: flex;
       flex-direction: column;
@@ -357,6 +357,93 @@
     }
     .preset-btn:hover { background: #eef2ff; border-color: #a78bfa; color: #4f46e5; }
 
+    /* 减肥增重 模块 */
+    .size-info-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      background: #f8fafc;
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      font-size: 0.8rem;
+      color: #1e293b;
+      margin-bottom: 0.4rem;
+    }
+    .size-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .size-info-label {
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .size-info-value {
+      font-weight: 600;
+      background: #eef2ff;
+      padding: 0.1rem 0.6rem;
+      border-radius: 40px;
+      color: #4f46e5;
+      font-size: 0.75rem;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* 状态栏长驻 */
+    .size-status-text {
+      font-size: 0.75rem;
+      color: #4f46e5;
+      background: #eef2ff;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 0.6rem;
+      font-weight: 500;
+      min-height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .size-buttons {
+      display: flex;
+      gap: 0.6rem;
+    }
+    .size-btn {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 40px;
+      padding: 0.6rem 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+    .size-btn:hover:not(:disabled) {
+      background: #eef2ff;
+      border-color: #a78bfa;
+      color: #4f46e5;
+      transform: scale(1.01);
+    }
+    .size-btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(0.6);
+    }
+    .size-btn .arrow-icon { font-size: 0.9rem; }
+
     @media (max-width: 900px) {
       .editor-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
     }
@@ -364,56 +451,56 @@
 </head>
 <body>
   <div class="app-card">
-    <h1><span>✨ 图片处理</span> 工具</h1>
-    <div class="subhead">拖动鼠标可自由裁剪 · 旋转滤镜实时调整</div>
+    <div class="header-row">
+      <h1><span>✨ 图片处理</span> 工具</h1>
+      <button class="standalone-btn" id="standaloneBtn" title="在新窗口打开，免受界面刷新干扰">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        在独立窗口中打开
+      </button>
+    </div>
+    <div class="subhead">纯前端工具，本地化操作。牛马刷子工具合集   ©️ XUGL6036   @ Github</div>
 
     <div class="editor-grid">
       <div class="left-panel">
-        <div class="upload-area" id="dropZone">
-          <label for="fileInput" class="file-input-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            选择图片
-          </label>
-          <input type="file" id="fileInput" accept="image/*">
-          <div class="filename-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-            </svg>
-            <span id="fileNameText">未选择文件</span>
-          </div>
-        </div>
-
+        <!-- 预览面板集成上传区域 -->
         <div class="preview-panel">
           <div class="canvas-wrapper" id="canvasWrapper">
-            <div class="placeholder-message" id="placeholderMsg" style="position:absolute; display:flex; flex-direction:column; align-items:center; gap:0.5rem; color:#94a3b8; padding: 1rem; text-align: center;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:3rem;height:3rem;">
+            <!-- 空白占位，点击或拖拽触发上传 -->
+            <div class="placeholder-message" id="placeholderMsg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="2" width="20" height="20" rx="3" />
                 <circle cx="8.5" cy="8.5" r="1.5" fill="#cbd5e1" stroke="none" />
                 <path d="M21 15L16 10L5 21" />
               </svg>
-              <span>拖拽或上传一张图片到上面方框，开始编辑吧</span>
+              <span>点击选择图片，或将图片拖拽到此处</span>
             </div>
             <canvas id="imageCanvas" style="display: none;"></canvas>
           </div>
 
           <div class="preview-footer">
-            <div class="hint-inline">⚡ 拖动鼠标框选自由裁剪区域</div>
+            <div class="hint-inline">
+              <span id="fileNameDisplay" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">未选择文件</span>
+            </div>
             <div class="action-buttons">
               <button class="btn btn-danger" id="clearBtn">清空</button>
               <button class="btn btn-secondary" id="resetBtn">重置</button>
+              <button class="btn btn-secondary" id="copyBtn" disabled>复制</button>
               <button class="btn btn-primary" id="downloadBtn" disabled>下载</button>
             </div>
           </div>
         </div>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="fileInput" accept="image/*">
       </div>
 
       <!-- 右侧控制面板 -->
       <div class="control-panel">
-        <!-- 滤镜调整（提至顶部，默认展开） -->
+        <!-- 滤镜调整 -->
         <div class="section-card" id="filterSection">
           <div class="section-header" data-target="filter">
             <span>🎨 滤镜调整</span>
@@ -440,7 +527,7 @@
           </div>
         </div>
 
-        <!-- 基础调整（移至下方，默认折叠） -->
+        <!-- 基础调整 -->
         <div class="section-card collapsed" id="basicSection">
           <div class="section-header" data-target="basic">
             <span>✂️ 基础调整</span>
@@ -464,18 +551,54 @@
             </div>
           </div>
         </div>
+
+        <!-- 减肥增重 -->
+        <div class="section-card collapsed" id="sizeSection">
+          <div class="section-header" data-target="size">
+            <span>⚖️ 减肥增重</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9" /></svg>
+          </div>
+          <div class="section-content">
+            <div class="size-info-grid" id="sizeInfoGrid">
+              <div class="size-info-row">
+                <span class="size-info-label">📐 尺寸</span>
+                <span class="size-info-value" id="infoDimensions">—</span>
+              </div>
+              <div class="size-info-row">
+                <span class="size-info-label">📦 文件大小</span>
+                <span class="size-info-value" id="infoFileSize">—</span>
+              </div>
+              <div class="size-info-row">
+                <span class="size-info-label">🖼️ 当前画布</span>
+                <span class="size-info-value" id="infoCanvasSize">—</span>
+              </div>
+            </div>
+
+            <!-- 状态栏长驻 -->
+            <div class="size-status-text" id="sizeStatusText">等待操作...</div>
+
+            <div class="size-buttons">
+              <button class="size-btn" id="decreaseSizeBtn" disabled>
+                <span class="arrow-icon">⬇️</span> 减小字节
+              </button>
+              <button class="size-btn" id="increaseSizeBtn" disabled>
+                <span class="arrow-icon">⬆️</span> 增加字节
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
   <script>
     (function() {
       // DOM
       const fileInput = document.getElementById('fileInput');
-      const fileNameText = document.getElementById('fileNameText');
+      const fileNameDisplay = document.getElementById('fileNameDisplay');
       const canvas = document.getElementById('imageCanvas');
       const ctx = canvas.getContext('2d');
       const placeholderMsg = document.getElementById('placeholderMsg');
-      const dropZone = document.getElementById('dropZone');
       const canvasWrapper = document.getElementById('canvasWrapper');
 
       const sliders = {
@@ -495,12 +618,21 @@
 
       const resetBtn = document.getElementById('resetBtn');
       const clearBtn = document.getElementById('clearBtn');
+      const copyBtn = document.getElementById('copyBtn');
       const downloadBtn = document.getElementById('downloadBtn');
+      const standaloneBtn = document.getElementById('standaloneBtn');
       const presetBtns = document.querySelectorAll('.preset-btn');
       const cropBtns = document.querySelectorAll('.crop-btn');
       const dirBtns = document.querySelectorAll('.dir-btn');
       const sectionHeaders = document.querySelectorAll('.section-header');
       const sectionCards = document.querySelectorAll('.section-card');
+
+      const infoDimensions = document.getElementById('infoDimensions');
+      const infoFileSize = document.getElementById('infoFileSize');
+      const infoCanvasSize = document.getElementById('infoCanvasSize');
+      const decreaseSizeBtn = document.getElementById('decreaseSizeBtn');
+      const increaseSizeBtn = document.getElementById('increaseSizeBtn');
+      const sizeStatusText = document.getElementById('sizeStatusText');
 
       // State
       let originalImage = null;
@@ -510,27 +642,73 @@
       let flipH = false;
       let flipV = false;
 
-      // 自由裁剪状态
       let isDragging = false;
       let startX = 0, startY = 0;
       let currentX = 0, currentY = 0;
       let manualCropRect = null;
 
-      function updateSliderLabels() {
-        valLabels.brightness.textContent = sliders.brightness.value + '%';
-        valLabels.contrast.textContent = sliders.contrast.value + '%';
-        valLabels.saturate.textContent = sliders.saturate.value + '%';
-        valLabels.blur.textContent = parseFloat(sliders.blur.value).toFixed(1) + 'px';
-        valLabels.grayscale.textContent = sliders.grayscale.value + '%';
+      let currentFileSizeBytes = 0;
+      let currentMimeType = 'image/png';
+
+      const KB = 1024;
+      const MB = 1024 * 1024;
+      const MIN_SIZE_BYTES = 50 * KB;
+      const MAX_SIZE_BYTES = 5 * MB;
+
+      function formatFileSize(bytes) {
+        if (bytes === 0 || bytes === undefined || bytes === null) return '—';
+        if (bytes < KB) return bytes + ' B';
+        if (bytes < MB) return (bytes / KB).toFixed(1) + ' KB';
+        return (bytes / MB).toFixed(2) + ' MB';
       }
 
-      function getFilterString() {
-        const b = sliders.brightness.value / 100;
-        const c = sliders.contrast.value / 100;
-        const s = sliders.saturate.value / 100;
-        const bl = sliders.blur.value;
-        const g = sliders.grayscale.value / 100;
-        return `brightness(${b}) contrast(${c}) saturate(${s}) blur(${bl}px) grayscale(${g})`;
+      let lastCanvasDataURLSize = 0;
+
+      function getDataURLSize(dataURL) {
+        const base64 = dataURL.split(',')[1];
+        if (!base64) return 0;
+        return Math.floor(base64.length * 3 / 4);
+      }
+
+      function updateSizePanelInfo() {
+        if (originalImage) {
+          infoDimensions.textContent = `${originalImage.width} × ${originalImage.height}`;
+        } else {
+          infoDimensions.textContent = '—';
+        }
+
+        if (currentImageLoaded && canvas.width > 0) {
+          infoCanvasSize.textContent = `${canvas.width} × ${canvas.height}`;
+        } else {
+          infoCanvasSize.textContent = '—';
+        }
+
+        infoFileSize.textContent = formatFileSize(currentFileSizeBytes);
+
+        if (!currentImageLoaded || canvas.width === 0 || !lastCanvasDataURLSize) {
+          decreaseSizeBtn.disabled = true;
+          increaseSizeBtn.disabled = true;
+          return;
+        }
+
+        const size = lastCanvasDataURLSize;
+        decreaseSizeBtn.disabled = size < MIN_SIZE_BYTES;
+        increaseSizeBtn.disabled = size > MAX_SIZE_BYTES;
+      }
+
+      function refreshCanvasSizeMetric() {
+        if (!currentImageLoaded || canvas.width === 0) {
+          lastCanvasDataURLSize = 0;
+          updateSizePanelInfo();
+          return;
+        }
+        try {
+          const dataURL = canvas.toDataURL('image/png');
+          lastCanvasDataURLSize = getDataURLSize(dataURL);
+        } catch (e) {
+          lastCanvasDataURLSize = 0;
+        }
+        updateSizePanelInfo();
       }
 
       function render() {
@@ -614,6 +792,11 @@
         canvas.style.display = 'block';
         placeholderMsg.style.display = 'none';
         downloadBtn.disabled = false;
+        copyBtn.disabled = false;
+
+        setTimeout(() => {
+          refreshCanvasSizeMetric();
+        }, 0);
       }
 
       let renderTimeout = null;
@@ -622,7 +805,23 @@
         renderTimeout = requestAnimationFrame(() => render());
       }
 
-      // 拖拽裁剪逻辑
+      function updateSliderLabels() {
+        valLabels.brightness.textContent = sliders.brightness.value + '%';
+        valLabels.contrast.textContent = sliders.contrast.value + '%';
+        valLabels.saturate.textContent = sliders.saturate.value + '%';
+        valLabels.blur.textContent = parseFloat(sliders.blur.value).toFixed(1) + 'px';
+        valLabels.grayscale.textContent = sliders.grayscale.value + '%';
+      }
+
+      function getFilterString() {
+        const b = sliders.brightness.value / 100;
+        const c = sliders.contrast.value / 100;
+        const s = sliders.saturate.value / 100;
+        const bl = sliders.blur.value;
+        const g = sliders.grayscale.value / 100;
+        return `brightness(${b}) contrast(${c}) saturate(${s}) blur(${bl}px) grayscale(${g})`;
+      }
+
       function getRelativePos(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -663,12 +862,12 @@
       function onPointerUp() {
         if (!isDragging) return;
         isDragging = false;
-        if (manualCropRect && (manualCropRect.w < 0.01 || manualCropRect.h < 0.01)) {
-          manualCropRect = null;
+        if (manualCropRect && (manualCropRect.w < 0.01 || manualCropRect.h < 0.01)) {          manualCropRect = null;
         }
         requestRender();
       }
 
+      // 将拖拽监听绑定到 canvas（仅在已有图片时生效）
       canvas.addEventListener('mousedown', onPointerDown);
       window.addEventListener('mousemove', onPointerMove);
       window.addEventListener('mouseup', onPointerUp);
@@ -706,12 +905,17 @@
         currentImageLoaded = false;
         canvas.style.display = 'none';
         placeholderMsg.style.display = 'flex';
-        fileNameText.textContent = '未选择文件';
+        fileNameDisplay.textContent = '未选择文件';
         downloadBtn.disabled = true;
+        copyBtn.disabled = true;
         manualCropRect = null;
+        currentFileSizeBytes = 0;
+        lastCanvasDataURLSize = 0;
+        sizeStatusText.textContent = '等待操作...'; // 重置为初始状态
         resetFilters();
         resetTransform();
         fileInput.value = '';
+        updateSizePanelInfo();
       }
 
       function onImageLoad(img) {
@@ -719,6 +923,7 @@
         currentImageLoaded = true;
         resetFilters();
         resetTransform();
+        sizeStatusText.textContent = '等待操作...'; // 新图片重置状态
         requestRender();
       }
 
@@ -727,7 +932,9 @@
           alert('请选择有效的图片文件');
           return;
         }
-        fileNameText.textContent = file.name.length > 32 ? file.name.slice(0, 30) + '…' : file.name;
+        fileNameDisplay.textContent = file.name.length > 32 ? file.name.slice(0, 30) + '…' : file.name;
+        currentFileSizeBytes = file.size;   // 记录原始文件大小
+        currentMimeType = file.type || 'image/png';
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
@@ -738,16 +945,28 @@
         reader.readAsDataURL(file);
       }
 
-      // 事件绑定
+      // 上传相关：集成在预览框的点击与拖拽
+      canvasWrapper.addEventListener('click', (e) => {
+        // 如果还没有图片，点击预览区可触发文件选择
+        if (!currentImageLoaded) {
+          fileInput.click();
+        }
+      });
+
       fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) handleFile(e.target.files[0]);
       });
 
-      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-      dropZone.addEventListener('drop', (e) => {
+      canvasWrapper.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('dragover');
+        if (!currentImageLoaded) {
+          canvasWrapper.classList.add('dragover');
+        }
+      });
+      canvasWrapper.addEventListener('dragleave', () => canvasWrapper.classList.remove('dragover'));
+      canvasWrapper.addEventListener('drop', (e) => {
+        e.preventDefault();
+        canvasWrapper.classList.remove('dragover');
         if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
       });
 
@@ -761,6 +980,53 @@
       resetBtn.addEventListener('click', fullReset);
       clearBtn.addEventListener('click', clearImage);
 
+      // 独立窗口打开
+      standaloneBtn.addEventListener('click', () => {
+        window.open(window.location.href, '_blank', 'width=1400,height=900,menubar=no,toolbar=no,location=no,status=no');
+      });
+
+      // 复制图片至剪贴板
+      copyBtn.addEventListener('click', async () => {
+        if (!currentImageLoaded) return;
+        try {
+          if (navigator.clipboard && window.ClipboardItem) {
+            canvas.toBlob(async (blob) => {
+              try {
+                const item = new ClipboardItem({ 'image/png': blob });
+                await navigator.clipboard.write([item]);
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ 已复制';
+                setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
+              } catch (err) {
+                fallbackCopyToClipboard();
+              }
+            }, 'image/png');
+          } else {
+            fallbackCopyToClipboard();
+          }
+        } catch (e) {
+          fallbackCopyToClipboard();
+        }
+
+        function fallbackCopyToClipboard() {
+          try {
+            canvas.toBlob((blob) => {
+              const item = new ClipboardItem({ [blob.type]: blob });
+              navigator.clipboard.write([item]).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ 已复制';
+                setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
+              }).catch(() => {
+                alert('当前浏览器不支持直接复制图片，请使用下载按钮保存。');
+              });
+            });
+          } catch (e) {
+            alert('当前浏览器不支持直接复制图片，请使用下载按钮保存。');
+          }
+        }
+      });
+
+      // 下载
       downloadBtn.addEventListener('click', () => {
         if (!currentImageLoaded) return;
         try {
@@ -840,11 +1106,166 @@
         });
       });
 
+      // =============== 减肥增重 功能实现 ===============
+      // isIncrease: true 增加字节, false 减小字节
+      function adjustImageSize(isIncrease) {
+        if (!currentImageLoaded || canvas.width === 0) return;
+
+        let dataURL;
+        try {
+          if (isIncrease) {
+            // 增加字节：放大15%尺寸，使用最高质量 JPEG 导出
+            const scale = 1.15;
+            const newW = Math.max(1, Math.round(canvas.width * scale));
+            const newH = Math.max(1, Math.round(canvas.height * scale));
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = newW;
+            tempCanvas.height = newH;
+            const tctx = tempCanvas.getContext('2d');
+            tctx.drawImage(canvas, 0, 0, newW, newH);
+            dataURL = tempCanvas.toDataURL('image/jpeg', 1.0);
+          } else {
+            // 减小字节：降低 JPEG 质量
+            let quality = 0.7;
+            dataURL = canvas.toDataURL('image/jpeg', quality);
+            let size = getDataURLSize(dataURL);
+            
+            if (size > MIN_SIZE_BYTES * 2) {
+              quality = 0.5;
+              dataURL = canvas.toDataURL('image/jpeg', quality);
+            }
+            if (getDataURLSize(dataURL) > MIN_SIZE_BYTES * 1.5) {
+              quality = 0.35;
+              dataURL = canvas.toDataURL('image/jpeg', quality);
+            }
+          }
+        } catch (e) {
+          console.warn('调整大小失败', e);
+          return;
+        }
+
+        const oldSize = lastCanvasDataURLSize;
+        const newSize = getDataURLSize(dataURL);
+        const sizeDiff = Math.abs(newSize - oldSize);
+        const diffStr = formatFileSize(sizeDiff);
+
+        const img = new Image();
+        img.onload = () => {
+          resetFilters();
+          resetTransform();
+          originalImage = img;
+          currentImageLoaded = true;
+          currentFileSizeBytes = newSize;
+          
+          requestRender();
+          
+          setTimeout(() => {
+            refreshCanvasSizeMetric();
+            updateSizePanelInfo();
+            
+            if (isIncrease) {
+              sizeStatusText.textContent = `✅ 已增加字节，当前大小 ${formatFileSize(newSize)} (+${diffStr})`;
+            } else {
+              sizeStatusText.textContent = `✅ 已减小字节，当前大小 ${formatFileSize(newSize)} (-${diffStr})`;
+            }
+          }, 50);
+        };
+        img.onerror = () => alert('调整大小失败，请重试');
+        img.src = dataURL;
+      }
+
+      decreaseSizeBtn.addEventListener('click', () => {
+        // 如果大于 5MB，首次点击直接减小至 5MB
+        if (lastCanvasDataURLSize > MAX_SIZE_BYTES) {
+          let quality = 1.0;
+          // 逐步降低质量直到低于 5MB
+          let tempDataURL = canvas.toDataURL('image/jpeg', quality);
+          while (getDataURLSize(tempDataURL) > MAX_SIZE_BYTES && quality > 0.1) {
+            quality -= 0.1;
+            tempDataURL = canvas.toDataURL('image/jpeg', quality);
+          }
+          if (getDataURLSize(tempDataURL) > MAX_SIZE_BYTES) {
+            // 如果降到最低还是超过，缩放尺寸至 0.8
+            const scale = 0.8;
+            const newW = Math.max(1, Math.round(canvas.width * scale));
+            const newH = Math.max(1, Math.round(canvas.height * scale));
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = newW;
+            tempCanvas.height = newH;
+            const tctx = tempCanvas.getContext('2d');
+            tctx.drawImage(canvas, 0, 0, newW, newH);
+            tempDataURL = tempCanvas.toDataURL('image/jpeg', 0.5);
+          }
+          const newSize = getDataURLSize(tempDataURL);
+          const oldSize = lastCanvasDataURLSize;
+          const img = new Image();
+          img.onload = () => {
+            resetFilters();
+            resetTransform();
+            originalImage = img;
+            currentImageLoaded = true;
+            currentFileSizeBytes = newSize;
+            requestRender();
+            setTimeout(() => {
+              refreshCanvasSizeMetric();
+              updateSizePanelInfo();
+              sizeStatusText.textContent = `✅ 已减小字节，当前大小 ${formatFileSize(newSize)} (-${formatFileSize(oldSize - newSize)})`;
+            }, 50);
+          };
+          img.src = tempDataURL;
+        } else {
+          adjustImageSize(false);
+        }
+      });
+
+      increaseSizeBtn.addEventListener('click', () => {
+        // 如果小于 50KB，首次点击直接增加至 50KB
+        if (lastCanvasDataURLSize < MIN_SIZE_BYTES) {
+          const target = MIN_SIZE_BYTES;
+          // 先放大尺寸至合适比例
+          let scale = 1.5;
+          let tempCanvas = document.createElement('canvas');
+          let tempDataURL = '';
+          let size = 0;
+          // 循环尝试直到达到目标大小
+          for (let i = 0; i < 5; i++) {
+            tempCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+            tempCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+            const tctx = tempCanvas.getContext('2d');
+            tctx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+            tempDataURL = tempCanvas.toDataURL('image/jpeg', 1.0);
+            size = getDataURLSize(tempDataURL);
+            if (size >= target) break;
+            scale *= 1.3;
+          }
+          const oldSize = lastCanvasDataURLSize;
+          const img = new Image();
+          img.onload = () => {
+            resetFilters();
+            resetTransform();
+            originalImage = img;
+            currentImageLoaded = true;
+            currentFileSizeBytes = size;
+            requestRender();
+            setTimeout(() => {
+              refreshCanvasSizeMetric();
+              updateSizePanelInfo();
+              sizeStatusText.textContent = `✅ 已增加字节，当前大小 ${formatFileSize(size)} (+${formatFileSize(size - oldSize)})`;
+            }, 50);
+          };
+          img.src = tempDataURL;
+        } else {
+          adjustImageSize(true);
+        }
+      });
+
       // 初始化
       updateSliderLabels();
       canvas.style.display = 'none';
       placeholderMsg.style.display = 'flex';
       downloadBtn.disabled = true;
+      copyBtn.disabled = true;
+      updateSizePanelInfo();
     })();
   </script>
 </body>

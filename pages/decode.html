@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>解码· 二维码/条形码/文字识别 </title>
+  <title>解码 · 二维码/条形码/文字识别【牛马刷子工具合集】</title>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.12.1/dist/quagga.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -18,52 +18,80 @@
       background: #fff; 
       display: flex; flex-direction: column; overflow: hidden;
     }
+    /* 顶部栏 — 增加独立窗口按钮 */
     .top-bar {
-      background: #f8fafc; color: #0f2a4a; padding: 22px 24px; /* 加大内边距使高度变高 */
+      background: #f8fafc; color: #0f2a4a; padding: 18px 24px;
       display: flex; justify-content: space-between; align-items: center;
       flex-shrink: 0; border-bottom: 1px solid #e2e8f0;
-      border-left: 6px solid #0f2a4a; /* 增加左侧色条，弥补移除副标题后的视觉空缺 */
+      border-left: 6px solid #0f2a4a;
     }
-    .top-bar h1 { font-size: 1.4rem; font-weight: 600; } /* 稍微放大字体 */
+    .top-bar h1 { font-size: 1.4rem; font-weight: 600; }
+    .top-bar .right-group { display: flex; align-items: center; gap: 16px; }
     .top-bar .powered { font-size: 0.8rem; color: #64748b; }
     .top-bar .powered strong { color: #0f2a4a; }
+    /* 独立窗口按钮 */
+    .popout-btn {
+      background: transparent; border: 1px solid #cbd5e1; border-radius: 30px;
+      padding: 4px 12px; font-size: 0.75rem; font-weight: 500;
+      color: #1e293b; cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .popout-btn:hover { background: #eef2f6; border-color: #3b82f6; color: #0f2a4a; }
+    .popout-btn:active { transform: scale(0.96); }
+
+    /* 主网格：左右两栏 */
     .main-grid {
       flex: 1; display: grid; grid-template-columns: 1fr 1fr;
       gap: 14px; padding: 14px 20px 0; min-height: 0;
     }
+    /* 左面板 — 合并后的“上传/预览”区域（原 dropzone + image-preview 合并） */
     .left-panel { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
-    .dropzone {
-      background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 14px;
-      padding: 10px 16px; display: flex; align-items: center; gap: 10px;
-      cursor: pointer; transition: all 0.15s; flex-shrink: 0; min-height: 60px;
+    .merged-zone {
+      background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 14px;
+      display: flex; flex-direction: column; flex: 1; min-height: 0;
+      overflow: hidden; cursor: pointer; transition: border 0.15s, background 0.15s;
       outline: none; position: relative;
     }
-    .dropzone:hover, .dropzone.highlight { border-color: #3b82f6; background: #eff6ff; }
-    .dropzone:focus { border-color: #0f2a4a; background: #eff6ff; box-shadow: 0 0 0 3px rgba(15,42,74,0.15); }
-    .dropzone .icon { font-size: 1.5rem; }
-    .dropzone p { font-size: 0.85rem; font-weight: 500; color: #1e293b; }
-    .dropzone small { font-size: 0.65rem; color: #94a3b8; }
+    .merged-zone:hover, .merged-zone.highlight {
+      border-color: #3b82f6; background: #eff6ff;
+    }
+    .merged-zone:focus {
+      border-color: #0f2a4a; background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(15,42,74,0.15);
+    }
+    /* 内部预览容器 */
+    .preview-container {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 12px; overflow: hidden; min-height: 0;
+      position: relative;
+    }
+    .preview-container img {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .preview-placeholder {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: #64748b; font-size: 0.9rem; text-align: center;
+      user-select: none;
+    }
+    .preview-placeholder .icon { font-size: 2.6rem; opacity: 0.7; }
+    .preview-placeholder small { font-size: 0.7rem; color: #94a3b8; }
+    /* 粘贴提示 */
     .paste-hint {
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      position: absolute; right: 14px; top: 14px;
       background: #fff; border: 1px solid #e2e8f0; border-radius: 40px;
-      padding: 2px 8px; font-size: 0.6rem; color: #0f2a4a;
-      display: flex; align-items: center; gap: 3px; pointer-events: none;
+      padding: 3px 10px; font-size: 0.62rem; color: #0f2a4a;
+      display: flex; align-items: center; gap: 4px; pointer-events: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
     }
     .paste-hint kbd {
-      background: #f1f5f9; border-radius: 3px; padding: 0 4px;
-      font-size: 0.6rem; border: 1px solid #e2e8f0;
+      background: #f1f5f9; border-radius: 3px; padding: 0 5px;
+      font-size: 0.62rem; border: 1px solid #e2e8f0;
     }
-    .image-preview {
-      background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
-      padding: 10px; display: flex; align-items: center; justify-content: center;
-      flex: 1; min-height: 0; overflow: hidden;
-    }
-    .image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
-    .placeholder {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      color: #94a3b8; font-size: 0.8rem;
-    }
-    .placeholder span { font-size: 1.6rem; }
+    /* 隐藏文件输入 */
+    .hidden-input { display: none; }
+
+    /* 右侧面板 — 识别结果 */
     .right-panel {
       display: flex; flex-direction: column; height: 100%; min-height: 0;
       background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
@@ -147,7 +175,6 @@
     .btn:hover:not(:disabled) { background: #f1f5f9; border-color: #3b82f6; color: #1e293b; }
     .btn:active:not(:disabled) { transform: scale(0.96); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .hidden-input { display: none; }
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; gap: 10px; overflow-y: auto; padding: 12px 14px 0; }
       .paste-hint { display: none; }
@@ -160,25 +187,32 @@
 <body>
 <div class="app">
   <div class="top-bar">
-    <div><h1>📷 二维码 / 条形码 / 文字识别</h1></div>
-    <div class="powered">Powered By <strong>XUGL</strong> @ 2026</div>
+    <div><h1>二维码 · 解码</h1></div>
+    <div class="right-group">
+      <div class="powered">Powered By <strong>XUGL</strong> @ 2026</div>
+      <button class="popout-btn" id="popoutBtn" title="在新窗口中打开（独立窗口）">
+        <span>⧉</span> 独立窗口
+      </button>
+    </div>
   </div>
   
   <div class="main-grid">
+    <!-- 左侧：合并了拖拽/上传与预览的单一区域 -->
     <div class="left-panel">
-      <div class="dropzone" id="dropzone" tabindex="0" title="单击聚焦粘贴，双击上传">
-        <span class="icon">📤</span>
-        <div>
-          <p>单击聚焦 · 双击上传</p>
-          <small>或 Ctrl+V 粘贴图片</small>
+      <div class="merged-zone" id="mergedZone" tabindex="0" title="单击聚焦粘贴，双击上传图片">
+        <div class="preview-container" id="previewContainer">
+          <div class="preview-placeholder">
+            <span class="icon">📤</span>
+            <div>单击聚焦 · 双击上传</div>
+            <small>或 Ctrl+V 粘贴图片</small>
+          </div>
         </div>
-        <span class="paste-hint"><kbd>Ctrl</kbd>+<kbd>V</kbd></span>
+        <div class="paste-hint"><kbd>Ctrl</kbd>+<kbd>V</kbd> 粘贴</div>
         <input type="file" id="fileInput" class="hidden-input" accept="image/*">
       </div>
-      <div class="image-preview" id="imagePreview">
-        <div class="placeholder"><span>🖼️</span><small>图片预览</small></div>
-      </div>
     </div>
+
+    <!-- 右侧：识别结果 -->
     <div class="right-panel">
       <div class="result-header">
         <div class="result-label">识别结果</div>
@@ -203,11 +237,16 @@
 <script>
   (function() {
     const $ = id => document.getElementById(id);
-    const dropzone = $('dropzone'), fileInput = $('fileInput'), imagePreview = $('imagePreview'),
+    const mergedZone = $('mergedZone'), fileInput = $('fileInput'), 
+          previewContainer = $('previewContainer'),
           resultBody = $('resultBody'), statusBadge = $('statusBadge'),
-          statusMessage = $('statusMessage'), resetBtn = $('resetBtn'), copyBtn = $('copyBtn');
+          statusMessage = $('statusMessage'), resetBtn = $('resetBtn'), copyBtn = $('copyBtn'),
+          popoutBtn = $('popoutBtn');
+    
     let currentImageSrc = null;
+    let currentFileBlob = null; // 保留当前图片的blob用于独立窗口
 
+    // 设置状态
     const setStatus = (type, msg) => {
       const map = {
         ready: ['就绪', '#f1f5f9', '#475569'],
@@ -224,11 +263,20 @@
 
     const setCopyEnabled = (v) => { copyBtn.disabled = !v; };
 
+    // 重置UI（保留状态可配置）
     const resetUI = (keepMsg = false) => {
-      imagePreview.innerHTML = '<div class="placeholder"><span>🖼️</span><small>图片预览</small></div>';
+      // 预览区还原为占位符
+      previewContainer.innerHTML = `
+        <div class="preview-placeholder">
+          <span class="icon">📤</span>
+          <div>单击聚焦 · 双击上传</div>
+          <small>或 Ctrl+V 粘贴图片</small>
+        </div>
+      `;
       resultBody.innerHTML = '<div class="result-content empty" id="resultContent">等待上传二维码/条形码/文字图片...</div>';
       if (currentImageSrc?.startsWith('blob:')) URL.revokeObjectURL(currentImageSrc);
       currentImageSrc = null;
+      currentFileBlob = null;
       fileInput.value = '';
       setCopyEnabled(false);
       if (!keepMsg) setStatus('ready', '拖入、上传或粘贴图片');
@@ -253,29 +301,18 @@
       return parts.join('\n\n').trim();
     };
 
-    // 增强版：去除汉字之间、汉字与标点之间的多余空格
+    // 清理汉字多余空格
     const cleanCjkSpaces = (text) => {
       if (!text) return '';
       let cleaned = text;
-      
-      // 1. 去除汉字与汉字之间的空格
       cleaned = cleaned.replace(/([\u4e00-\u9fff\u3400-\u4dbf])\s+([\u4e00-\u9fff\u3400-\u4dbf])/g, '$1$2');
-      
-      // 2. 去除汉字与中文标点（，。！？：；@#）之间的空格
       cleaned = cleaned.replace(/([\u4e00-\u9fff])\s+([，。！？：；、（）《》“”‘’@#])/g, '$1$2');
       cleaned = cleaned.replace(/([，。！？：；、（）《》“”‘’@#])\s+([\u4e00-\u9fff])/g, '$1$2');
-      
-      // 3. 去除汉字与英文/数字之间的空格
       cleaned = cleaned.replace(/([\u4e00-\u9fff])\s+([a-zA-Z0-9])/g, '$1$2');
       cleaned = cleaned.replace(/([a-zA-Z0-9])\s+([\u4e00-\u9fff])/g, '$1$2');
-
-      // 4. 去除中文标点前后的多余空格
       cleaned = cleaned.replace(/\s+([，。！？：；、（）《》“”‘’])/g, '$1');
       cleaned = cleaned.replace(/([，。！？：；、（）《》“”‘’])\s+/g, '$1');
-
-      // 5. 连续多个空格合并为一个（保留英文单词间的正常空格）
       cleaned = cleaned.replace(/[ \t]+/g, ' ');
-
       return cleaned.trim();
     };
 
@@ -324,38 +361,28 @@
       });
     }
 
-    // 预处理图片（放大2倍）以提高识别率，并关闭 Tesseract 默认空格保留
     async function decodeText(imageSrc) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = async () => {
           try {
-            // 放大图片
             const scale = 2.0;
             const canvas = document.createElement('canvas');
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
             const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true; // 平滑缩放
+            ctx.imageSmoothingEnabled = true;
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // 获取放大后的 base64 图像
             const scaledDataUrl = canvas.toDataURL('image/jpeg');
-
             const worker = await Tesseract.createWorker('chi_sim+eng');
             try {
-              // preserve_interword_spaces: '0' 尝试让它不要随便加空格
-              await worker.setParameters({
-                preserve_interword_spaces: '0', 
-              });
+              await worker.setParameters({ preserve_interword_spaces: '0' });
               const { data: { text } } = await worker.recognize(scaledDataUrl);
               resolve(cleanCjkSpaces((text || '').trim()));
             } finally {
               await worker.terminate();
             }
-          } catch (err) {
-            reject(err);
-          }
+          } catch (err) { reject(err); }
         };
         img.onerror = () => reject(new Error('OCR图片加载失败'));
         img.src = imageSrc;
@@ -378,27 +405,34 @@
       return div;
     };
 
+    // 核心：处理图片（Blob）——识别并更新预览
     async function handleImageBlob(blob) {
       if (!blob.type.startsWith('image/')) return showError('不支持的文件类型', '请上传图片文件');
       if (currentImageSrc?.startsWith('blob:')) URL.revokeObjectURL(currentImageSrc);
 
       const img = new Image();
       const url = URL.createObjectURL(blob);
-      imagePreview.innerHTML = '<div class="placeholder"><span>⏳</span><small>加载中...</small></div>';
+      
+      // 显示加载状态
+      previewContainer.innerHTML = `<div class="preview-placeholder"><span class="icon">⏳</span><small>加载中...</small></div>`;
       setCopyEnabled(false);
 
       img.onload = async () => {
-        imagePreview.innerHTML = '';
+        // 替换为实际图片预览
+        previewContainer.innerHTML = '';
         const previewImg = document.createElement('img');
         previewImg.src = url;
         previewImg.alt = '图片预览';
-        imagePreview.appendChild(previewImg);
+        previewContainer.appendChild(previewImg);
+        
         currentImageSrc = url;
+        currentFileBlob = blob; // 保存以便独立窗口使用
 
+        // 开始识别流程
         resultBody.innerHTML = '<div class="result-content empty">识别中，请稍候...</div>';
         setStatus('loading', '正在识别二维码...');
 
-        // 1) 尝试二维码 —— 成功则直接结束，不执行 OCR
+        // 1) 二维码
         try {
           const text = await decodeQR(img);
           resultBody.innerHTML = '';
@@ -406,11 +440,9 @@
           setStatus('success', '二维码识别成功');
           setCopyEnabled(true);
           return;
-        } catch (qrErr) {
-          // 继续尝试条形码
-        }
+        } catch (qrErr) { /* 继续 */ }
 
-        // 2) 尝试条形码 —— 成功则直接结束，不执行 OCR
+        // 2) 条形码
         setStatus('loading', '正在尝试条形码识别...');
         try {
           const barcodeText = await decodeBarcode(url);
@@ -421,11 +453,9 @@
             setCopyEnabled(true);
             return;
           }
-        } catch (barErr) {
-          // 继续尝试 OCR
-        }
+        } catch (barErr) { /* 继续 */ }
 
-        // 3) 条码/二维码均未识别到，执行文字识别
+        // 3) OCR
         setStatus('loading', '正在尝试文字识别...');
         try {
           const ocrText = await decodeText(url);
@@ -448,40 +478,64 @@
 
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        imagePreview.innerHTML = '<div class="placeholder"><span>❌</span><small>图片加载失败</small></div>';
+        previewContainer.innerHTML = `<div class="preview-placeholder"><span class="icon">❌</span><small>图片加载失败</small></div>`;
         showError('图片加载失败', '格式不受支持或文件损坏');
       };
       img.src = url;
     }
 
-    dropzone.addEventListener('click', e => { e.preventDefault(); dropzone.focus(); });
-    dropzone.addEventListener('dblclick', e => { e.preventDefault(); fileInput.click(); });
+    // 交互：合并区域单击聚焦，双击打开文件选择
+    mergedZone.addEventListener('click', (e) => { 
+      e.preventDefault(); 
+      mergedZone.focus(); 
+    });
+    mergedZone.addEventListener('dblclick', (e) => { 
+      e.preventDefault(); 
+      fileInput.click(); 
+    });
 
-    dropzone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('highlight'); });
-    dropzone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('highlight'); });
-    dropzone.addEventListener('drop', e => {
-      e.preventDefault(); e.stopPropagation();
-      dropzone.classList.remove('highlight');
+    // 拖拽上传（拖拽进入合并区域）
+    mergedZone.addEventListener('dragover', (e) => { 
+      e.preventDefault(); 
+      e.stopPropagation(); 
+      mergedZone.classList.add('highlight'); 
+    });
+    mergedZone.addEventListener('dragleave', (e) => { 
+      e.preventDefault(); 
+      e.stopPropagation(); 
+      mergedZone.classList.remove('highlight'); 
+    });
+    mergedZone.addEventListener('drop', (e) => {
+      e.preventDefault(); 
+      e.stopPropagation();
+      mergedZone.classList.remove('highlight');
       const files = e.dataTransfer.files;
       if (!files.length) return setStatus('error', '未检测到文件');
       handleImageBlob(files[0]);
     });
 
+    // 文件选择
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length) handleImageBlob(fileInput.files[0]);
       fileInput.value = '';
     });
 
-    document.addEventListener('paste', async e => {
+    // 粘贴事件
+    document.addEventListener('paste', async (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
       let blob = null;
       for (const item of items) {
         if (item.type.includes('image')) { blob = item.getAsFile(); break; }
       }
-      if (blob) { e.preventDefault(); await handleImageBlob(blob); dropzone.focus(); }
+      if (blob) { 
+        e.preventDefault(); 
+        await handleImageBlob(blob); 
+        mergedZone.focus(); 
+      }
     });
 
+    // 复制结果
     copyBtn.addEventListener('click', async () => {
       const text = getResultText();
       if (!text) return;
@@ -493,11 +547,56 @@
       } catch { alert('复制失败，请手动选择文本复制'); }
     });
 
+    // 重置
     resetBtn.addEventListener('click', () => { resetUI(false); setStatus('ready', '拖入、上传或粘贴图片'); });
 
+    // 独立窗口按钮：使用 window.open 打开当前页面的一个副本，并将图片数据传递过去（通过sessionStorage或postMessage）
+    // 更简单的方式：打开同一页面并让用户重新上传。但为了“独立窗口”功能更实用，我们可以将当前图片的dataURL传递过去。
+    // 使用sessionStorage存储当前图片的dataURL，新窗口读取后直接显示/识别。
+    popoutBtn.addEventListener('click', () => {
+      // 如果有图片，将其转为dataURL暂存
+      if (currentFileBlob) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            // 存储到sessionStorage（同源窗口可读）
+            sessionStorage.setItem('popoutImage', ev.target.result);
+            sessionStorage.setItem('popoutTimestamp', Date.now());
+          } catch (e) {
+            // 存储可能失败（隐私模式等），忽略
+          }
+          window.open(window.location.href, '_blank', 'width=1100,height=750,menubar=no,toolbar=no,location=no,status=no');
+        };
+        reader.readAsDataURL(currentFileBlob);
+      } else {
+        // 没有图片就直接打开新窗口
+        window.open(window.location.href, '_blank', 'width=1100,height=750,menubar=no,toolbar=no,location=no,status=no');
+      }
+    });
+
+    // 页面加载时检查是否有从独立窗口传递过来的图片
+    window.addEventListener('load', () => {
+      const storedImage = sessionStorage.getItem('popoutImage');
+      if (storedImage) {
+        // 清除防止重复加载
+        sessionStorage.removeItem('popoutImage');
+        // 将dataURL转为Blob然后处理
+        fetch(storedImage)
+          .then(res => res.blob())
+          .then(blob => {
+            if (blob && blob.type.startsWith('image/')) {
+              handleImageBlob(blob);
+            }
+          })
+          .catch(() => {});
+      }
+    });
+
+    // 阻止全局拖拽干扰
     window.addEventListener('dragover', e => e.preventDefault());
     window.addEventListener('drop', e => e.preventDefault());
 
+    // 初始化界面
     resetUI(true);
     setStatus('ready', '拖入、上传或粘贴图片');
   })();
