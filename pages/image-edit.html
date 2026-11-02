@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,9 +14,13 @@
     .editor-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;flex:1;min-height:0}
     .left-panel{display:flex;flex-direction:column;min-height:0}
     .preview-panel{background:#ffffffd9;border-radius:1rem;padding:.8rem;display:flex;flex-direction:column;flex:1;min-height:0;position:relative}
+    
+    /* 画布自适应，消除两侧留白 */
     .canvas-wrapper{background-color:#f1f5f9;background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0px;border-radius:.75rem;display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative;border:2px dashed #cbd5e1;margin-bottom:.5rem;flex:1;min-height:0;cursor:pointer}
     #fileInput{display:none}
-    #imageCanvas{max-width:100%;max-height:100%;display:block;width:auto;height:auto;object-fit:contain;cursor:default}
+    /* 使用 width:100%; height:100%; object-fit:contain 确保画布撑满且比例正确 */
+    #imageCanvas{width:100%;height:100%;object-fit:contain;display:block;cursor:default;border:0;padding:0;margin:0}
+    
     .canvas-wrapper.mode-crop #imageCanvas{cursor:crosshair}
     .canvas-wrapper.mode-sticker #imageCanvas{cursor:grab}
     .canvas-wrapper.mode-sticker #imageCanvas:active{cursor:grabbing}
@@ -129,6 +133,8 @@
               <button class="preset-btn" data-preset="original" disabled>原图</button>
               <button class="preset-btn" data-preset="vintage" disabled>复古</button>
               <button class="preset-btn" data-preset="bright" disabled>明亮</button>
+              <button class="preset-btn" data-preset="mono" disabled>黑白</button>
+              <button class="preset-btn" data-preset="cool" disabled>冷色</button>
             </div>
           </div>
         </div>
@@ -167,7 +173,7 @@
   <script>
     (function(){
       const $=id=>document.getElementById(id);
-      const fileInput=$('fileInput'),fileNameDisplay=$('fileNameDisplay'),canvas=$('imageCanvas'),ctx=canvas.getContext('2d'),placeholderMsg=$('placeholderMsg'),canvasWrapper=$('canvasWrapper'),startCropBtn=$('startCropBtn'),extractBgBtn=$('extractBgBtn'),clearStickersBtn=$('clearStickersBtn'),stickerList=$('stickerList'),stickerControls=$('stickerControls'),saveStickerBtn=$('saveStickerBtn'),cancelCropBtn=$('cancelCropBtn'),scaleUpBtn=$('scaleUpBtn'),scaleDownBtn=$('scaleDownBtn'),deleteStickerBtn=$('deleteStickerBtn'),resetBtn=$('resetBtn'),clearBtn=$('clearBtn'),copyBtn=$('copyBtn'),downloadBtn=$('downloadBtn'),standaloneBtn=$('standaloneBtn'),adjustBar=$('adjustBar'),adjustApplyBtn=$('adjustApplyBtn'),adjustCancelBtn=$('adjustCancelBtn');
+      const fileInput=$('fileInput'),fileNameDisplay=$('fileNameDisplay'),canvas=$('imageCanvas'),ctx=canvas.getContext('2d'),placeholderMsg=$('placeholderMsg'),canvasWrapper=$('canvasWrapper'),startCropBtn=$('startCropBtn'),extractBgBtn=$('extractBgBtn'),clearStickersBtn=$('clearStickersBtn'),stickerList=$('stickerList'),stickerControls=$('stickerControls'),saveStickerBtn=$('saveStickerBtn'),cancelCropBtn=$('cancelCropBtn'),scaleUpBtn=$('scaleUpBtn'),scaleDownBtn=$('scaleDownBtn'),deleteStickerBtn=$('deleteStickerBtn'),resetBtn=$('resetBtn'),clearBtn=$('clearBtn'),copyBtn=$('copyBtn'),downloadBtn=$('downloadBtn'),standaloneBtn=$('standaloneBtn'),adjustBar=$('adjustBar'),adjustApplyBtn=$('adjustApplyBtn'),adjustCancelBtn=$('adjustCancelBtn'),sizeStatusText=$('sizeStatusText');
       const sliders={brightness:$('brightness'),contrast:$('contrast'),saturate:$('saturate')};
       const valLabels={brightness:$('brightnessVal'),contrast:$('contrastVal'),saturate:$('saturateVal')};
       
@@ -182,7 +188,6 @@
       function updateButtonsState() {
         const hasImage = currentImageLoaded;
         
-        // 依赖图片的按钮
         document.querySelectorAll('.crop-btn, .dir-btn, .preset-btn, #startCropBtn').forEach(btn => {
           btn.disabled = !hasImage;
         });
@@ -201,14 +206,42 @@
            extractBgBtn.disabled = true;
         }
 
-        // 清空贴纸按钮：只看素材库是否有贴纸
         clearStickersBtn.disabled = (stickers.length === 0);
       }
 
       function formatFileSize(b){if(!b)return '—';if(b<KB)return b+' B';if(b<MB)return (b/KB).toFixed(1)+' KB';return (b/MB).toFixed(2)+' MB';}
       function getDataURLSize(u){const b=u.split(',')[1];return b?Math.floor(b.length*3/4):0;}
-      function updateSizePanelInfo(){if(originalImage)$('infoDimensions').textContent=originalImage.width+' × '+originalImage.height;else $('infoDimensions').textContent='—';$('infoFileSize').textContent=formatFileSize(currentFileSizeBytes);if(!currentImageLoaded||canvas.width===0||!lastCanvasDataURLSize){$('decreaseSizeBtn').disabled=true;$('increaseSizeBtn').disabled=true;return;}$('decreaseSizeBtn').disabled=lastCanvasDataURLSize<MIN_SIZE_BYTES;$('increaseSizeBtn').disabled=lastCanvasDataURLSize>MAX_SIZE_BYTES;}
-      function refreshCanvasSizeMetric(){if(!currentImageLoaded||canvas.width===0){lastCanvasDataURLSize=0;updateSizePanelInfo();return;}try{lastCanvasDataURLSize=getDataURLSize(canvas.toDataURL('image/png'));}catch(e){lastCanvasDataURLSize=0;}updateSizePanelInfo();}
+      
+      function updateSizePanelInfo(){
+        if(originalImage)$('infoDimensions').textContent=originalImage.width+' × '+originalImage.height;
+        else $('infoDimensions').textContent='—';
+        
+        $('infoFileSize').textContent=formatFileSize(currentFileSizeBytes);
+        
+        if(!currentImageLoaded||canvas.width===0||!lastCanvasDataURLSize){
+          $('decreaseSizeBtn').disabled=true;
+          $('increaseSizeBtn').disabled=true;
+          return;
+        }
+        $('decreaseSizeBtn').disabled=lastCanvasDataURLSize<MIN_SIZE_BYTES;
+        $('increaseSizeBtn').disabled=lastCanvasDataURLSize>MAX_SIZE_BYTES;
+      }
+
+      // 修复：统一获取 JPEG 实际大小，与实际下载体积一致
+      function refreshCanvasSizeMetric(){
+        if(!currentImageLoaded||canvas.width===0){
+          lastCanvasDataURLSize=0;
+          updateSizePanelInfo();
+          return;
+        }
+        try{
+          lastCanvasDataURLSize=getDataURLSize(canvas.toDataURL('image/jpeg',0.9));
+        }catch(e){
+          lastCanvasDataURLSize=0;
+        }
+        updateSizePanelInfo();
+      }
+
       function getFilterString(){return `brightness(${sliders.brightness.value/100}) contrast(${sliders.contrast.value/100}) saturate(${sliders.saturate.value/100})`;}
       function updateSliderLabels(){valLabels.brightness.textContent=sliders.brightness.value+'%';valLabels.contrast.textContent=sliders.contrast.value+'%';valLabels.saturate.textContent=sliders.saturate.value+'%';}
 
@@ -229,7 +262,10 @@
         tctx.drawImage(originalImage,-originalImage.width/2,-originalImage.height/2,originalImage.width,originalImage.height);
         tctx.restore();
         
-        canvas.width=rotatedW;canvas.height=rotatedH;canvas.style.width='';canvas.style.height='';ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvas.width=rotatedW;canvas.height=rotatedH;
+        // 修复：移除强制行内宽高，让 CSS 接管自适应撑满
+        canvas.style.width='';canvas.style.height=''; 
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.filter=getFilterString();ctx.drawImage(temp,0,0);ctx.filter='none';
         
         ctx.save();
@@ -592,9 +628,14 @@
         originalImage=originalBackup;
         stickers.forEach(s => s.isOnCanvas = false); 
         activeStickerId=null;
+        
+        // 修复：重置时同步更新字节状态文字
+        currentFileSizeBytes = originalBackup.src ? getDataURLSize(originalBackup.src) : 0;
         requestRender();
+        sizeStatusText.textContent = '等待操作...';
       });
 
+      // 修复：清空画布时同步清空字节状态文字
       clearBtn.addEventListener('click',()=>{
         originalImage=null;currentImageLoaded=false;canvas.style.display='none';placeholderMsg.style.display='flex';fileNameDisplay.textContent='未选择文件';
         isCropMode=false;isEditingExtracted=false;
@@ -603,6 +644,9 @@
         canvasWrapper.classList.remove('mode-crop','mode-sticker');
         resetFilters();resetTransform();fileInput.value='';
         stickerControls.style.display='none';lastCanvasDataURLSize=0;
+        currentFileSizeBytes=0;
+        
+        sizeStatusText.textContent = '等待操作...'; // 修复状态重置
         
         updateSizePanelInfo();
         updateButtonsState();
@@ -620,7 +664,11 @@
             currentImageLoaded=true;activeStickerId=null;isCropMode=false;isEditingExtracted=false;
             exitAdjustMode();
             startCropBtn.textContent='框选区域';startCropBtn.style.background='#f8fafc';startCropBtn.style.color='#1e293b';
-            canvasWrapper.classList.remove('mode-crop','mode-sticker');resetFilters();resetTransform();requestRender();
+            canvasWrapper.classList.remove('mode-crop','mode-sticker');resetFilters();resetTransform();
+            
+            sizeStatusText.textContent = '等待操作...'; // 修复：重新上传时重置状态
+            
+            requestRender();
             updateButtonsState(); 
           };
           img.src=e.target.result;
@@ -630,7 +678,6 @@
 
       canvasWrapper.addEventListener('click',(e)=>{
         if(!currentImageLoaded && !isCropMode && !isAdjustMode) {
-           // 阻止事件冒泡防止触发 inner 元素
            if(e.target.closest('#stickerControls') || e.target.closest('.btn')) return;
            fileInput.click();
         }
@@ -647,15 +694,18 @@
         try{canvas.toBlob(async(blob)=>{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);copyBtn.textContent='✅ 已复制';setTimeout(()=>copyBtn.textContent='复制',1500);},'image/png');}catch(e){alert('当前浏览器不支持直接复制图片。');}
       });
       
+      // 下载改为 JPEG 格式，减小体积
       downloadBtn.addEventListener('click',()=>{
         if(!currentImageLoaded)return;
-        const link=document.createElement('a');link.download=`processed_${Date.now()}.png`;link.href=canvas.toDataURL('image/png');link.click();
+        const link=document.createElement('a');link.download=`processed_${Date.now()}.jpg`;link.href=canvas.toDataURL('image/jpeg', 0.9);link.click();
       });
 
       const presets={
         original:{brightness:100,contrast:100,saturate:100},
         vintage:{brightness:90,contrast:110,saturate:70},
-        bright:{brightness:130,contrast:105,saturate:110}
+        bright:{brightness:130,contrast:105,saturate:110},
+        mono:{brightness:100,contrast:100,saturate:0},
+        cool:{brightness:105,contrast:100,saturate:110}
       };
       document.querySelectorAll('.preset-btn').forEach(btn=>{
         btn.addEventListener('click',()=>{
