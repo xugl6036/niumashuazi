@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剪贴板读取器 · 牛马刷子工具合集</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        background: #f5f7fc;
+        margin: 0;
+        min-height: 100vh;
+        padding: 24px 16px;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .card {
+        background: #fff;
+        border-radius: 28px;
+        box-shadow: 0 20px 40px -12px rgba(0,20,30,.18);
+        padding: 2rem;
+    }
+    h1 {
+        font-size: 1.7rem;
+        font-weight: 600;
+        margin: 0 0 .4rem;
+        color: #0b1e2e;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    /* 标题右侧的工具栏 */
+    .title-right {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    h1 small {
+        font-size: .85rem;
+        font-weight: 400;
+        color: #4a5c6c;
+        background: #eef2f6;
+        padding: 4px 12px;
+        border-radius: 40px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .icon-btn {
+        background: transparent;
+        border: 1px solid #d0dfea;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: #5c7a8e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        transition: all 0.15s;
+    }
+    .icon-btn:hover {
+        background: #f0f6ff;
+        color: #1e2b3a;
+        border-color: #b7c9dd;
+    }
+    .subhead {
+        color: #3e5567;
+        font-size: .95rem;
+        border-left: 4px solid #3b82f6;
+        background: #f0f6ff;
+        border-radius: 0 12px 12px 0;
+        padding: 10px 16px;
+        margin: 0 0 1.6rem;
+        line-height: 1.5;
+    }
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 1.4rem;
+    }
+    .btn {
+        border: 1px solid #dbe1e9;
+        background: #fff;
+        padding: .8rem 1.6rem;
+        border-radius: 48px;
+        font-size: .95rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all .15s ease;
+        color: #1e2b3a;
+        box-shadow: 0 2px 6px rgba(0,0,0,.03);
+    }
+    .btn:hover { background: #f5f9ff; border-color: #b7c9dd; transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); box-shadow: none; }
+    .btn-primary {
+        background: #1e2b3a;
+        border-color: #1e2b3a;
+        color: #fff;
+        box-shadow: 0 8px 18px -6px rgba(20,40,70,.3);
+    }
+    .btn-primary:hover { background: #0f1a26; border-color: #0f1a26; }
+    .btn-danger {
+        background: #fff0f0;
+        border-color: #f5c2c2;
+        color: #b12a2a;
+    }
+    .btn-danger:hover { background: #ffe4e4; border-color: #efb0b0; }
+    .status-badge {
+        font-size: .85rem;
+        padding: 8px 16px;
+        border-radius: 40px;
+        background: #eef2f6;
+        color: #1f3a4b;
+        border: 1px solid #d0dfea;
+        margin-left: auto;
+        white-space: nowrap;
+    }
+    .status-badge.success { background: #e2f7e8; border-color: #b3e0c1; color: #0c5b2c; }
+    .status-badge.error { background: #fee9e9; border-color: #fbc2c2; color: #b12a2a; }
+    
+    .record-list {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .record-item {
+        border: 1px solid #e3eaf2;
+        border-radius: 22px;
+        background: #f9fbfe;
+        overflow: hidden;
+        animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .record-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        background: #ffffffd9;
+        border-bottom: 1px solid #e3eaf2;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .record-index {
+        font-weight: 700;
+        color: #1d3446;
+        font-size: .95rem;
+    }
+    .record-meta {
+        font-size: .8rem;
+        color: #7a8e9e;
+        margin-right: auto;
+    }
+    .tag {
+        font-size: .75rem;
+        padding: 3px 10px;
+        border-radius: 30px;
+        background: #e2eaf3;
+        color: #2f4b62;
+        font-weight: 500;
+    }
+    .tag.text { background: #e4f0fd; color: #1a5a92; }
+    .tag.table { background: #e6f7ea; color: #157a3a; }
+    .tag.image { background: #fef3e2; color: #a05e0c; }
+
+    .action-btn {
+        border: none;
+        background: transparent;
+        color: #4a5c6c;
+        font-size: .82rem;
+        cursor: pointer;
+        padding: 5px 12px;
+        border-radius: 30px;
+        transition: background .15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .action-btn:hover { background: #e8f0fe; color: #1a5a92; }
+
+    .delete-btn {
+        border: none;
+        background: transparent;
+        color: #b12a2a;
+        font-size: .82rem;
+        cursor: pointer;
+        padding: 5px 12px;
+        border-radius: 30px;
+        transition: background .15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .delete-btn:hover { background: #ffe9e9; }
+    
+    .record-body {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px 20px;
+    }
+    .block {
+        background: #fff;
+        border: 1px solid #e3eaf2;
+        border-radius: 16px;
+        padding: 14px 16px;
+    }
+    .block-title {
+        font-size: .8rem;
+        font-weight: 600;
+        color: #4a5c6c;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .text-preview {
+        font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: .9rem;
+        white-space: pre-wrap;
+        background: #fbfdff;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #dde5ef;
+        color: #0f1e2c;
+        max-height: 200px;
+        overflow-y: auto;
+        margin: 0;
+        word-break: break-word;
+    }
+    .table-wrapper {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid #dde5ef;
+        background: #fff;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 260px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eef2f8; }
+    th { background: #f3f8ff; font-weight: 600; color: #1d3a52; border-bottom: 2px solid #cbdae9; }
+    tr:last-child td { border-bottom: none; }
+    .image-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f2f6fc;
+        border-radius: 14px;
+        padding: 10px;
+        border: 1px dashed #b7cde0;
+    }
+    .image-preview img {
+        max-width: 100%;
+        max-height: 240px;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px -8px rgba(0,0,0,.2);
+        object-fit: contain;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: #859aa8;
+        background: #f9fbfe;
+        border: 1px dashed #cfdce8;
+        border-radius: 22px;
+        font-size: .95rem;
+    }
+    .empty-state .icon { font-size: 2rem; display: block; margin-bottom: 10px; }
+    .footer-note {
+        margin-top: 26px;
+        font-size: .8rem;
+        color: #6a7f8f;
+        text-align: center;
+        border-top: 1px solid #dbe4ee;
+        padding-top: 18px;
+    }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>
+            剪贴板读取器
+            <div class="title-right">
+                <small id="countBadge">0 条记录</small>
+                <button class="icon-btn" id="popoutBtn" title="在独立窗口打开">⧉</button>
+            </div>
+        </h1>
+        
+        <div class="subhead">
+            ⚡ 支持纯文字、HTML 表格和图片，且保留历史记录（最新记录在最上方）。
+        </div>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" id="readBtn">
+                <span>📥</span> 读取剪贴板
+            </button>
+            <button class="btn btn-danger" id="clearBtn">
+                <span>🗑️</span> 清空全部
+            </button>
+            <div id="statusMessage" class="status-badge">⏳ 等待读取</div>
+        </div>
+
+        <div class="record-list" id="recordList"></div>
+
+        <div id="emptyState" class="empty-state">
+            <span class="icon">📭</span>
+            还没有任何剪贴板记录<br>点击「读取剪贴板」或按 Ctrl+V 开始
+        </div>
+
+        <div class="footer-note">
+            ⚡ 数据仅在浏览器本地处理，不会上传 &nbsp;|&nbsp; 支持文字 / 表格 / 图片
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // DOM
+    const readBtn       = document.getElementById('readBtn');
+    const clearBtn      = document.getElementById('clearBtn');
+    const statusEl      = document.getElementById('statusMessage');
+    const recordList    = document.getElementById('recordList');
+    const emptyState    = document.getElementById('emptyState');
+    const countBadge    = document.getElementById('countBadge');
+    const popoutBtn     = document.getElementById('popoutBtn');
+
+    // 记录数组
+    let records = [];
+    let recordIdCounter = 0;
+    const objectUrls = new Set();
+
+    function createObjectUrl(blob) {
+        const url = URL.createObjectURL(blob);
+        objectUrls.add(url);
+        return url;
+    }
+
+    function revokeAllObjectUrls() {
+        objectUrls.forEach(url => URL.revokeObjectURL(url));
+        objectUrls.clear();
+    }
+
+    function setStatus(msg, type = 'neutral') {
+        statusEl.textContent = msg;
+        statusEl.className = 'status-badge';
+        if (type === 'success') statusEl.classList.add('success');
+        if (type === 'error')   statusEl.classList.add('error');
+    }
+
+    function formatTime(d) {
+        const p = n => String(n).padStart(2, '0');
+        return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
+
+    // Blob 转 Base64 (用于独立窗口跨域渲染图片)
+    function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    // 渲染单条记录
+    function renderRecord(record, index, isPopout = false) {
+        const item = document.createElement('div');
+        item.className = 'record-item';
+        item.dataset.id = record.id;
+
+        const header = document.createElement('div');
+        header.className = 'record-header';
+
+        const idxSpan = document.createElement('span');
+        idxSpan.className = 'record-index';
+        // 序号根据当前数组索引 + 1 决定，由于最新在前，所以 #1 就是最新
+        idxSpan.textContent = `#${index + 1}`;
+
+        const meta = document.createElement('span');
+        meta.className = 'record-meta';
+        meta.textContent = record.time;
+
+        header.appendChild(idxSpan);
+        header.appendChild(meta);
+
+        if (record.text) {
+            const t = document.createElement('span');
+            t.className = 'tag text';
+            t.textContent = `文字 ${record.text.length} 字`;
+            header.appendChild(t);
+        }
+        if (record.html) {
+            const t = document.createElement('span');
+            t.className = 'tag table';
+            t.textContent = '表格';
+            header.appendChild(t);
+        }
+        if (record.imageUrl) {
+            const t = document.createElement('span');
+            t.className = 'tag image';
+            t.textContent = '图片';
+            header.appendChild(t);
+        }
+
+        // 独立窗口不需要操作按钮
+        if (!isPopout) {
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-btn';
+            copyBtn.innerHTML = '📋 复制';
+            copyBtn.title = '复制此条内容';
+            copyBtn.addEventListener('click', () => copyRecord(record));
+            header.appendChild(copyBtn);
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = '✕ 删除';
+            delBtn.addEventListener('click', () => removeRecord(record.id));
+            header.appendChild(delBtn);
+        }
+
+        item.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'record-body';
+
+        if (record.text) {
+            const block = document.createElement('div');
+            block.className = 'block';
+            const title = document.createElement('div');
+            title.className = 'block-title';
+            title.innerHTML = '📄 文字';
+            const pre = document.createElement('pre');
+            pre.className = 'text-preview';
+            pre.textContent = record.text;
+            block.appendChild(title);
+            block.appendChild(pre);
+            body.appendChild(block);
+        }
+
+        if (record.html) {
+            const block = document.createElement('div');
+            block.className = 'block';
+            const title = document.createElement('div');
+            title.className = 'block-title';
+            title.innerHTML = '📊 表格';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(record.html, 'text/html');
+                const table = doc.querySelector('table');
+                if (table) {
+                    wrapper.appendChild(table.cloneNode(true));
+                } else {
+                    wrapper.textContent = '(无有效表格)';
+                }
+            } catch (e) {
+                wrapper.textContent = '(表格解析失败)';
+            }
+
+            block.appendChild(title);
+            block.appendChild(wrapper);
+            body.appendChild(block);
+        }
+
+        if (record.imageUrl) {
+            const block = document.createElement('div');
+            block.className = 'block';
+            const title = document.createElement('div');
+            title.className = 'block-title';
+            title.innerHTML = '🖼️ 图片';
+
+            const preview = document.createElement('div');
+            preview.className = 'image-preview';
+            const img = document.createElement('img');
+            img.src = record.imageUrl; // 在 popout 中会被替换为 base64
+            img.alt = '剪贴板图片';
+            img.loading = 'lazy';
+            preview.appendChild(img);
+
+            block.appendChild(title);
+            block.appendChild(preview);
+            body.appendChild(block);
+        }
+
+        item.appendChild(body);
+        return item;
+    }
+
+    // 重新渲染列表
+    function renderAll() {
+        recordList.innerHTML = '';
+
+        if (records.length === 0) {
+            emptyState.classList.remove('hidden');
+            recordList.classList.add('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+            recordList.classList.remove('hidden');
+            
+            // 由于 records 数组已经保证最新在首位，直接顺序遍历渲染即可
+            records.forEach((r, i) => {
+                recordList.appendChild(renderRecord(r, i, false));
+            });
+        }
+
+        countBadge.textContent = `${records.length} 条记录`;
+    }
+
+    // 复制单条记录
+    async function copyRecord(record) {
+        try {
+            if (record.imageBlob) {
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [record.imageBlob.type]: record.imageBlob
+                    })
+                ]);
+                setStatus('✅ 图片已复制到剪贴板', 'success');
+            } else {
+                const clipboardData = {};
+                if (record.text) clipboardData['text/plain'] = new Blob([record.text], { type: 'text/plain' });
+                if (record.html) clipboardData['text/html'] = new Blob([record.html], { type: 'text/html' });
+                
+                if (Object.keys(clipboardData).length > 0) {
+                    await navigator.clipboard.write([new ClipboardItem(clipboardData)]);
+                    setStatus('✅ 内容已复制到剪贴板', 'success');
+                } else {
+                    setStatus('⚠️ 该记录没有可复制的内容', 'error');
+                }
+            }
+        } catch (err) {
+            console.error('复制失败:', err);
+            if (record.text) {
+                try {
+                    await navigator.clipboard.writeText(record.text);
+                    setStatus('✅ 文字已复制 (降级模式)', 'success');
+                    return;
+                } catch (e) {}
+            }
+            setStatus('❌ 复制失败，可能缺少权限', 'error');
+        }
+    }
+
+    function addRecord({ text, html, imageBlob }) {
+        const hasText  = text  && text.trim() !== '';
+        const hasTable = html  && html.toLowerCase().includes('<table');
+        const hasImage = imageBlob && imageBlob.size > 0;
+
+        if (!hasText && !hasTable && !hasImage) return false;
+
+        const record = {
+            id: ++recordIdCounter,
+            time: formatTime(new Date()),
+            text: hasText ? text : null,
+            html: hasTable ? html : null,
+            imageUrl: null,
+            imageBlob: null
+        };
+
+        if (hasImage) {
+            const url = createObjectUrl(imageBlob);
+            record.imageUrl = url;
+            record.imageBlob = imageBlob;
+        }
+
+        // 核心修改：将 push 改为 unshift，把新记录放在数组最前面
+        records.unshift(record);
+        renderAll();
+        return true;
+    }
+
+    function removeRecord(id) {
+        const idx = records.findIndex(r => r.id === id);
+        if (idx === -1) return;
+        const rec = records[idx];
+        if (rec.imageUrl && objectUrls.has(rec.imageUrl)) {
+            URL.revokeObjectURL(rec.imageUrl);
+            objectUrls.delete(rec.imageUrl);
+        }
+        records.splice(idx, 1);
+        renderAll();
+        setStatus('🗑️ 已删除一条记录', 'neutral');
+    }
+
+    function clearAll() {
+        revokeAllObjectUrls();
+        records = [];
+        renderAll();
+        setStatus('🗑️ 已清空所有记录', 'neutral');
+    }
+
+    async function readClipboard() {
+        setStatus('⏳ 读取中...', 'neutral');
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            setStatus('❌ 浏览器不支持，请使用 Ctrl+V 粘贴', 'error');
+            return;
+        }
+        try {
+            const items = await navigator.clipboard.read();
+            const extracted = await extractFromItems(items);
+            const ok = addRecord(extracted);
+            if (ok) setStatus('✅ 已新增一条记录', 'success');
+            else setStatus('📭 未检测到文字/表格/图片', 'error');
+        } catch (err) {
+            console.error(err);
+            if (err.name === 'NotAllowedError') {
+                setStatus('⚠️ 未获得权限，请点击允许或使用 Ctrl+V', 'error');
+            } else {
+                setStatus(`❌ 读取失败: ${err.message || '未知错误'}`, 'error');
+            }
+        }
+    }
+
+    async function extractFromItems(items) {
+        const result = { text: null, html: null, imageBlob: null };
+        for (const item of items) {
+            const types = item.types;
+            if (!result.imageBlob) {
+                for (const type of types) {
+                    if (type.startsWith('image/')) {
+                        try {
+                            const blob = await item.getType(type);
+                            if (blob && blob.size > 0) { result.imageBlob = blob; break; }
+                        } catch (e) {}
+                    }
+                }
+            }
+            if (!result.html && types.includes('text/html')) {
+                try {
+                    const blob = await item.getType('text/html');
+                    const html = await blob.text();
+                    if (html && html.toLowerCase().includes('<table')) result.html = html;
+                } catch (e) {}
+            }
+            if (!result.text && types.includes('text/plain')) {
+                try {
+                    const blob = await item.getType('text/plain');
+                    const text = await blob.text();
+                    if (text && text.trim() !== '') result.text = text;
+                } catch (e) {}
+            }
+        }
+        return result;
+    }
+
+    async function extractFromPaste(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (!clipboardData) return null;
+        const items = Array.from(clipboardData.items);
+        const result = { text: null, html: null, imageBlob: null };
+        for (const it of items) {
+            if (it.type.startsWith('image/') && !result.imageBlob) {
+                const blob = it.getAsFile();
+                if (blob && blob.size > 0) { result.imageBlob = blob; break; }
+            }
+        }
+        for (const it of items) {
+            if ((it.type === 'text/html' || it.type === 'application/xhtml+xml') && !result.html) {
+                if (it.kind === 'string') {
+                    const html = await new Promise(res => it.getAsString(res));
+                    if (html && html.toLowerCase().includes('<table')) result.html = html;
+                }
+            }
+        }
+        for (const it of items) {
+            if (it.type === 'text/plain' && !result.text) {
+                if (it.kind === 'string') {
+                    const text = await new Promise(res => it.getAsString(res));
+                    if (text && text.trim() !== '') result.text = text;
+                }
+            }
+        }
+        return result;
+    }
+
+    // 独立窗口打开
+    popoutBtn.addEventListener('click', async () => {
+        if (records.length === 0) {
+            setStatus('⚠️ 暂无记录可导出', 'error');
+            return;
+        }
+
+        setStatus('⏳ 正在生成独立窗口...', 'neutral');
+
+        try {
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'container';
+            
+            contentContainer.innerHTML = `
+                <div class="card">
+                    <h1>
+                        📋 剪贴板读取器
+                        <div class="title-right">
+                            <small>共 ${records.length} 条记录</small>
+                        </div>
+                    </h1>
+                    <div class="record-list" id="popoutList"></div>
+                </div>
+            `;
+
+            const popoutList = contentContainer.querySelector('#popoutList');
+
+            // 遍历当前记录（已按最新排序）
+            for (let i = 0; i < records.length; i++) {
+                const rec = records[i];
+                const itemNode = renderRecord(rec, i, true); 
+
+                if (rec.imageBlob) {
+                    const base64Data = await blobToBase64(rec.imageBlob);
+                    const img = itemNode.querySelector('.image-preview img');
+                    if (img) img.src = base64Data;
+                }
+
+                popoutList.appendChild(itemNode);
+            }
+
+            const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('');
+
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="zh-CN">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>📋 剪贴板记录 - 独立窗口</title>
+                    ${styles}
+                    <style>
+                        body { padding: 30px 20px; background: #f5f7fc; }
+                        .container { max-width: 1000px; margin: 0 auto; }
+                    </style>
+                </head>
+                <body>
+                    ${contentContainer.outerHTML}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const win = window.open(url, '_blank', 'width=900,height=700,scrollbars=yes');
+
+            if (!win) {
+                setStatus('❌ 浏览器拦截了弹窗，请允许弹窗', 'error');
+            } else {
+                setStatus('✅ 已在独立窗口打开', 'success');
+            }
+
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
+
+        } catch (err) {
+            console.error(err);
+            setStatus('❌ 导出独立窗口失败', 'error');
+        }
+    });
+
+    // 事件绑定
+    readBtn.addEventListener('click', readClipboard);
+    clearBtn.addEventListener('click', clearAll);
+    window.addEventListener('paste', async (e) => {
+        e.preventDefault();
+        setStatus('⏳ 处理粘贴...', 'neutral');
+        try {
+            const extracted = await extractFromPaste(e);
+            if (!extracted) { setStatus('❌ 无法读取粘贴数据', 'error'); return; }
+            const ok = addRecord(extracted);
+            if (ok) setStatus('✅ 已粘贴新增一条记录', 'success');
+            else setStatus('📭 粘贴内容为空或格式不支持', 'error');
+        } catch (err) {
+            console.error(err);
+            setStatus('❌ 粘贴处理失败', 'error');
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        revokeAllObjectUrls();
+    });
+
+    // 初始化
+    renderAll();
+})();
+</script>
+</body>
+</html>
