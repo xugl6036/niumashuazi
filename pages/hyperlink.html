@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级链接 · 牛马刷子工具合集</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --tab-bg: #ffffff;
+            --tab-active-bg: #e8f0fe;
+            --tab-active-text: #1a73e8;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --card-bg: #ffffff;
+            --border-color: #eeeeee;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--tab-bg);
+            padding: 6px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            color: var(--text-sub);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--tab-active-text);
+        }
+
+        .tab-btn.active {
+            background-color: var(--tab-active-bg);
+            color: var(--tab-active-text);
+            font-weight: 500;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: #eaf5ed;
+            color: #34a853;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .icon-box svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('junsheng', this)">均胜群英</button>
+            <button class="tab-btn" onclick="switchTab('daomeijia', this)">到每家</button>
+            <button class="tab-btn" onclick="switchTab('yanwei', this)">上海妍伟</button>
+            <button class="tab-btn" onclick="switchTab('zhida', this)">上海挚达</button>
+            <button class="tab-btn" onclick="switchTab('hangye', this)">行业通用</button>
+            <button class="tab-btn" onclick="switchTab('taizhouEncrypted', this)">泰州涌晟</button>
+        </div>
+    </div>
+
+    <div id="content-container">
+        
+        <!-- ================= 1. 均胜群英 ================= -->
+        <div id="cat-junsheng" class="category-content active">
+            <div class="cards-grid">
+                <a href="https://cs.joysonquin.com/" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></div><h3 class="card-title">均胜群英 - 官网</h3></div><p class="card-desc">均胜JQCS系统</p></a>
+                <a href="https://www.example.com/" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">均胜群英 - 资质</h3></div><p class="card-desc">营业执照、施工资质、安许等相关材料。</p></a>
+                <a href="https://www.example.com/" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">均胜群英 - 其他</h3></div><p class="card-desc">未归类或者其他杂项。</p></a>
+                <a href="https://www.example.com" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">比亚迪系</h3></div><p class="card-desc">比亚迪品牌相关表单保险等材料</p></a>
+                <a href="https://www.kdocs.cn/l/ckWoAQgskVI5" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">长城</h3></div><p class="card-desc">长城品牌相关表单保险等材料</p></a>
+                <a href="https://www.kdocs.cn/l/cmPrZE2a5w0P" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">长安升级枪线登记</h3></div><p class="card-desc">客户付款后在此登记发货</p></a>
+                <a href="https://www.kdocs.cn/l/ctAhYAX5Qhtp" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">吉利品牌资料</h3></div><p class="card-desc">吉利品牌相关表单保险等材料</p></a>
+                <a href="https://www.kdocs.cn/l/cudQCekk6sjs" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">零跑资料</h3></div><p class="card-desc">零跑品牌相关表单保险等材料</p></a>
+                <a href="https://kdocs.cn/l/ccLnwf0nN1T1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">零跑暂停工单</h3></div><p class="card-desc">需要提供：和客户沟通记录（文字截图或者通话录音）+暂停原因在线表格内申请订单暂停。</p></a>
+            </div>
+        </div>
+
+        <!-- ================= 2. 到每家 ================= -->
+        <div id="cat-daomeijia" class="category-content">
+            <div class="cards-grid">
+                <a href="链接1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">到每家 - 方案 1</h3></div><p class="card-desc">支持多维度数据展示，清晰直观。</p></a>
+                <a href="链接12" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">到每家 - 方案 12</h3></div><p class="card-desc">支持移动端随时查看与操作。</p></a>
+            </div>
+        </div>
+
+        <!-- ================= 3. 上海妍伟 ================= -->
+        <div id="cat-yanwei" class="category-content">
+            <div class="cards-grid">
+                <a href="链接1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">上海妍伟 - 方案 1</h3></div><p class="card-desc">支持多维度数据展示，清晰直观。</p></a>
+                <a href="链接12" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">上海妍伟 - 方案 12</h3></div><p class="card-desc">支持移动端随时查看与操作。</p></a>
+            </div>
+        </div>
+
+        <!-- ================= 4. 上海挚达 ================= -->
+        <div id="cat-zhida" class="category-content">
+            <div class="cards-grid">
+                <a href="链接1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">上海挚达 - 方案 1</h3></div><p class="card-desc">支持多维度数据展示，清晰直观。</p></a>
+                <a href="链接12" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">上海挚达 - 方案 12</h3></div><p class="card-desc">支持移动端随时查看与操作。</p></a>
+            </div>
+        </div>
+
+        <!-- ================= 5. 行业通用 ================= -->
+        <div id="cat-hangye" class="category-content">
+            <div class="cards-grid">
+                <a href="链接1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">行业通用 - 方案 1</h3></div><p class="card-desc">支持多维度数据展示，清晰直观。</p></a>
+                <a href="链接12" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">行业通用 - 方案 12</h3></div><p class="card-desc">支持移动端随时查看与操作。</p></a>
+            </div>
+        </div>
+
+        <!-- ================= 6. 泰州涌晟 (加密) ================= -->
+        <div id="cat-taizhouEncrypted" class="category-content">
+            <div class="cards-grid">
+                <a href="链接1" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">泰州涌晟 - 方案 1</h3></div><p class="card-desc">支持多维度数据展示，清晰直观。</p></a>
+                <a href="链接12" target="_blank" class="card"><div class="card-header"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V9h16v10zM4 7V5h16v2H4zm2 4h4v2H6v-2zm0 4h4v2H6v-2zm6-4h6v2h-6v-2zm0 4h6v2h-6v-2z"/></svg></div><h3 class="card-title">泰州涌晟 - 方案 12</h3></div><p class="card-desc">支持移动端随时查看与操作。</p></a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript 交互逻辑 -->
+    <script>
+        // 切换标签逻辑
+        function switchTab(targetId, btnElement) {
+            // 如果点击的是“泰州涌晟”，则触发密码验证
+            if (targetId === 'taizhouEncrypted') {
+                // 默认密码设置为 888888，您可以在下面这行修改
+                const password = prompt("请输入“泰州涌晟”的访问密码：");
+                if (password !== "888888") {
+                    if (password !== null) { // 如果用户点击了取消，不提示错误
+                        alert("密码错误，拒绝访问！");
+                    }
+                    return; // 密码错误或取消，中断切换
+                }
+            }
+
+            // 1. 移除所有标签的 active 类
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            // 2. 给当前点击的标签添加 active 类
+            btnElement.classList.add('active');
+
+            // 3. 隐藏所有内容区
+            const contents = document.querySelectorAll('.category-content');
+            contents.forEach(content => content.classList.remove('active'));
+            // 4. 显示目标内容区
+            document.getElementById(`cat-${targetId}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
