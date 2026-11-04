@@ -19,11 +19,15 @@
     .control-panel {
       width: 44%; padding: 24px 24px 20px; border-right: 1px solid #edf2f7;
       display: flex; flex-direction: column; height: 100%; min-height: 0;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .function-area {
       flex: 1; overflow-y: auto; min-height: 0;
       padding-right: 6px; margin-bottom: 12px;
+      cursor: default;
     }
     .function-area::-webkit-scrollbar { width: 6px; }
     .function-area::-webkit-scrollbar-track { background: transparent; }
@@ -33,10 +37,11 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 12px; padding-bottom: 8px;
       border-bottom: 2px solid #2f80ed; flex-shrink: 0; position: relative;
+      cursor: default;
     }
-    .section-header h2 { color: #1a202c; font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
+    .section-header h2 { color: #1a202c; font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.5px; cursor: default; }
 
-    .clear-action-wrapper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+    .clear-action-wrapper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; cursor: default; }
     .clear-toast {
       font-size: 12px; color: #38a169; font-weight: 600;
       opacity: 0; transition: opacity 0.3s; white-space: nowrap; pointer-events: none;
@@ -48,14 +53,17 @@
       width: 32px; height: 32px; border: none; background: transparent;
       color: #a0aec0; border-radius: 8px; cursor: pointer;
       transition: all 0.2s; padding: 0; flex-shrink: 0;
+      outline: none;
     }
+    .btn-icon:focus { outline: none; }
     .btn-icon:hover { background: #fef2f2; color: #ef4444; }
     .btn-icon svg { width: 18px; height: 18px; display: block; fill: currentColor; }
 
-    .form-group { display: flex; align-items: center; margin-bottom: 10px; }
+    /* 输入框 */
+    .form-group { display: flex; align-items: center; margin-bottom: 10px; cursor: default; }
     .form-group label {
       width: 86px; font-size: 13px; color: #4a5568;
-      font-weight: 600; flex-shrink: 0;
+      font-weight: 600; flex-shrink: 0; cursor: default;
     }
     .form-group input[type="text"], .form-group select {
       flex: 1; padding: 8px 12px; border: 1px solid #dcdfe6;
@@ -63,27 +71,30 @@
       transition: border-color 0.2s, box-shadow 0.2s;
       font-family: inherit; color: #2d3748; background: #fafbfc;
       appearance: none; -webkit-appearance: none;
+      cursor: text;
     }
     .form-group select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 10px center;
-      background-size: 14px; padding-right: 28px; cursor: pointer;
+      background-size: 14px; padding-right: 28px;
+      cursor: default;
     }
     .form-group input:focus, .form-group select:focus {
       border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff;
     }
 
-    .coords-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
+    .coords-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; cursor: default; }
     .coords-group input {
       flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #dcdfe6;
       border-radius: 8px; font-size: 13px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       font-family: inherit; color: #2d3748; background: #fafbfc;
+      cursor: text;
     }
     .coords-group input:focus { border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff; }
-    .coords-fixed { font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+    .coords-fixed { font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; white-space: nowrap; cursor: default; }
 
-    .time-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
+    .time-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; cursor: default; }
     .time-group select {
       flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #dcdfe6;
       border-radius: 8px; font-size: 13px; outline: none;
@@ -92,12 +103,14 @@
       appearance: none; -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 6px center;
-      background-size: 12px; padding-right: 22px; cursor: pointer;
+      background-size: 12px; padding-right: 22px;
+      cursor: default;
     }
     .time-group select:focus { border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff; }
+    .time-group span { cursor: default; }
 
     /* 滑动开关 */
-    .toggle-switch-wrapper { display: flex; align-items: center; margin-left: 8px; flex-shrink: 0; }
+    .toggle-switch-wrapper { display: flex; align-items: center; margin-left: 8px; flex-shrink: 0; cursor: default; }
     .toggle-switch {
       position: relative; display: inline-flex; align-items: center;
       width: 70px; height: 28px; cursor: pointer; user-select: none;
@@ -128,48 +141,59 @@
     .toggle-switch input:checked ~ .toggle-text-off { opacity: 0; }
 
     /* 变形器区域 */
-    .transform-section { margin-top: 24px; }
+    .transform-section { margin-top: 24px; cursor: default; }
     
     /* 尺寸行 */
-    .slider-row { display: flex; align-items: center; margin-bottom: 20px; }
-    .slider-row label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; }
-    .slider-wrapper { flex: 1; display: flex; align-items: center; gap: 10px; }
+    .slider-row { display: flex; align-items: center; margin-bottom: 20px; cursor: default; }
+    .slider-row label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; cursor: default; }
+    .slider-wrapper { flex: 1; display: flex; align-items: center; gap: 10px; cursor: default; }
     .slider-wrapper input[type="range"] {
       flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
       background: linear-gradient(90deg, #2f80ed, #6ea8fe);
-      border-radius: 6px; outline: none; cursor: pointer;
+      border-radius: 6px; outline: none;
+      cursor: default;
     }
     .slider-wrapper input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
-      border-radius: 50%; background: #ffffff; cursor: pointer;
+      border-radius: 50%; background: #ffffff; cursor: default;
       box-shadow: 0 2px 6px rgba(47, 128, 237, 0.5), 0 0 0 2px #2f80ed;
       border: none; transition: transform 0.15s;
     }
     .slider-value-badge {
       font-size: 12px; font-weight: 700; color: #2f80ed;
       background: #eef4ff; padding: 4px 10px; border-radius: 16px;
-      min-width: 48px; text-align: center;
+      min-width: 48px; text-align: center; cursor: default;
     }
 
     /* 通用并排按钮行 */
-    .btn-row { display: flex; align-items: center; margin-bottom: 20px; }
-    .btn-row > label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; }
+    .btn-row { display: flex; align-items: center; margin-bottom: 20px; cursor: default; }
+    .btn-row > label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; cursor: default; }
     
-    .btn-group { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .btn-group { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; cursor: default; }
 
     /* 自适应宽度方块按钮 */
     .square-btn {
       flex: 1; height: 28px; display: flex; align-items: center; justify-content: center;
-      background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b;
-      font-size: 11px; font-weight: bold; /* 加粗 */
+      background: #f1f5f9; border: 2px solid transparent; color: #64748b;
+      font-size: 11px; font-weight: bold;
       border-radius: 6px; cursor: pointer; transition: all 0.2s; padding: 0; min-width: 0;
+      outline: none; user-select: none;
+    }
+    .square-btn:focus { outline: none; }
+    /* 透明度按钮被选中时的框选样式 */
+    .square-btn.active {
+      border-color: #1a202c;
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2f80ed;
+      z-index: 1;
     }
 
     /* 配色按钮 */
     .color-btn {
       flex: 1; height: 28px; border-radius: 6px; border: 2px solid transparent;
       cursor: pointer; transition: all 0.2s; position: relative;
+      outline: none; user-select: none;
     }
+    .color-btn:focus { outline: none; }
     .color-btn:hover { transform: scale(1.02); }
     .color-btn.active { 
       border-color: #1a202c;
@@ -178,16 +202,18 @@
       z-index: 1;
     }
 
-    .opacity-btns { display: flex; flex: 1; gap: 6px; opacity: 0.4; pointer-events: none; transition: opacity 0.2s; min-width: 0; }
-    .opacity-btns.active { opacity: 1; pointer-events: auto; }
+    /* 移除透明度按钮组的 opacity 变暗效果，统一显示鲜艳颜色 */
+    .opacity-btns { display: flex; flex: 1; gap: 6px; min-width: 0; pointer-events: none; }
+    .opacity-btns.active { pointer-events: auto; }
 
     /* 底部提示 */
     .bottom-area {
       flex-shrink: 0; display: flex; gap: 10px;
       min-height: 30px; align-items: stretch; margin-top: auto;
       justify-content: center; opacity: 0.6; pointer-events: none;
+      cursor: default;
     }
-    .bottom-area span { color: #a0aec0; font-size: 12px; }
+    .bottom-area span { color: #a0aec0; font-size: 12px; cursor: default; }
 
     /* ========== 右侧预览区 ========== */
     .preview-panel {
@@ -254,7 +280,7 @@
     .watermark-bg-layer::before,
     .watermark-bg-layer::after {
       content: ""; position: absolute; left: 0; right: 0;
-      height: 26px; background-color: #2f80ed; /* 默认蓝色 */
+      height: 26px; background-color: #2f80ed;
       transition: background-color 0.2s;
     }
     .watermark-bg-layer::before { top: 0; border-radius: 10px 10px 0 0; }
@@ -268,7 +294,7 @@
 
     .wm-header {
       background-color: transparent; 
-      color: #ffffff; /* 默认白字 */
+      color: #ffffff;
       padding: 0 12px; position: relative; display: flex; align-items: center;
       height: 26px; flex-shrink: 0; border: none;
       font-family: inherit; font-weight: bold;
@@ -312,7 +338,7 @@
     
     .wm-footer {
       background-color: transparent; 
-      color: #ffffff; /* 默认白字 */
+      color: #ffffff;
       padding: 0 12px; font-size: 12px; display: flex; align-items: center;
       height: 26px; flex-shrink: 0; white-space: nowrap;
       overflow: hidden; text-overflow: ellipsis;
@@ -334,7 +360,9 @@
       border: none; border-radius: 8px; cursor: pointer;
       transition: all 0.2s; background: rgba(47, 128, 237, 0.92);
       color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); padding: 0;
+      outline: none;
     }
+    .float-actions .action-btn:focus { outline: none; }
     .float-actions .action-btn:hover { background: #1c6cd6; transform: scale(1.08); }
     .float-actions .action-btn svg { width: 16px; height: 16px; display: block; fill: currentColor; }
     .float-actions .action-btn.reset { background: rgba(229, 62, 62, 0.92); }
@@ -607,7 +635,7 @@
 
   let watermarkScale = 1;
   let currentOpacity = 1;
-  let currentColor = '#2f80ed'; // 记录当前选中的颜色
+  let currentColor = '#2f80ed';
 
   // ===== 初始化下拉框 =====
   function initDateSelectors() {
@@ -719,21 +747,14 @@
 
     opacityBtns.forEach(b => {
       const val = +b.dataset.val;
-      // 1. 固定底色随配色变，透明度固定为对应的 0.5 ~ 0.9
+      // 1. 底色随配色变，透明度固定为对应的 0.5 ~ 0.9
       b.style.backgroundColor = hexToRgba(currentColor, val / 100);
       
       // 2. 字体加粗且颜色自适应
       b.style.color = textColor;
       b.style.fontWeight = 'bold';
 
-      // 3. 选中状态：加深色边框，未选中：透明边框
-      if (b.classList.contains('active')) {
-        b.style.borderColor = isYellow ? '#1a202c' : '#ffffff';
-        b.style.boxShadow = '0 0 4px rgba(0,0,0,0.2)';
-      } else {
-        b.style.borderColor = 'transparent';
-        b.style.boxShadow = 'none';
-      }
+      // 3. 选中状态框选样式在 CSS 中通过 .active 统一处理
     });
   }
 
@@ -748,7 +769,7 @@
       else btn.classList.remove('active');
     });
     
-    // 重新渲染按钮样式
+    // 重新渲染按钮背景色
     renderOpacityBtns();
   }
 
