@@ -206,12 +206,12 @@
     #base-image.hidden { display: none; }
     .canvas-wrapper.has-image #base-image { height: 100%; width: auto; max-width: 100%; max-height: 100%; }
 
-    /* ========== 水印卡片（防重影修复） ========== */
+    /* ========== 水印卡片 ========== */
     .watermark-card {
-      position: absolute; left: 16px; bottom: 16px; width: 18em;
+      position: absolute; left: 16px; bottom: 16px; 
+      width: 246px; /* 加宽以容纳更多字符 */
       font-size: 13px; 
       border-radius: 10px;
-      overflow: hidden; 
       display: flex; flex-direction: column; font-weight: bold;
       z-index: 2;
       pointer-events: auto; line-height: 1.4; color: #333;
@@ -221,70 +221,100 @@
       transform-origin: top left;
       -webkit-backface-visibility: hidden; backface-visibility: hidden;
       transform: translateZ(0);
-      /* 将阴影移到卡片外层，避免与背景融合产生光晕 */
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      background: transparent; 
     }
-    
-    /* 内部背景层（用于控制透明度） */
-    .watermark-bg {
-      position: absolute; inset: 0; z-index: 0;
-      background: rgba(255, 255, 255, 1); 
-      pointer-events: none;
-      border-radius: 10px;
-    }
-    
-    /* 保证卡片里的文字层级在最上方 */
-    .wm-header, .wm-body, .wm-footer { position: relative; z-index: 1; }
 
-    .watermark-card:active { cursor: grabbing; }
-    .watermark-card.hidden { display: none; }
+    .watermark-bg-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1; 
+      border-radius: 10px;
+      background-color: #ffffff;
+      pointer-events: none;
+      transition: opacity 0.1s;
+    }
+    
+    .watermark-bg-layer::before,
+    .watermark-bg-layer::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      height: 26px;
+      background-color: #2f80ed;
+    }
+    .watermark-bg-layer::before { top: 0; border-radius: 10px 10px 0 0; }
+    .watermark-bg-layer::after { bottom: 0; border-radius: 0 0 10px 10px; }
+
+    .watermark-content {
+      position: relative;
+      z-index: 2; 
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      overflow: hidden;
+    }
 
     .wm-header {
-      background-color: #2f80ed; color: #ffffff; padding: 0 12px;
+      background-color: transparent; color: #ffffff; padding: 0 12px;
       position: relative; display: flex; align-items: center;
       height: 26px; flex-shrink: 0; margin: 0; border: none;
-      font-family: inherit; font-weight: bold; border-radius: 10px 10px 0 0;
+      font-family: inherit; font-weight: bold;
     }
+
     .wm-yellow-square {
       width: 8px; height: 8px; background-color: #f2c94c;
       position: absolute; left: 12px; margin: 0; padding: 0;
     }
+    
     .wm-title-text {
       width: 100%; text-align: center; font-size: 14px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       padding: 0 4px; margin: 0; border: none;
       font-family: inherit; font-weight: bold; color: #ffffff;
     }
+    
     .wm-title-text.placeholder-text, .wm-value.placeholder-text {
       color: #a0aec0 !important; font-weight: 500 !important;
     }
+    
     .wm-body {
       padding: 10px 12px; display: flex; flex-direction: column;
       gap: 6px; margin: 0; background: transparent; border: none;
       font-family: inherit; font-weight: bold;
     }
+    
     .wm-row {
       display: flex; align-items: flex-start; margin: 0;
       padding: 0; border: none; font-family: inherit; font-weight: bold;
     }
+    
     .wm-label {
       width: 6.1em; flex-shrink: 0; color: #1a202c; white-space: nowrap;
       font-size: 12px; font-weight: bold; margin: 0; padding: 0;
       border: none; letter-spacing: normal; text-align: left; font-family: inherit;
     }
+    
     .wm-value {
-      flex: 1; color: #1a202c; word-break: break-all; line-height: 1.45;
+      flex: 1; color: #1a202c; line-height: 1.45;
       padding-left: 6px; font-size: 12px; font-weight: bold;
       margin: 0; border: none; font-family: inherit;
+      white-space: normal;
+      word-break: break-word; /* 修复：自然换行 */
     }
+    
+    #disp-date { white-space: nowrap; }
+    
     .wm-footer {
-      background-color: #2f80ed; color: #ffffff; padding: 0 12px;
+      background-color: transparent; color: #ffffff; padding: 0 12px;
       font-size: 12px; display: flex; align-items: center;
       height: 26px; flex-shrink: 0; white-space: nowrap;
       overflow: hidden; text-overflow: ellipsis; margin: 0;
-      border: none; border-radius: 0 0 10px 10px;
-      font-family: inherit; font-weight: bold;
+      border: none; font-family: inherit; font-weight: bold;
     }
+
+    .watermark-card:active { cursor: grabbing; }
+    .watermark-card.hidden { display: none; }
 
     /* 浮动操作按钮 */
     .float-actions {
@@ -367,8 +397,8 @@
         </div>
       </div>
 
-      <div class="form-group"><label>标题：</label><input type="text" id="input-title" placeholder="品牌+客户名称"></div>
-      <div class="form-group"><label>施工责任人：</label><input type="text" id="input-person" placeholder="工程师姓名"></div>
+      <div class="form-group"><label>标题：</label><input type="text" id="input-title" placeholder="品牌+客户名称" autocomplete="off"></div>
+      <div class="form-group"><label>施工责任人：</label><input type="text" id="input-person" placeholder="工程师姓名" autocomplete="off"></div>
       <div class="form-group">
         <label>日期：</label>
         <div class="time-group">
@@ -393,17 +423,17 @@
           </label>
         </div>
       </div>
-      <div class="form-group"><label>地点：</label><input type="text" id="input-location" placeholder="省市区县·小区村庄"></div>
+      <div class="form-group"><label>地点：</label><input type="text" id="input-location" placeholder="省市区县·小区村庄" autocomplete="off"></div>
       <div class="form-group">
         <label>经纬度：</label>
         <div class="coords-group">
-          <input type="text" id="input-coords-lat" placeholder="33.55">
+          <input type="text" id="input-coords-lat" placeholder="33.55" autocomplete="off">
           <span class="coords-fixed">°N,</span>
-          <input type="text" id="input-coords-lng" placeholder="119.08">
+          <input type="text" id="input-coords-lng" placeholder="119.08" autocomplete="off">
           <span class="coords-fixed">°E</span>
         </div>
       </div>
-      <div class="form-group"><label>施工单位：</label><input type="text" id="input-company" placeholder="均胜群英"></div>
+      <div class="form-group"><label>施工单位：</label><input type="text" id="input-company" placeholder="均胜群英" autocomplete="off"></div>
 
       <!-- 变形器 -->
       <div class="transform-section">
@@ -441,23 +471,22 @@
       <img id="base-image" class="hidden" alt="预览图片">
 
       <div class="watermark-card hidden" id="watermark-card">
-        <!-- 新增背景层，用于独立控制透明度 -->
-        <div class="watermark-bg" id="watermark-bg"></div>
-        
-        <div class="wm-header">
-          <div class="wm-yellow-square"></div>
-          <div class="wm-title-text" id="disp-title">品牌+客户名称</div>
+        <div class="watermark-bg-layer" id="watermark-bg-layer"></div>
+        <div class="watermark-content">
+          <div class="wm-header">
+            <div class="wm-yellow-square"></div>
+            <div class="wm-title-text" id="disp-title">品牌+客户名称</div>
+          </div>
+          <div class="wm-body">
+            <div class="wm-row"><div class="wm-label">施工责任人：</div><div class="wm-value" id="disp-person">工程师姓名</div></div>
+            <div class="wm-row"><div class="wm-label">日&emsp;&emsp;&emsp;期：</div><div class="wm-value" id="disp-date">2026.10.27 星期二</div></div>
+            <div class="wm-row"><div class="wm-label">地&emsp;&emsp;&emsp;点：</div><div class="wm-value" id="disp-location">省市区县·小区村庄</div></div>
+            <div class="wm-row"><div class="wm-label">经&emsp;&emsp;&emsp;度：</div><div class="wm-value" id="disp-coords">33.55°N,119.08°E</div></div>
+          </div>
+          <div class="wm-footer">施工单位：<span id="disp-company">均胜群英</span></div>
         </div>
-        <div class="wm-body">
-          <div class="wm-row"><div class="wm-label">施工责任人：</div><div class="wm-value" id="disp-person">工程师姓名</div></div>
-          <div class="wm-row"><div class="wm-label">日&emsp;&emsp;&emsp;期：</div><div class="wm-value" id="disp-date">2026.10.27 星期二</div></div>
-          <div class="wm-row"><div class="wm-label">地&emsp;&emsp;&emsp;点：</div><div class="wm-value" id="disp-location">省市区县·小区村庄</div></div>
-          <div class="wm-row"><div class="wm-label">经&emsp;纬&emsp;度：</div><div class="wm-value" id="disp-coords">33.55°N,119.08°E</div></div>
-        </div>
-        <div class="wm-footer">施工单位：<span id="disp-company">均胜群英</span></div>
       </div>
 
-      <!-- 空状态 -->
       <div class="empty-preview" id="empty-preview">
         <div class="empty-icon-wrap">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -476,7 +505,7 @@
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
         </button>
         <button class="action-btn reset" id="btn-reset" title="清空图片">
-          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/></svg>
         </button>
       </div>
     </div>
@@ -490,10 +519,12 @@
   const canvasWrapper = document.getElementById('canvas-wrapper');
   const baseImage = document.getElementById('base-image');
   const watermarkCard = document.getElementById('watermark-card');
-  const watermarkBg = document.getElementById('watermark-bg');
+  const watermarkBgLayer = document.getElementById('watermark-bg-layer');
   const emptyPreview = document.getElementById('empty-preview');
+  
+  // 动态创建隐藏的 input 以支持上传
   const fileInput = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', style: 'display:none' });
-   document.body.appendChild(fileInput);
+  document.body.appendChild(fileInput);
 
   const btnCopy = document.getElementById('btn-copy');
   const btnDownload = document.getElementById('btn-download');
@@ -506,12 +537,14 @@
   const scaleBadge = document.getElementById('scale-badge');
   const btnResetTransform = document.getElementById('btn-reset-transform');
 
-  const dispTitle = document.getElementById('disp-title');
-  const dispPerson = document.getElementById('disp-person');
-  const dispDate = document.getElementById('disp-date');
-  const dispLocation = document.getElementById('disp-location');
-  const dispCoords = document.getElementById('disp-coords');
-  const dispCompany = document.getElementById('disp-company');
+  const disp = {
+    title: document.getElementById('disp-title'),
+    person: document.getElementById('disp-person'),
+    date: document.getElementById('disp-date'),
+    location: document.getElementById('disp-location'),
+    coords: document.getElementById('disp-coords'),
+    company: document.getElementById('disp-company')
+  };
 
   const inputs = {
     title: document.getElementById('input-title'),
@@ -597,15 +630,15 @@
   }
 
   function updateWatermarkText() {
-    setText(dispTitle, inputs.title.value.trim(), placeholders.title);
-    setText(dispPerson, inputs.person.value.trim(), placeholders.person);
-    setText(dispLocation, inputs.location.value.trim(), placeholders.location);
-    setText(dispCompany, inputs.company.value.trim(), placeholders.company);
+    setText(disp.title, inputs.title.value.trim(), placeholders.title);
+    setText(disp.person, inputs.person.value.trim(), placeholders.person);
+    setText(disp.location, inputs.location.value.trim(), placeholders.location);
+    setText(disp.company, inputs.company.value.trim(), placeholders.company);
 
-    dispDate.textContent = getDateString();
-    dispDate.classList.remove('placeholder-text');
+    disp.date.textContent = getDateString();
+    disp.date.classList.remove('placeholder-text');
 
-    setText(dispCoords, getCoordsString(), placeholders.coords);
+    setText(disp.coords, getCoordsString(), placeholders.coords);
   }
 
   Object.values(inputs).forEach(input => input.oninput = updateWatermarkText);
@@ -628,21 +661,21 @@
   function syncOpacity() {
     watermarkOpacity = +opacitySlider.value / 100;
     opacityBadge.textContent = opacitySlider.value + '%';
-    // 【核心修复】把透明度赋给内部背景层，而不是整个卡片
-    watermarkBg.style.background = `rgba(255,255,255,${watermarkOpacity})`;
+    watermarkBgLayer.style.opacity = watermarkOpacity;
   }
+  
   function syncScale() {
     watermarkScale = +scaleSlider.value / 100;
     scaleBadge.textContent = scaleSlider.value + '%';
     watermarkCard.style.transform = `scale(${watermarkScale})`;
   }
+  
   opacitySlider.oninput = syncOpacity;
   scaleSlider.oninput = syncScale;
 
   btnResetTransform.onclick = () => {
     opacitySlider.value = 100; scaleSlider.value = 100;
     syncOpacity(); syncScale();
-    watermarkCard.style.transform = 'scale(1)';
   };
 
   // ===== 水印拖动 =====
@@ -789,7 +822,6 @@
         if (cc) {
           cc.style.display = 'flex'; cc.classList.remove('hidden');
           cc.style.borderRadius = '10px'; cc.style.border = 'none'; cc.style.outline = 'none';
-          // 阴影保持在外层
           cc.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
           cc.style.transform = `scale(${watermarkScale})`;
           cc.style.left = watermarkCard.style.left; cc.style.top = watermarkCard.style.top;
@@ -797,17 +829,14 @@
           cc.style.fontFamily = '"Microsoft YaHei","微软雅黑",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
           cc.style.fontWeight = 'bold';
           
-          // 修改内部背景层透明度
-          const cbg = doc.getElementById('watermark-bg');
-          if (cbg) cbg.style.background = `rgba(255,255,255,${watermarkOpacity})`;
+          const cbg = doc.getElementById('watermark-bg-layer');
+          if (cbg) cbg.style.opacity = watermarkOpacity;
 
           const title = cc.querySelector('.wm-title-text');
           if (title && title.classList.contains('placeholder-text')) { title.style.color = '#a0aec0'; title.style.fontWeight = '500'; }
           cc.querySelectorAll('.wm-value').forEach(el => {
             if (el.classList.contains('placeholder-text')) { el.style.color = '#a0aec0'; el.style.fontWeight = '500'; }
           });
-          const hd = cc.querySelector('.wm-header'); if (hd) { hd.style.borderRadius = '10px 10px 0 0'; }
-          const ft = cc.querySelector('.wm-footer'); if (ft) { ft.style.borderRadius = '0 0 10px 10px'; }
         }
         const ep = doc.getElementById('empty-preview'); if (ep) ep.style.display = 'none';
         const fa = doc.querySelector('.float-actions'); if (fa) fa.style.display = 'none';
@@ -896,8 +925,7 @@
     opacitySlider.value = 100; scaleSlider.value = 100;
     opacityBadge.textContent = '100%'; scaleBadge.textContent = '100%';
     
-    // 复位背景层
-    watermarkBg.style.background = 'rgba(255,255,255,1)';
+    watermarkBgLayer.style.opacity = 1;
     watermarkCard.style.transform = 'scale(1)';
   };
 
@@ -905,7 +933,7 @@
   baseImage.style.display = 'none';
   emptyPreview.classList.remove('hidden');
   watermarkCard.classList.add('hidden');
-  watermarkBg.style.background = 'rgba(255,255,255,1)';
+  watermarkBgLayer.style.opacity = 1;
   watermarkCard.style.transform = 'scale(1)';
 })();
 </script>
