@@ -17,13 +17,13 @@
 
     /* ========== 左侧控制面板 ========== */
     .control-panel {
-      width: 42%; padding: 28px 28px 24px; border-right: 1px solid #edf2f7;
+      width: 44%; padding: 24px 24px 20px; border-right: 1px solid #edf2f7;
       display: flex; flex-direction: column; height: 100%; min-height: 0;
     }
 
     .function-area {
       flex: 1; overflow-y: auto; min-height: 0;
-      padding-right: 4px; margin-bottom: 16px;
+      padding-right: 6px; margin-bottom: 12px;
     }
     .function-area::-webkit-scrollbar { width: 6px; }
     .function-area::-webkit-scrollbar-track { background: transparent; }
@@ -31,10 +31,10 @@
 
     .section-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; padding-bottom: 10px;
+      margin-bottom: 12px; padding-bottom: 8px;
       border-bottom: 2px solid #2f80ed; flex-shrink: 0; position: relative;
     }
-    .section-header h2 { color: #1a202c; font-size: 18px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
+    .section-header h2 { color: #1a202c; font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
 
     .clear-action-wrapper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
     .clear-toast {
@@ -52,125 +52,146 @@
     .btn-icon:hover { background: #fef2f2; color: #ef4444; }
     .btn-icon svg { width: 18px; height: 18px; display: block; fill: currentColor; }
 
-    .form-group { display: flex; align-items: center; margin-bottom: 12px; }
+    .form-group { display: flex; align-items: center; margin-bottom: 10px; }
     .form-group label {
-      width: 92px; font-size: 14px; color: #4a5568;
+      width: 86px; font-size: 13px; color: #4a5568;
       font-weight: 600; flex-shrink: 0;
     }
     .form-group input[type="text"], .form-group select {
-      flex: 1; padding: 10px 14px; border: 1px solid #dcdfe6;
-      border-radius: 8px; font-size: 14px; outline: none;
+      flex: 1; padding: 8px 12px; border: 1px solid #dcdfe6;
+      border-radius: 8px; font-size: 13px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       font-family: inherit; color: #2d3748; background: #fafbfc;
       appearance: none; -webkit-appearance: none;
     }
     .form-group select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center;
-      background-size: 16px; padding-right: 36px; cursor: pointer;
+      background-repeat: no-repeat; background-position: right 10px center;
+      background-size: 14px; padding-right: 28px; cursor: pointer;
     }
     .form-group input:focus, .form-group select:focus {
       border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff;
     }
 
-    .coords-group { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .coords-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
     .coords-group input {
-      flex: 1; min-width: 0; padding: 10px 14px; border: 1px solid #dcdfe6;
-      border-radius: 8px; font-size: 14px; outline: none;
+      flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #dcdfe6;
+      border-radius: 8px; font-size: 13px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       font-family: inherit; color: #2d3748; background: #fafbfc;
     }
     .coords-group input:focus { border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff; }
-    .coords-fixed { font-size: 14px; color: #4a5568; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+    .coords-fixed { font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
 
     .time-group { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
     .time-group select {
-      flex: 1; min-width: 0; padding: 10px 14px; border: 1px solid #dcdfe6;
-      border-radius: 8px; font-size: 14px; outline: none;
+      flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #dcdfe6;
+      border-radius: 8px; font-size: 13px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       font-family: inherit; color: #2d3748; background: #fafbfc;
       appearance: none; -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0aec0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 8px center;
-      background-size: 14px; padding-right: 28px; cursor: pointer;
+      background-repeat: no-repeat; background-position: right 6px center;
+      background-size: 12px; padding-right: 22px; cursor: pointer;
     }
     .time-group select:focus { border-color: #2f80ed; box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.12); background: #fff; }
 
-    /* ========== 完美贴边的滑动开关 ========== */
-    .toggle-switch-wrapper { display: flex; align-items: center; margin-left: 10px; flex-shrink: 0; }
+    /* 滑动开关 */
+    .toggle-switch-wrapper { display: flex; align-items: center; margin-left: 8px; flex-shrink: 0; }
     .toggle-switch {
       position: relative; display: inline-flex; align-items: center;
-      width: 72px; height: 32px; cursor: pointer; user-select: none;
+      width: 70px; height: 28px; cursor: pointer; user-select: none;
     }
     .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
     .toggle-slider {
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #e2e8f0; border-radius: 32px; transition: background-color 0.3s;
+      background-color: #e2e8f0; border-radius: 28px; transition: background-color 0.3s;
     }
     .toggle-text {
       position: absolute; top: 0; bottom: 0; display: flex;
-      align-items: center; justify-content: center; font-size: 12px;
+      align-items: center; justify-content: center; font-size: 11px;
       font-weight: bold; transition: opacity 0.3s, color 0.3s;
       pointer-events: none; z-index: 2;
     }
-    .toggle-text-off { right: 14px; color: #64748b; opacity: 1; }
-    .toggle-text-on { left: 12px; color: #ffffff; opacity: 0; }
+    .toggle-text-off { right: 12px; color: #64748b; opacity: 1; }
+    .toggle-text-on { left: 14px; color: #ffffff; opacity: 0; }
 
     .toggle-slider::before {
-      position: absolute; content: ""; height: 26px; width: 26px;
+      position: absolute; content: ""; height: 22px; width: 22px;
       left: 3px; bottom: 3px; background-color: #ffffff; border-radius: 50%;
       transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); z-index: 1;
     }
     .toggle-switch input:checked + .toggle-slider { background-color: #2f80ed; }
-    .toggle-switch input:checked + .toggle-slider::before { 
-      left: calc(100% - 26px - 3px); 
-      transform: translateX(0); 
-    }
+    .toggle-switch input:checked + .toggle-slider::before { left: calc(100% - 22px - 3px); transform: translateX(0); }
     .toggle-switch input:checked ~ .toggle-text-on { opacity: 1; }
     .toggle-switch input:checked ~ .toggle-text-off { opacity: 0; }
 
-    /* 变形器 */
-    .transform-section { margin-top: 32px; }
-    .slider-row { display: flex; align-items: center; margin-bottom: 24px; }
-    .slider-row:last-child { margin-bottom: 0; }
-    .slider-row label { width: 92px; font-size: 14px; color: #4a5568; font-weight: 600; flex-shrink: 0; }
-    .slider-wrapper { flex: 1; display: flex; align-items: center; gap: 12px; }
+    /* 变形器区域 */
+    .transform-section { margin-top: 24px; }
+    
+    /* 尺寸行 */
+    .slider-row { display: flex; align-items: center; margin-bottom: 20px; }
+    .slider-row label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; }
+    .slider-wrapper { flex: 1; display: flex; align-items: center; gap: 10px; }
     .slider-wrapper input[type="range"] {
-      flex: 1; height: 8px; -webkit-appearance: none; appearance: none;
+      flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
       background: linear-gradient(90deg, #2f80ed, #6ea8fe);
       border-radius: 6px; outline: none; cursor: pointer;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     }
     .slider-wrapper input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
+      -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
       border-radius: 50%; background: #ffffff; cursor: pointer;
-      box-shadow: 0 2px 8px rgba(47, 128, 237, 0.5), 0 0 0 2px #2f80ed;
+      box-shadow: 0 2px 6px rgba(47, 128, 237, 0.5), 0 0 0 2px #2f80ed;
       border: none; transition: transform 0.15s;
     }
-    .slider-wrapper input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.12); }
-    .slider-wrapper input[type="range"]::-moz-range-thumb {
-      width: 22px; height: 22px; border-radius: 50%; background: #ffffff;
-      cursor: pointer; border: 2px solid #2f80ed; box-shadow: 0 2px 8px rgba(47, 128, 237, 0.4);
-    }
     .slider-value-badge {
-      font-size: 13px; font-weight: 700; color: #2f80ed;
-      background: #eef4ff; padding: 5px 12px; border-radius: 20px;
-      min-width: 58px; text-align: center; transition: background 0.2s;
-      box-shadow: inset 0 1px 2px rgba(47,128,237,0.1);
+      font-size: 12px; font-weight: 700; color: #2f80ed;
+      background: #eef4ff; padding: 4px 10px; border-radius: 16px;
+      min-width: 48px; text-align: center;
     }
+
+    /* 通用并排按钮行 */
+    .btn-row { display: flex; align-items: center; margin-bottom: 20px; }
+    .btn-row > label { width: 86px; font-size: 13px; color: #4a5568; font-weight: 600; flex-shrink: 0; }
+    
+    .btn-group { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; }
+
+    /* 自适应宽度方块按钮 */
+    .square-btn {
+      flex: 1; height: 28px; display: flex; align-items: center; justify-content: center;
+      background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b;
+      font-size: 11px; font-weight: bold; /* 加粗 */
+      border-radius: 6px; cursor: pointer; transition: all 0.2s; padding: 0; min-width: 0;
+    }
+
+    /* 配色按钮 */
+    .color-btn {
+      flex: 1; height: 28px; border-radius: 6px; border: 2px solid transparent;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .color-btn:hover { transform: scale(1.02); }
+    .color-btn.active { 
+      border-color: #1a202c;
+      transform: scale(0.92);
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #2f80ed;
+      z-index: 1;
+    }
+
+    .opacity-btns { display: flex; flex: 1; gap: 6px; opacity: 0.4; pointer-events: none; transition: opacity 0.2s; min-width: 0; }
+    .opacity-btns.active { opacity: 1; pointer-events: auto; }
 
     /* 底部提示 */
     .bottom-area {
       flex-shrink: 0; display: flex; gap: 10px;
-      min-height: 40px; align-items: stretch; margin-top: auto;
+      min-height: 30px; align-items: stretch; margin-top: auto;
       justify-content: center; opacity: 0.6; pointer-events: none;
     }
-    .bottom-area span { color: #a0aec0; font-size: 13px; }
+    .bottom-area span { color: #a0aec0; font-size: 12px; }
 
     /* ========== 右侧预览区 ========== */
     .preview-panel {
-      flex: 1; padding: 28px; background: #f2f4f7;
+      flex: 1; padding: 24px; background: #f2f4f7;
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; position: relative; height: 100%; min-height: 0;
     }
@@ -196,7 +217,6 @@
       background-image: none; background-color: #ffffff; cursor: default;
     }
     .canvas-wrapper.drag-over { box-shadow: 0 0 0 4px #2f80ed, 0 8px 28px rgba(0, 0, 0, 0.18); }
-    .canvas-wrapper.selected { box-shadow: 0 0 0 4px #2f80ed, 0 8px 28px rgba(0, 0, 0, 0.18); }
 
     #base-image {
       display: block; max-width: 100%; max-height: 100%;
@@ -209,7 +229,7 @@
     /* ========== 水印卡片 ========== */
     .watermark-card {
       position: absolute; left: 16px; bottom: 16px; 
-      width: 246px; /* 加宽以容纳更多字符 */
+      width: 246px; 
       font-size: 13px; 
       border-radius: 10px;
       display: flex; flex-direction: column; font-weight: bold;
@@ -226,52 +246,44 @@
     }
 
     .watermark-bg-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 1; 
-      border-radius: 10px;
-      background-color: #ffffff;
-      pointer-events: none;
-      transition: opacity 0.1s;
+      position: absolute; inset: 0; z-index: 1; 
+      border-radius: 10px; background-color: #ffffff;
+      pointer-events: none; transition: opacity 0.1s;
     }
     
     .watermark-bg-layer::before,
     .watermark-bg-layer::after {
-      content: "";
-      position: absolute;
-      left: 0; right: 0;
-      height: 26px;
-      background-color: #2f80ed;
+      content: ""; position: absolute; left: 0; right: 0;
+      height: 26px; background-color: #2f80ed; /* 默认蓝色 */
+      transition: background-color 0.2s;
     }
     .watermark-bg-layer::before { top: 0; border-radius: 10px 10px 0 0; }
     .watermark-bg-layer::after { bottom: 0; border-radius: 0 0 10px 10px; }
 
     .watermark-content {
-      position: relative;
-      z-index: 2; 
-      display: flex;
-      flex-direction: column;
-      border-radius: 10px;
-      overflow: hidden;
+      position: relative; z-index: 2; 
+      display: flex; flex-direction: column;
+      border-radius: 10px; overflow: hidden;
     }
 
     .wm-header {
-      background-color: transparent; color: #ffffff; padding: 0 12px;
-      position: relative; display: flex; align-items: center;
-      height: 26px; flex-shrink: 0; margin: 0; border: none;
+      background-color: transparent; 
+      color: #ffffff; /* 默认白字 */
+      padding: 0 12px; position: relative; display: flex; align-items: center;
+      height: 26px; flex-shrink: 0; border: none;
       font-family: inherit; font-weight: bold;
+      transition: color 0.2s;
     }
 
     .wm-yellow-square {
       width: 8px; height: 8px; background-color: #f2c94c;
-      position: absolute; left: 12px; margin: 0; padding: 0;
+      position: absolute; left: 12px; transition: background-color 0.2s;
     }
     
     .wm-title-text {
       width: 100%; text-align: center; font-size: 14px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      padding: 0 4px; margin: 0; border: none;
-      font-family: inherit; font-weight: bold; color: #ffffff;
+      padding: 0 4px; font-family: inherit; font-weight: bold;
     }
     
     .wm-title-text.placeholder-text, .wm-value.placeholder-text {
@@ -280,37 +292,32 @@
     
     .wm-body {
       padding: 10px 12px; display: flex; flex-direction: column;
-      gap: 6px; margin: 0; background: transparent; border: none;
-      font-family: inherit; font-weight: bold;
+      gap: 6px; background: transparent; font-family: inherit; font-weight: bold;
     }
     
-    .wm-row {
-      display: flex; align-items: flex-start; margin: 0;
-      padding: 0; border: none; font-family: inherit; font-weight: bold;
-    }
+    .wm-row { display: flex; align-items: flex-start; font-family: inherit; font-weight: bold; }
     
     .wm-label {
       width: 6.1em; flex-shrink: 0; color: #1a202c; white-space: nowrap;
-      font-size: 12px; font-weight: bold; margin: 0; padding: 0;
-      border: none; letter-spacing: normal; text-align: left; font-family: inherit;
+      font-size: 12px; font-weight: bold; letter-spacing: normal; text-align: left;
     }
     
     .wm-value {
       flex: 1; color: #1a202c; line-height: 1.45;
       padding-left: 6px; font-size: 12px; font-weight: bold;
-      margin: 0; border: none; font-family: inherit;
-      white-space: normal;
-      word-break: break-word; /* 修复：自然换行 */
+      white-space: normal; word-break: break-word;
     }
     
     #disp-date { white-space: nowrap; }
     
     .wm-footer {
-      background-color: transparent; color: #ffffff; padding: 0 12px;
-      font-size: 12px; display: flex; align-items: center;
+      background-color: transparent; 
+      color: #ffffff; /* 默认白字 */
+      padding: 0 12px; font-size: 12px; display: flex; align-items: center;
       height: 26px; flex-shrink: 0; white-space: nowrap;
-      overflow: hidden; text-overflow: ellipsis; margin: 0;
-      border: none; font-family: inherit; font-weight: bold;
+      overflow: hidden; text-overflow: ellipsis;
+      font-family: inherit; font-weight: bold;
+      transition: color 0.2s;
     }
 
     .watermark-card:active { cursor: grabbing; }
@@ -323,46 +330,38 @@
     }
     .float-actions .action-btn {
       pointer-events: auto; display: flex; align-items: center;
-      justify-content: center; width: 36px; height: 36px;
+      justify-content: center; width: 34px; height: 34px;
       border: none; border-radius: 8px; cursor: pointer;
       transition: all 0.2s; background: rgba(47, 128, 237, 0.92);
-      color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      padding: 0; line-height: 1;
+      color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); padding: 0;
     }
     .float-actions .action-btn:hover { background: #1c6cd6; transform: scale(1.08); }
-    .float-actions .action-btn svg { width: 18px; height: 18px; display: block; fill: currentColor; }
+    .float-actions .action-btn svg { width: 16px; height: 16px; display: block; fill: currentColor; }
     .float-actions .action-btn.reset { background: rgba(229, 62, 62, 0.92); }
     .float-actions .action-btn.reset:hover { background: #c53030; }
     .float-actions .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .float-actions .action-btn.download { background: rgba(56, 161, 105, 0.92); }
     .float-actions .action-btn.download:hover { background: #2f855a; }
 
-    /* ========== 空状态提示 ========== */
+    /* 空状态提示 */
     .empty-preview {
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; width: 100%; height: 100%;
       color: #94a3b8; user-select: none; background: #fafafa; z-index: 3; pointer-events: none;
     }
+    .empty-preview > div { line-height: normal; }
     .empty-icon-wrap {
       width: 72px; height: 72px; background: #ffffff; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); margin-bottom: 20px;
-      color: #cbd5e1;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); margin-bottom: 20px; color: #cbd5e1;
     }
-    .empty-icon-wrap svg { 
-      width: 32px; height: 32px; fill: currentColor; display: block; 
-    }
-    .empty-title { 
-      font-size: 16px; font-weight: 600; color: #475569; margin-bottom: 8px; 
-      line-height: 1.2;
-    }
-    .empty-hint { 
-      font-size: 13px; color: #94a3b8; line-height: 1.2;
-    }
+    .empty-icon-wrap svg { width: 32px; height: 32px; fill: currentColor; display: block; }
+    .empty-title { font-size: 16px; font-weight: 600; color: #475569; margin-bottom: 8px; }
+    .empty-hint { font-size: 13px; color: #94a3b8; }
     .empty-preview.hidden { display: none; }
 
     .signature {
-      margin-top: 16px; color: #b0b4b9; font-size: 13px;
+      margin-top: 12px; color: #b0b4b9; font-size: 12px;
       font-weight: bold; letter-spacing: 1px; display: flex;
       align-items: center; width: 100%; justify-content: center; flex-shrink: 0;
     }
@@ -440,18 +439,13 @@
         <div class="section-header">
           <h2>变形器</h2>
           <div class="clear-action-wrapper">
-            <button class="btn-icon" id="btn-reset-transform" title="复位透明度与尺寸">
+            <button class="btn-icon" id="btn-reset-transform" title="复位尺寸与透明度">
               <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/></svg>
             </button>
           </div>
         </div>
-        <div class="slider-row">
-          <label>透明度：</label>
-          <div class="slider-wrapper">
-            <input type="range" id="opacity-slider" min="0" max="100" value="100" step="1">
-            <span class="slider-value-badge" id="opacity-badge">100%</span>
-          </div>
-        </div>
+        
+        <!-- 1. 尺寸 -->
         <div class="slider-row">
           <label>尺寸：</label>
           <div class="slider-wrapper">
@@ -459,6 +453,41 @@
             <span class="slider-value-badge" id="scale-badge">100%</span>
           </div>
         </div>
+
+        <!-- 2. 透明度 -->
+        <div class="btn-row">
+          <label>透明度：</label>
+          <div class="btn-group">
+            <div class="toggle-switch-wrapper" style="margin-left:0;">
+              <label class="toggle-switch" title="开启背景透明">
+                <input type="checkbox" id="checkbox-opacity">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text toggle-text-on">开启</span>
+                <span class="toggle-text toggle-text-off">关闭</span>
+              </label>
+            </div>
+            <div class="opacity-btns" id="opacity-btns">
+              <button class="square-btn" data-val="50">50%</button>
+              <button class="square-btn" data-val="60">60%</button>
+              <button class="square-btn" data-val="70">70%</button>
+              <button class="square-btn" data-val="80">80%</button>
+              <button class="square-btn" data-val="90">90%</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 配色 -->
+        <div class="btn-row">
+          <label>配色：</label>
+          <div class="btn-group" id="color-btns">
+            <button class="color-btn active" data-color="#2f80ed" style="background-color:#2f80ed;" title="蓝色"></button>
+            <button class="color-btn" data-color="#ef4444" style="background-color:#ef4444;" title="红色"></button>
+            <button class="color-btn" data-color="#f2c94c" style="background-color:#f2c94c;" title="黄色"></button>
+            <button class="color-btn" data-color="#10b981" style="background-color:#10b981;" title="绿色"></button>
+            <button class="color-btn" data-color="#1f2937" style="background-color:#1f2937;" title="黑色"></button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -487,6 +516,7 @@
         </div>
       </div>
 
+      <!-- 空状态 -->
       <div class="empty-preview" id="empty-preview">
         <div class="empty-icon-wrap">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -505,7 +535,7 @@
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
         </button>
         <button class="action-btn reset" id="btn-reset" title="清空图片">
-          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"/></svg>
         </button>
       </div>
     </div>
@@ -522,7 +552,6 @@
   const watermarkBgLayer = document.getElementById('watermark-bg-layer');
   const emptyPreview = document.getElementById('empty-preview');
   
-  // 动态创建隐藏的 input 以支持上传
   const fileInput = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', style: 'display:none' });
   document.body.appendChild(fileInput);
 
@@ -531,11 +560,20 @@
   const btnReset = document.getElementById('btn-reset');
   const btnClearContent = document.getElementById('btn-clear-content');
   const clearToast = document.getElementById('clear-toast');
-  const opacitySlider = document.getElementById('opacity-slider');
-  const opacityBadge = document.getElementById('opacity-badge');
   const scaleSlider = document.getElementById('scale-slider');
   const scaleBadge = document.getElementById('scale-badge');
   const btnResetTransform = document.getElementById('btn-reset-transform');
+
+  // 透明度控件
+  const checkboxOpacity = document.getElementById('checkbox-opacity');
+  const opacityBtnsContainer = document.getElementById('opacity-btns');
+  const opacityBtns = opacityBtnsContainer.querySelectorAll('.square-btn');
+
+  // 配色控件
+  const colorBtns = document.querySelectorAll('.color-btn');
+  const wmHeader = document.querySelector('.wm-header');
+  const wmFooter = document.querySelector('.wm-footer');
+  const wmYellowSquare = document.querySelector('.wm-yellow-square');
 
   const disp = {
     title: document.getElementById('disp-title'),
@@ -567,8 +605,9 @@
     location: '省市区县·小区村庄', coords: '33.55°N,119.08°E', company: '均胜群英'
   };
 
-  let watermarkOpacity = 1;
   let watermarkScale = 1;
+  let currentOpacity = 1;
+  let currentColor = '#2f80ed'; // 记录当前选中的颜色
 
   // ===== 初始化下拉框 =====
   function initDateSelectors() {
@@ -657,25 +696,117 @@
     setTimeout(() => clearToast.classList.remove('show'), 1500);
   };
 
-  // ===== 变形器 =====
-  function syncOpacity() {
-    watermarkOpacity = +opacitySlider.value / 100;
-    opacityBadge.textContent = opacitySlider.value + '%';
-    watermarkBgLayer.style.opacity = watermarkOpacity;
-  }
-  
+  // ===== 变形器：尺寸 =====
   function syncScale() {
     watermarkScale = +scaleSlider.value / 100;
     scaleBadge.textContent = scaleSlider.value + '%';
     watermarkCard.style.transform = `scale(${watermarkScale})`;
   }
-  
-  opacitySlider.oninput = syncOpacity;
   scaleSlider.oninput = syncScale;
 
+  // ===== 核心逻辑：十六进制颜色转 rgba =====
+  function hexToRgba(hex, alpha) {
+    let r = parseInt(hex.slice(1, 3), 16),
+        g = parseInt(hex.slice(3, 5), 16),
+        b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // 核心渲染逻辑：根据当前颜色和透明度，重新给 5 个按钮上色
+  function renderOpacityBtns() {
+    const isYellow = currentColor.toLowerCase().includes('f2c94c');
+    const textColor = isYellow ? '#1a202c' : '#ffffff'; // 黄底黑字，深色底白字
+
+    opacityBtns.forEach(b => {
+      const val = +b.dataset.val;
+      // 1. 固定底色随配色变，透明度固定为对应的 0.5 ~ 0.9
+      b.style.backgroundColor = hexToRgba(currentColor, val / 100);
+      
+      // 2. 字体加粗且颜色自适应
+      b.style.color = textColor;
+      b.style.fontWeight = 'bold';
+
+      // 3. 选中状态：加深色边框，未选中：透明边框
+      if (b.classList.contains('active')) {
+        b.style.borderColor = isYellow ? '#1a202c' : '#ffffff';
+        b.style.boxShadow = '0 0 4px rgba(0,0,0,0.2)';
+      } else {
+        b.style.borderColor = 'transparent';
+        b.style.boxShadow = 'none';
+      }
+    });
+  }
+
+  // ===== 变形器：透明度 =====
+  function updateOpacity(val) {
+    currentOpacity = val / 100;
+    watermarkBgLayer.style.opacity = currentOpacity;
+    
+    // 更新按钮的激活状态
+    opacityBtns.forEach(btn => {
+      if (+btn.dataset.val === val) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    
+    // 重新渲染按钮样式
+    renderOpacityBtns();
+  }
+
+  checkboxOpacity.onchange = () => {
+    if (checkboxOpacity.checked) {
+      opacityBtnsContainer.classList.add('active');
+      updateOpacity(80); // 默认选中 80%
+    } else {
+      opacityBtnsContainer.classList.remove('active');
+      updateOpacity(100); // 关闭时恢复完全不透明
+      opacityBtns.forEach(btn => btn.classList.remove('active'));
+    }
+  };
+
+  opacityBtns.forEach(btn => {
+    btn.onclick = () => {
+      if (!checkboxOpacity.checked) return;
+      updateOpacity(+btn.dataset.val);
+    };
+  });
+
+  // ===== 变形器：配色 =====
+  colorBtns.forEach(btn => {
+    btn.onclick = () => {
+      colorBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentColor = btn.dataset.color;
+      
+      const styleTag = document.getElementById('dynamic-color-style') || document.createElement('style');
+      styleTag.id = 'dynamic-color-style';
+      styleTag.innerHTML = `
+        .watermark-bg-layer::before { background-color: ${currentColor} !important; }
+        .watermark-bg-layer::after { background-color: ${currentColor} !important; }
+      `;
+      if (!styleTag.parentNode) document.head.appendChild(styleTag);
+
+      // 智能文字颜色保护
+      const isYellow = currentColor.toLowerCase().includes('f2c94c');
+      wmHeader.style.color = isYellow ? '#1a202c' : '#ffffff';
+      wmFooter.style.color = isYellow ? '#1a202c' : '#ffffff';
+      wmYellowSquare.style.backgroundColor = isYellow ? '#1a202c' : '#f2c94c';
+
+      // 联动更新透明度按钮的底色
+      renderOpacityBtns();
+    };
+  });
+
+  // 复位功能
   btnResetTransform.onclick = () => {
-    opacitySlider.value = 100; scaleSlider.value = 100;
-    syncOpacity(); syncScale();
+    scaleSlider.value = 100; syncScale();
+    
+    checkboxOpacity.checked = false;
+    opacityBtnsContainer.classList.remove('active');
+    updateOpacity(100);
+    
+    const defaultColorBtn = document.querySelector('.color-btn[data-color="#2f80ed"]');
+    if (defaultColorBtn) defaultColorBtn.click();
   };
 
   // ===== 水印拖动 =====
@@ -830,7 +961,7 @@
           cc.style.fontWeight = 'bold';
           
           const cbg = doc.getElementById('watermark-bg-layer');
-          if (cbg) cbg.style.opacity = watermarkOpacity;
+          if (cbg) cbg.style.opacity = currentOpacity;
 
           const title = cc.querySelector('.wm-title-text');
           if (title && title.classList.contains('placeholder-text')) { title.style.color = '#a0aec0'; title.style.fontWeight = '500'; }
@@ -921,12 +1052,7 @@
     canvasWrapper.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
     canvasWrapper.classList.remove('selected', 'drag-over');
 
-    watermarkOpacity = 1; watermarkScale = 1;
-    opacitySlider.value = 100; scaleSlider.value = 100;
-    opacityBadge.textContent = '100%'; scaleBadge.textContent = '100%';
-    
-    watermarkBgLayer.style.opacity = 1;
-    watermarkCard.style.transform = 'scale(1)';
+    btnResetTransform.onclick(); // 复用重置逻辑
   };
 
   // ===== 初始化 =====
@@ -935,6 +1061,10 @@
   watermarkCard.classList.add('hidden');
   watermarkBgLayer.style.opacity = 1;
   watermarkCard.style.transform = 'scale(1)';
+  
+  // 触发一次默认颜色的点击，确保文字颜色和按钮颜色对应
+  const defaultColorBtn = document.querySelector('.color-btn[data-color="#2f80ed"]');
+  if (defaultColorBtn) defaultColorBtn.click();
 })();
 </script>
 
