@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>图片处理工具</title>
+  <title>图片处理 · 牛马刷子工具合集</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}html,body{width:100vw;height:100vh;overflow:hidden;background:#e9edf2;font-family:system-ui,-apple-system,sans-serif}
     .app-card{width:100%;height:100%;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);display:flex;flex-direction:column;padding:1rem 1.5rem 1.5rem}
@@ -15,10 +15,8 @@
     .left-panel{display:flex;flex-direction:column;min-height:0}
     .preview-panel{background:#ffffffd9;border-radius:1rem;padding:.8rem;display:flex;flex-direction:column;flex:1;min-height:0;position:relative}
     
-    /* 画布自适应，消除两侧留白 */
     .canvas-wrapper{background-color:#f1f5f9;background-image:linear-gradient(45deg,#e2e8f0 25%,transparent 25%),linear-gradient(-45deg,#e2e8f0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e2e8f0 75%),linear-gradient(-45deg,transparent 75%,#e2e8f0 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0px;border-radius:.75rem;display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative;border:2px dashed #cbd5e1;margin-bottom:.5rem;flex:1;min-height:0;cursor:pointer}
     #fileInput{display:none}
-    /* 使用 width:100%; height:100%; object-fit:contain 确保画布撑满且比例正确 */
     #imageCanvas{width:100%;height:100%;object-fit:contain;display:block;cursor:default;border:0;padding:0;margin:0}
     
     .canvas-wrapper.mode-crop #imageCanvas{cursor:crosshair}
@@ -60,6 +58,13 @@
     .size-buttons{display:flex;gap:.6rem}.size-btn{flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:40px;padding:.6rem 0;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .sticker-list-container{display:flex;flex-wrap:wrap;gap:8px;min-height:60px;background:#f8fafc;padding:8px;border-radius:8px;border:1px dashed #cbd5e1}
     .sticker-item{width:48px;height:48px;object-fit:contain;background:#e2e8f0;border-radius:4px;cursor:pointer}
+    
+    #clearStickersBtn:disabled {
+        opacity: 0.4;
+        pointer-events: none;
+        background: #fee2e2; 
+        color: #b91c1c;
+    }
   </style>
 </head>
 <body>
@@ -101,7 +106,6 @@
       </div>
       <div class="control-panel">
         
-        <!-- 基础调整 -->
         <div class="section-card collapsed" id="basicSection">
           <div class="section-header" data-target="basic"><span>📐 尺寸方向</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" fill="none" stroke-width="2"/></svg></div>
           <div class="section-content">
@@ -120,7 +124,6 @@
           </div>
         </div>
 
-        <!-- 滤镜调整 -->
         <div class="section-card collapsed" id="filterSection">
           <div class="section-header" data-target="filter"><span>🎨 滤镜调色</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" fill="none" stroke-width="2"/></svg></div>
           <div class="section-content">
@@ -139,7 +142,6 @@
           </div>
         </div>
 
-        <!-- 图形字节 -->
         <div class="section-card collapsed" id="sizeSection">
           <div class="section-header" data-target="size"><span>⚖️ 图形字节</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" fill="none" stroke-width="2"/></svg></div>
           <div class="section-content">
@@ -152,17 +154,18 @@
           </div>
         </div>
 
-        <!-- 抠图功能 -->
         <div class="section-card collapsed" id="stickerSection">
           <div class="section-header"><span>✂️ 抠图贴纸</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" fill="none" stroke-width="2"/></svg></div>
           <div class="section-content">
             <div class="size-buttons" style="margin-bottom:0.5rem">
-              <button class="size-btn" id="startCropBtn" disabled>选区</button>
-              <button class="size-btn" id="extractBgBtn" disabled>抠除</button>
+              <button class="size-btn" id="startCropBtn" disabled>框选区域</button>
+              <button class="size-btn" id="extractBgBtn" disabled>抠除背景</button>
             </div>
-            <button class="size-btn" id="clearStickersBtn" style="width:100%" disabled>清空贴纸</button>
-            <div style="font-size:.8rem;margin-top:.5rem">🎯 已保存的贴纸</div>
-            <div id="stickerList" class="sticker-list-container"><span style="font-size:.75rem;margin:0 auto;line-height:44px">暂无贴纸</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem; margin-bottom:0.4rem;">
+              <div style="font-size:.8rem;">🎯 已保存的贴纸</div>
+              <button class="btn btn-danger" id="clearStickersBtn" style="padding:0.25rem 0.6rem; font-size:0.7rem; border-radius:6px; border:none; cursor:pointer;" disabled>清空</button>
+            </div>
+            <div id="stickerList" class="sticker-list-container"><span style="font-size:.75rem;margin:0 auto;line-height:44px;color:#94a3b8;">暂无贴纸</span></div>
           </div>
         </div>
 
@@ -187,25 +190,16 @@
       
       function updateButtonsState() {
         const hasImage = currentImageLoaded;
-        
-        document.querySelectorAll('.crop-btn, .dir-btn, .preset-btn, #startCropBtn').forEach(btn => {
-          btn.disabled = !hasImage;
-        });
+        document.querySelectorAll('.crop-btn, .dir-btn, .preset-btn, #startCropBtn').forEach(btn => { btn.disabled = !hasImage; });
         sliders.brightness.disabled = !hasImage;
         sliders.contrast.disabled = !hasImage;
         sliders.saturate.disabled = !hasImage;
-        
         copyBtn.disabled = !hasImage;
         downloadBtn.disabled = !hasImage;
         clearBtn.disabled = !hasImage;
         resetBtn.disabled = !hasImage;
         
-        if(hasImage) {
-           extractBgBtn.disabled = !(isCropMode || isEditingExtracted); 
-        } else {
-           extractBgBtn.disabled = true;
-        }
-
+        if(hasImage) { extractBgBtn.disabled = !(isCropMode || isEditingExtracted); } else { extractBgBtn.disabled = true; }
         clearStickersBtn.disabled = (stickers.length === 0);
       }
 
@@ -215,30 +209,17 @@
       function updateSizePanelInfo(){
         if(originalImage)$('infoDimensions').textContent=originalImage.width+' × '+originalImage.height;
         else $('infoDimensions').textContent='—';
-        
         $('infoFileSize').textContent=formatFileSize(currentFileSizeBytes);
-        
         if(!currentImageLoaded||canvas.width===0||!lastCanvasDataURLSize){
-          $('decreaseSizeBtn').disabled=true;
-          $('increaseSizeBtn').disabled=true;
-          return;
+          $('decreaseSizeBtn').disabled=true;$('increaseSizeBtn').disabled=true;return;
         }
         $('decreaseSizeBtn').disabled=lastCanvasDataURLSize<MIN_SIZE_BYTES;
         $('increaseSizeBtn').disabled=lastCanvasDataURLSize>MAX_SIZE_BYTES;
       }
 
-      // 修复：统一获取 JPEG 实际大小，与实际下载体积一致
       function refreshCanvasSizeMetric(){
-        if(!currentImageLoaded||canvas.width===0){
-          lastCanvasDataURLSize=0;
-          updateSizePanelInfo();
-          return;
-        }
-        try{
-          lastCanvasDataURLSize=getDataURLSize(canvas.toDataURL('image/jpeg',0.9));
-        }catch(e){
-          lastCanvasDataURLSize=0;
-        }
+        if(!currentImageLoaded||canvas.width===0){ lastCanvasDataURLSize=0; updateSizePanelInfo(); return; }
+        try{ lastCanvasDataURLSize=getDataURLSize(canvas.toDataURL('image/jpeg',0.9)); }catch(e){ lastCanvasDataURLSize=0; }
         updateSizePanelInfo();
       }
 
@@ -254,16 +235,9 @@
         if(!currentImageLoaded||!originalImage)return;
         const rs=getRotatedSize(originalImage),rotatedW=rs.w,rotatedH=rs.h,rad=(rotationAngle*Math.PI)/180;
         const temp=document.createElement('canvas');temp.width=rotatedW;temp.height=rotatedH;const tctx=temp.getContext('2d');
-        
-        tctx.save();
-        tctx.translate(rotatedW/2,rotatedH/2);
-        tctx.rotate(rad);
-        tctx.scale(isMirroredH?-1:1, isMirroredV?-1:1);
-        tctx.drawImage(originalImage,-originalImage.width/2,-originalImage.height/2,originalImage.width,originalImage.height);
-        tctx.restore();
+        tctx.save();tctx.translate(rotatedW/2,rotatedH/2);tctx.rotate(rad);tctx.scale(isMirroredH?-1:1, isMirroredV?-1:1);tctx.drawImage(originalImage,-originalImage.width/2,-originalImage.height/2,originalImage.width,originalImage.height);tctx.restore();
         
         canvas.width=rotatedW;canvas.height=rotatedH;
-        // 修复：移除强制行内宽高，让 CSS 接管自适应撑满
         canvas.style.width='';canvas.style.height=''; 
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.filter=getFilterString();ctx.drawImage(temp,0,0);ctx.filter='none';
@@ -308,28 +282,20 @@
         adjustOffset.y=Math.max(-maxOffY,Math.min(maxOffY,adjustOffset.y));
         ctx.clearRect(0,0,cw,ch);
         ctx.save();
-        ctx.translate(cw/2+adjustOffset.x,ch/2+adjustOffset.y);
-        ctx.scale(adjustScale,adjustScale);
-        const rad=(rotationAngle*Math.PI)/180;
-        ctx.rotate(rad);
-        ctx.scale(isMirroredH?-1:1, isMirroredV?-1:1);
-        ctx.filter=getFilterString();
-        ctx.drawImage(originalImage,-originalImage.width/2,-originalImage.height/2,originalImage.width,originalImage.height);
-        ctx.filter='none';
+        ctx.translate(cw/2+adjustOffset.x,ch/2+adjustOffset.y);ctx.scale(adjustScale,adjustScale);
+        const rad=(rotationAngle*Math.PI)/180;ctx.rotate(rad);ctx.scale(isMirroredH?-1:1, isMirroredV?-1:1);
+        ctx.filter=getFilterString();ctx.drawImage(originalImage,-originalImage.width/2,-originalImage.height/2,originalImage.width,originalImage.height);ctx.filter='none';
         ctx.restore();
         
         ctx.save();
         stickers.forEach(s=>{
           if(s.isOnCanvas){
             const cx=s.x*canvas.width,cy=s.y*canvas.height,dw=s.img.width*s.scale,dh=s.img.height*s.scale;
-            if(s.id===activeStickerId){
-              ctx.strokeStyle='#4f46e5';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.strokeRect(cx-dw/2,cy-dh/2,dw,dh);ctx.setLineDash([]);
-            }
+            if(s.id===activeStickerId){ctx.strokeStyle='#4f46e5';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.strokeRect(cx-dw/2,cy-dh/2,dw,dh);ctx.setLineDash([]);}
             ctx.drawImage(s.img,cx-dw/2,cy-dh/2,dw,dh);
           }
         });
         ctx.restore();
-        
         canvas.style.display='block';placeholderMsg.style.display='none';
       }
 
@@ -338,24 +304,68 @@
       function updateFloatingButtonsPosition(){
         stickerControls.style.display='none';saveStickerBtn.style.display='none';cancelCropBtn.style.display='none';scaleUpBtn.style.display='none';scaleDownBtn.style.display='none';deleteStickerBtn.style.display='none';
         const rect=canvas.getBoundingClientRect();
-        if(isEditingExtracted){saveStickerBtn.style.display='flex';cancelCropBtn.style.display='flex';stickerControls.style.display='flex';stickerControls.style.left=`${rect.right+10}px`;stickerControls.style.top=`${rect.top+20}px`;return;}
+        const wrapperRect=canvasWrapper.getBoundingClientRect();
+        
+        // 抠图模式下：存入贴纸和取消按钮，固定在画布内框的右上角
+        if(isEditingExtracted){
+          saveStickerBtn.style.display='flex';
+          cancelCropBtn.style.display='flex';
+          stickerControls.style.display='flex';
+          // 使用 fixed 定位，相对视口计算，确保在 canvasWrapper 内部留出 15px 边距
+          stickerControls.style.left=`${wrapperRect.right - 170}px`; // 170是预估按钮组宽度，可以根据实际微调
+          stickerControls.style.top=`${wrapperRect.top + 15}px`;
+          return;
+        }
+        
+        // 贴纸选中模式下：缩放和删除按钮，跟随贴纸右上角
         if(activeStickerId!==null){
-          scaleUpBtn.style.display='flex';scaleDownBtn.style.display='flex';deleteStickerBtn.style.display='flex';stickerControls.style.display='flex';
+          scaleUpBtn.style.display='flex';
+          scaleDownBtn.style.display='flex';
+          deleteStickerBtn.style.display='flex';
+          stickerControls.style.display='flex';
           const s=stickers.find(st=>st.id===activeStickerId);
           if(s && s.isOnCanvas){
-            const cx=s.x*canvas.width,cy=s.y*canvas.height,dw=s.img.width*s.scale,dh=s.img.height*s.scale,sx=rect.width/canvas.width,sy=rect.height/canvas.height;
-            stickerControls.style.left=`${rect.left+(cx+dw/2)*sx}px`;stickerControls.style.top=`${rect.top+(cy-dh/2)*sy+window.scrollY}px`;
+            // 计算贴纸右上角在页面上的绝对位置
+            const cx=s.x*canvas.width, cy=s.y*canvas.height;
+            const dw=s.img.width*s.scale, dh=s.img.height*s.scale;
+            
+            // 由于是 object-fit: contain，需要计算真实的缩放比例和留白
+            const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+            const blankX = (rect.width - canvas.width * scale) / 2;
+            const blankY = (rect.height - canvas.height * scale) / 2;
+            
+            // 贴纸右上角在视口中的 X/Y
+            const stickerRightX = rect.left + blankX + (cx + dw/2) * scale;
+            const stickerTopY = rect.top + blankY + (cy - dh/2) * scale;
+            
+            // 把操作按钮放在贴纸右上角，为了防止超出画布右边，做一个最大值限制
+            stickerControls.style.left=`${Math.min(stickerRightX + 5, wrapperRect.right - 100)}px`;
+            stickerControls.style.top=`${Math.max(stickerTopY, wrapperRect.top + 10)}px`;
           }
         }
       }
       
+      // 【终极修复】：精准计算 object-fit: contain 导致的外部留白
       function getPointerCoords(e){
         const rect = canvas.getBoundingClientRect();
         const cX = e.touches ? e.touches[0].clientX : e.clientX;
         const cY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        // 鼠标相对于外层容器的坐标
+        const mouseX = cX - rect.left;
+        const mouseY = cY - rect.top;
+        
+        // 计算 object-fit: contain 的实际缩放比
+        const scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
+        
+        // 计算画布内容在容器内居中产生的留白
+        const blankX = (rect.width - canvas.width * scale) / 2;
+        const blankY = (rect.height - canvas.height * scale) / 2;
+        
+        // 减去留白，并除以缩放比，得到真实的 canvas 像素坐标
         return {
-          x: (cX - rect.left) * (canvas.width / rect.width),
-          y: (cY - rect.top) * (canvas.height / rect.height)
+          x: (mouseX - blankX) / scale,
+          y: (mouseY - blankY) / scale
         };
       }
       
@@ -498,7 +508,6 @@
       adjustApplyBtn.addEventListener('click',applyAdjustCrop);
       adjustCancelBtn.addEventListener('click',()=>{exitAdjustMode();requestRender();});
 
-      // 去色差抠图（边缘采样法）
       extractBgBtn.addEventListener('click',()=>{
         if(!currentImageLoaded)return;
         const w=originalImage.width,h=originalImage.height;
@@ -535,7 +544,6 @@
         newImg.src=tempC.toDataURL('image/png');
       });
 
-      // 存入贴纸
       saveStickerBtn.addEventListener('click',()=>{
         const img=new Image();
         img.onload=()=>{
@@ -562,7 +570,6 @@
       scaleUpBtn.addEventListener('click',(e)=>{e.stopPropagation();if(activeStickerId===null)return;const s=stickers.find(st=>st.id===activeStickerId);if(s){s.scale*=1.15;requestRender();}});
       scaleDownBtn.addEventListener('click',(e)=>{e.stopPropagation();if(activeStickerId===null)return;const s=stickers.find(st=>st.id===activeStickerId);if(s){s.scale*=0.85;s.scale=Math.max(0.1,s.scale);requestRender();}});
       
-      // 删除按钮（×）：仅从画布隐藏，素材库保留
       deleteStickerBtn.addEventListener('click',(e)=>{
         e.stopPropagation();
         if(activeStickerId===null)return;
@@ -588,7 +595,7 @@
           });
           stickerList.appendChild(img);
         });
-        updateButtonsState(); // 贴纸库变化后更新按钮状态
+        updateButtonsState();
       }
 
       startCropBtn.addEventListener('click',()=>{
@@ -609,7 +616,7 @@
         }
         cropRect=null;
         requestRender();
-        updateButtonsState(); // 更新抠除背景按钮状态
+        updateButtonsState();
       });
 
       clearStickersBtn.addEventListener('click',()=>{
@@ -620,7 +627,6 @@
       function resetFilters(){sliders.brightness.value=100;sliders.contrast.value=100;sliders.saturate.value=100;updateSliderLabels();}
       function resetTransform(){rotationAngle=0;isMirroredH=false;isMirroredV=false;currentCrop='free';document.querySelectorAll('.crop-btn').forEach(b=>b.classList.toggle('active',b.dataset.crop==='free'));}
       
-      // 重置按钮：恢复原图，清空画布上的贴纸，但不清空右侧素材库
       resetBtn.addEventListener('click',()=>{
         if(!originalBackup)return;
         exitAdjustMode();
@@ -628,14 +634,11 @@
         originalImage=originalBackup;
         stickers.forEach(s => s.isOnCanvas = false); 
         activeStickerId=null;
-        
-        // 修复：重置时同步更新字节状态文字
         currentFileSizeBytes = originalBackup.src ? getDataURLSize(originalBackup.src) : 0;
         requestRender();
         sizeStatusText.textContent = '等待操作...';
       });
 
-      // 修复：清空画布时同步清空字节状态文字
       clearBtn.addEventListener('click',()=>{
         originalImage=null;currentImageLoaded=false;canvas.style.display='none';placeholderMsg.style.display='flex';fileNameDisplay.textContent='未选择文件';
         isCropMode=false;isEditingExtracted=false;
@@ -645,9 +648,7 @@
         resetFilters();resetTransform();fileInput.value='';
         stickerControls.style.display='none';lastCanvasDataURLSize=0;
         currentFileSizeBytes=0;
-        
-        sizeStatusText.textContent = '等待操作...'; // 修复状态重置
-        
+        sizeStatusText.textContent = '等待操作...';
         updateSizePanelInfo();
         updateButtonsState();
       });
@@ -665,9 +666,7 @@
             exitAdjustMode();
             startCropBtn.textContent='框选区域';startCropBtn.style.background='#f8fafc';startCropBtn.style.color='#1e293b';
             canvasWrapper.classList.remove('mode-crop','mode-sticker');resetFilters();resetTransform();
-            
-            sizeStatusText.textContent = '等待操作...'; // 修复：重新上传时重置状态
-            
+            sizeStatusText.textContent = '等待操作...';
             requestRender();
             updateButtonsState(); 
           };
@@ -694,7 +693,6 @@
         try{canvas.toBlob(async(blob)=>{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);copyBtn.textContent='✅ 已复制';setTimeout(()=>copyBtn.textContent='复制',1500);},'image/png');}catch(e){alert('当前浏览器不支持直接复制图片。');}
       });
       
-      // 下载改为 JPEG 格式，减小体积
       downloadBtn.addEventListener('click',()=>{
         if(!currentImageLoaded)return;
         const link=document.createElement('a');link.download=`processed_${Date.now()}.jpg`;link.href=canvas.toDataURL('image/jpeg', 0.9);link.click();
