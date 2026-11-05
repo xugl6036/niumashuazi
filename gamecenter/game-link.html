@@ -9,92 +9,117 @@
       box-sizing: border-box;
       user-select: none;
     }
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* 禁止页面滚动 */
+    }
     body {
       background: linear-gradient(145deg, #2b4b3c 0%, #1f3a2e 100%);
-      min-height: 100vh;
-      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      padding: 8px;
     }
+
     .game-wrapper {
       background: #3a5e4b;
-      padding: 24px 30px 30px;
-      border-radius: 48px 48px 32px 32px;
+      padding: min(16px, 1.6vh) min(20px, 1.8vw) min(20px, 1.8vh);
+      border-radius: 40px 40px 28px 28px;
       box-shadow: 0 18px 28px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.2);
       border: 1px solid #69a183;
       position: relative;
+      max-height: 98vh;
+      max-width: 98vw;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     .game-panel {
       background: #f3efdd;
-      padding: 18px;
-      border-radius: 28px;
+      padding: min(12px, 1.2vh) min(14px, 1.2vw);
+      border-radius: 24px;
       box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.3);
       position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 8px 16px 8px;
+      padding: 0 6px min(10px, 1vh) 6px;
+      flex-shrink: 0;
     }
     .title {
-      font-size: 28px;
+      font-size: clamp(1.1rem, min(3vh, 3vw), 1.75rem);
       font-weight: 800;
       color: #2f4235;
       text-shadow: 2px 2px 0 #cbbf9b;
-      letter-spacing: 2px;
+      letter-spacing: 1px;
+      white-space: nowrap;
     }
     .stats {
       display: flex;
-      gap: 28px;
+      gap: min(16px, 1.5vw);
       background: #d9d0b5;
-      padding: 8px 28px;
+      padding: min(4px, 0.5vh) min(16px, 1.4vw);
       border-radius: 100px;
       box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
     }
     .stats span {
       font-weight: 600;
       color: #2f4235;
-      font-size: 20px;
+      font-size: clamp(0.8rem, min(2.2vh, 2.2vw), 1.25rem);
+      display: flex;
+      align-items: center;
     }
     .stats .value {
       background: #1e2e26;
       color: #f5eac9;
-      padding: 2px 14px;
+      padding: min(1px, 0.2vh) min(8px, 0.8vw);
       border-radius: 40px;
-      margin-left: 8px;
+      margin-left: 6px;
       box-shadow: inset 0 -2px 0 #0e1511;
     }
+
+    /* 自适应棋盘：单元格尺寸随视口缩放，最大 66px，最小 28px */
     .grid-container {
       display: grid;
-      grid-template-columns: repeat(8, 66px);
-      grid-template-rows: repeat(8, 66px);
-      gap: 8px;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: min(6px, 0.6vh);
       background: #6b8f78;
-      padding: 14px;
-      border-radius: 28px;
-      box-shadow: inset 0 0 0 4px #4d6b58, inset 0 0 18px #1d2e24;
-      position: relative; 
+      padding: min(10px, 1vh);
+      border-radius: 22px;
+      box-shadow: inset 0 0 0 3px #4d6b58, inset 0 0 18px #1d2e24;
+      position: relative;
+      flex-shrink: 0;
+      width: fit-content;
+      margin: 0 auto;
     }
-    /* 画布覆盖在网格的 padding 内部，与格子中心对齐 */
     #lineCanvas {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      width: calc(100% - 28px);
-      height: calc(100% - 28px);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       z-index: 30;
     }
     .cell {
+      /* 核心自适应：同时考虑高度与宽度 */
+      width: clamp(28px, min(7.5vh, 7.5vw), 66px);
+      height: clamp(28px, min(7.5vh, 7.5vw), 66px);
       background: #ebdfc1;
-      border-radius: 16px;
+      border-radius: min(14px, 1.4vh);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 38px;
+      font-size: clamp(1rem, min(3.8vh, 3.8vw), 2.4rem);
       box-shadow: 0 5px 0 #a28d64, 0 7px 12px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       transition: all 0.06s ease;
@@ -112,7 +137,7 @@
       transform: translateY(2px);
     }
     .cell.selected {
-      box-shadow: 0 0 0 5px #f9e874, 0 0 0 9px #d4a024, 0 8px 12px black;
+      box-shadow: 0 0 0 4px #f9e874, 0 0 0 7px #d4a024, 0 8px 12px black;
       transform: scale(1.02) translateY(-2px);
       background: #fff3d1;
       z-index: 2;
@@ -125,14 +150,15 @@
     .footer {
       display: flex;
       justify-content: center;
-      margin-top: 22px;
+      margin-top: min(12px, 1.2vh);
+      flex-shrink: 0;
     }
     button {
       background: #d8c9a3;
       border: none;
-      padding: 12px 48px;
+      padding: min(8px, 0.8vh) min(28px, 2.5vw);
       border-radius: 60px;
-      font-size: 20px;
+      font-size: clamp(0.9rem, min(2.4vh, 2.4vw), 1.25rem);
       font-weight: 700;
       color: #2b3e31;
       box-shadow: 0 8px 0 #8f7a55, 0 8px 16px rgba(0, 0, 0, 0.4);
@@ -148,13 +174,37 @@
     }
     .message {
       text-align: center;
-      font-size: 22px;
+      font-size: clamp(0.9rem, min(2.6vh, 2.6vw), 1.4rem);
       font-weight: 600;
       color: #f1e9d0;
       text-shadow: 2px 2px 0 #1a2a20;
-      min-height: 46px;
-      margin-top: 12px;
+      min-height: 1.6em;
+      margin-top: min(8px, 0.8vh);
       transition: 0.2s;
+      flex-shrink: 0;
+    }
+
+    /* 针对特别矮的屏幕进一步压缩 */
+    @media (max-height: 700px) {
+      .game-wrapper { padding: 8px 12px 12px; border-radius: 24px 24px 18px 18px; }
+      .game-panel { padding: 8px 10px; border-radius: 18px; }
+      .header { padding-bottom: 6px; }
+      .grid-container { gap: 4px; padding: 8px; border-radius: 18px; }
+      .cell { width: clamp(26px, min(7vh, 7vw), 58px); height: clamp(26px, min(7vh, 7vw), 58px); font-size: clamp(0.9rem, min(3.4vh, 3.4vw), 2rem); }
+      .footer { margin-top: 6px; }
+    }
+
+    /* 横屏手机或极窄屏幕 */
+    @media (max-width: 600px) and (max-height: 500px) {
+      .game-wrapper { padding: 4px 6px 8px; border-radius: 16px; }
+      .game-panel { padding: 6px; border-radius: 14px; }
+      .title { font-size: 0.9rem; }
+      .stats { padding: 2px 8px; }
+      .stats span { font-size: 0.75rem; }
+      .grid-container { gap: 3px; padding: 6px; border-radius: 14px; }
+      .cell { width: clamp(22px, min(6.5vh, 6.5vw), 48px); height: clamp(22px, min(6.5vh, 6.5vw), 48px); font-size: clamp(0.8rem, min(3vh, 3vw), 1.6rem); }
+      button { padding: 6px 18px; font-size: 0.8rem; }
+      .message { font-size: 0.8rem; margin-top: 4px; }
     }
   </style>
 </head>
@@ -225,7 +275,6 @@
       return board;
     }
 
-    // 连通性算法 (同前)
     function getConnectPath(r1, c1, r2, c2) {
       if (r1 === r2 && c1 === c2) return null;
       if (grid[r1][c1] === null || grid[r2][c2] === null) return null;
@@ -360,22 +409,18 @@
       return null;
     }
 
-    // --- 修复了坐标计算的画线函数 ---
     function drawConnectionPath(path) {
       if (!canvas || !ctx) return;
       if (lineTimer) clearTimeout(lineTimer);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 直接读取Canvas的真实CSS尺寸
       const canvasRect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvasRect.width * dpr;
       canvas.height = canvasRect.height * dpr;
       ctx.setTransform(1, 0, 0, 1, 0, 0); 
       ctx.scale(dpr, dpr);
-      
-      // 获取格子的真实CSS尺寸
+      ctx.clearRect(0, 0, canvasRect.width, canvasRect.height);
+
       const cell = gridContainer.querySelector('.cell');
       let cellWidth = 66, cellHeight = 66, gap = 8;
       if (cell) {
@@ -386,7 +431,10 @@
         gap = parseFloat(gridStyle.gap) || 8;
       }
 
-      // 精确计算格子中心相对Canvas的坐标
+      // Canvas 起点在棋盘 padding 内侧，所以计算时以 padding 内部左上角为原点
+      const gridStyle = getComputedStyle(gridContainer);
+      const padding = parseFloat(gridStyle.paddingLeft) || 0;
+
       function getCellCenter(row, col) {
         return {
           x: col * (cellWidth + gap) + cellWidth / 2,
@@ -399,7 +447,6 @@
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       
-      // 绘制白色底边
       ctx.beginPath();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 8;
@@ -409,7 +456,6 @@
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
 
-      // 绘制黄色亮线
       ctx.beginPath();
       ctx.strokeStyle = '#ffd966';
       ctx.lineWidth = 5;
@@ -419,7 +465,6 @@
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
 
-      // 画拐点圆点
       ctx.shadowBlur = 8;
       points.forEach((p, idx) => {
         if (idx !== 0 && idx !== points.length - 1) {
@@ -433,7 +478,6 @@
         }
       });
       
-      // 起点终点圆点
       [points[0], points[points.length-1]].forEach(p => {
         ctx.beginPath();
         ctx.fillStyle = '#ffe484';

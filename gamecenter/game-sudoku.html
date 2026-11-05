@@ -10,35 +10,46 @@
       user-select: none;
     }
 
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* 禁止页面滚动 */
+    }
+
     body {
       background: linear-gradient(145deg, #1e2b3c 0%, #0f1722 100%);
-      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-      margin: 0;
-      padding: 16px;
+      padding: 8px; /* 小幅内边距 */
     }
 
+    /* 游戏容器：高度撑满，不超出 */
     .game-container {
       background: #2d3e52;
-      padding: 2rem 2rem 1.8rem;
-      border-radius: 42px;
+      padding: 1.2vh 1.5vw 1.2vh; /* 随视口缩放的内边距 */
+      border-radius: 32px;
       box-shadow: 0 25px 35px rgba(0, 0, 0, 0.7), inset 0 1px 4px rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
+      max-height: 98vh;
+      max-width: 98vw;
+      height: auto;
+      overflow: hidden; /* 防止内部撑破 */
     }
 
+    /* 模式切换栏 */
     .mode-bar {
       display: flex;
-      gap: 18px;
-      margin-bottom: 24px;
+      gap: min(12px, 1.5vw);
+      margin-bottom: min(18px, 1.5vh);
       background: #1f2b38;
-      padding: 8px 18px;
+      padding: min(6px, 0.6vh) min(14px, 1.2vw);
       border-radius: 60px;
       box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
     }
 
     .mode-btn {
@@ -46,13 +57,13 @@
       background: transparent;
       color: #b6c8db;
       font-weight: 600;
-      font-size: 1.1rem;
-      padding: 8px 24px;
+      font-size: clamp(0.8rem, 1.8vh, 1.1rem);
+      padding: min(6px, 0.6vh) min(18px, 1.5vw);
       border-radius: 50px;
       cursor: pointer;
       transition: all 0.2s ease;
       letter-spacing: 0.5px;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      white-space: nowrap;
     }
 
     .mode-btn.active {
@@ -72,28 +83,31 @@
       color: #101b26;
     }
 
+    /* 数独棋盘：单元格尺寸根据视口动态计算 */
     .sudoku-board {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
-      gap: 3px;
+      gap: min(2px, 0.3vh);
       background: #121b24;
-      padding: 8px;
-      border-radius: 20px;
-      box-shadow: inset 0 0 0 2px #3d4f63, 0 20px 25px -8px black;
-      margin-bottom: 24px;
+      padding: min(5px, 0.6vh);
+      border-radius: 18px;
+      box-shadow: inset 0 0 0 2px #3d4f63, 0 15px 20px -8px black;
+      margin-bottom: min(16px, 1.4vh);
+      flex-shrink: 0;
     }
 
     .cell {
-      width: 56px;
-      height: 56px;
+      /* 核心自适应：同时考虑视口高度和宽度，最大56px，最小30px */
+      width: clamp(30px, min(9vh, 9vw), 56px);
+      height: clamp(30px, min(9vh, 9vw), 56px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
+      font-size: clamp(1rem, min(3.2vh, 3.2vw), 1.8rem);
       font-weight: 600;
       background: #243342;
       color: #d9e6f2;
-      border-radius: 10px;
+      border-radius: min(10px, 1vh);
       transition: 0.1s ease;
       cursor: pointer;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 2px 4px rgba(0, 0, 0, 0.4);
@@ -128,23 +142,25 @@
       box-shadow: inset 0 0 0 2px #ff8a8a;
     }
 
+    /* 数字键盘：自适应尺寸 */
     .numpad {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+      gap: min(8px, 0.8vh);
       width: 100%;
-      max-width: 500px;
-      margin-top: 8px;
+      max-width: min(500px, 90vw);
+      margin-top: min(6px, 0.5vh);
+      flex-shrink: 0;
     }
 
     .num-btn {
       background: #2a394b;
       border: none;
-      font-size: 1.7rem;
+      font-size: clamp(0.9rem, min(2.5vh, 2.5vw), 1.7rem);
       font-weight: 600;
       color: #e3edf7;
-      padding: 12px 0;
-      border-radius: 18px;
+      padding: min(8px, 0.8vh) 0;
+      border-radius: min(18px, 1.6vh);
       cursor: pointer;
       box-shadow: 0 6px 0 #0e151f, 0 6px 12px black;
       transition: all 0.05s linear;
@@ -161,7 +177,7 @@
     .num-btn.clear-btn {
       background: #4a3f3f;
       color: #ffbaba;
-      font-size: 1.3rem;
+      font-size: clamp(0.7rem, min(1.8vh, 1.8vw), 1.3rem);
       font-weight: 500;
     }
 
@@ -169,21 +185,42 @@
       box-shadow: 0 2px 0 #2e2525, 0 6px 12px black;
     }
 
+    /* 状态栏 */
     .status {
-      margin-top: 18px;
-      font-size: 1.3rem;
+      margin-top: min(12px, 1vh);
+      font-size: clamp(0.9rem, min(2.2vh, 2.2vw), 1.3rem);
       font-weight: 500;
       color: #d0e0f0;
-      min-height: 2.2rem;
+      min-height: 1.8em;
       text-shadow: 0 2px 3px black;
       letter-spacing: 0.3px;
+      text-align: center;
+      flex-shrink: 0;
     }
 
     .win-message {
       color: #f0c15c;
       font-weight: 700;
-      font-size: 1.5rem;
+      font-size: clamp(1rem, min(2.5vh, 2.5vw), 1.5rem);
       text-shadow: 0 0 8px #f0c15cbb;
+    }
+
+    /* 针对特别矮的屏幕（如高度<700px）进一步压缩 */
+    @media (max-height: 700px) {
+      .game-container { padding: 0.6vh 1vw; }
+      .mode-bar { margin-bottom: 8px; padding: 4px 10px; }
+      .mode-btn { padding: 4px 14px; }
+      .sudoku-board { margin-bottom: 8px; }
+      .numpad { margin-top: 4px; gap: 5px; }
+      .cell { width: clamp(26px, min(8vh, 8vw), 46px); height: clamp(26px, min(8vh, 8vw), 46px); font-size: clamp(0.9rem, min(2.8vh, 2.8vw), 1.5rem); }
+    }
+
+    /* 横屏手机或极窄屏幕时，降低数字键盘高度 */
+    @media (max-width: 600px) and (max-height: 500px) {
+      .game-container { padding: 0.4vh 0.8vw; border-radius: 20px; }
+      .mode-btn { font-size: 0.7rem; padding: 3px 10px; }
+      .cell { width: clamp(22px, min(7vh, 7vw), 40px); height: clamp(22px, min(7vh, 7vw), 40px); font-size: clamp(0.7rem, min(2.5vh, 2.5vw), 1.2rem); }
+      .num-btn { font-size: clamp(0.7rem, 2vh, 1.2rem); padding: 4px 0; }
     }
   </style>
 </head>
@@ -207,7 +244,6 @@
   (function() {
     // ---------- 预设题目 ----------
     const PUZZLES = {
-      // 简易 (空格较少，约30个空格)
       easy: [
         [5, 3, 0,  0, 7, 0,  0, 0, 0],
         [6, 0, 0,  1, 9, 5,  0, 0, 0],
@@ -219,7 +255,6 @@
         [0, 0, 0,  4, 1, 9,  0, 0, 5],
         [0, 0, 0,  0, 8, 0,  0, 7, 9]
       ],
-      // 普通 (空格适中，约45个空格)
       medium: [
         [0, 0, 4,  0, 5, 0,  0, 0, 0],
         [9, 0, 0,  7, 3, 4,  6, 0, 0],
@@ -231,7 +266,6 @@
         [0, 0, 7,  9, 4, 3,  0, 0, 6],
         [0, 0, 0,  0, 6, 0,  2, 0, 0]
       ],
-      // 困难 (空格较多，约55个空格)
       hard: [
         [0, 0, 0,  0, 0, 0,  0, 0, 0],
         [0, 0, 0,  0, 0, 3,  0, 8, 5],
@@ -245,47 +279,37 @@
       ]
     };
 
-    // 状态变量
     let currentMode = 'easy';
-    let board = [];           // 当前数字 (0表示空)
-    let fixedCells = [];      // 是否为固定数字 (初始)
+    let board = [];
+    let fixedCells = [];
     let selectedRow = -1, selectedCol = -1;
     let gameWon = false;
 
-    // DOM 元素
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
     const numpadEl = document.getElementById('numpad');
 
-    // ---------- 工具函数 ----------
     function deepCopy(matrix) {
       return matrix.map(row => [...row]);
     }
 
-    // 检查数独是否完整且有效 (用于胜利判断)
     function isBoardValidAndComplete(board) {
-      // 检查所有格子是否非零
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
           if (board[r][c] === 0) return false;
         }
       }
-
-      // 检查行/列/宫
       for (let i = 0; i < 9; i++) {
         const rowSet = new Set();
         const colSet = new Set();
         const boxSet = new Set();
         for (let j = 0; j < 9; j++) {
-          // 行
           const rowVal = board[i][j];
           if (rowSet.has(rowVal)) return false;
           rowSet.add(rowVal);
-          // 列
           const colVal = board[j][i];
           if (colSet.has(colVal)) return false;
           colSet.add(colVal);
-          // 宫
           const boxRow = 3 * Math.floor(i / 3) + Math.floor(j / 3);
           const boxCol = 3 * (i % 3) + (j % 3);
           const boxVal = board[boxRow][boxCol];
@@ -296,12 +320,10 @@
       return true;
     }
 
-    // 判断某个格子是否是固定数字
     function isFixed(row, col) {
       return fixedCells[row][col];
     }
 
-    // 清除错误标记 (只清除可编辑且非胜利状态下的错误高亮)
     function clearErrorHighlights() {
       const cells = boardEl.children;
       for (let i = 0; i < 81; i++) {
@@ -309,27 +331,22 @@
       }
     }
 
-    // 更新单个格子的显示样式与文本
     function updateCellDisplay(row, col) {
       const index = row * 9 + col;
       const cellEl = boardEl.children[index];
       const value = board[row][col];
       cellEl.textContent = value === 0 ? '' : value;
-
-      // 样式管理
       cellEl.classList.toggle('fixed', fixedCells[row][col]);
       cellEl.classList.toggle('editable', !fixedCells[row][col]);
       cellEl.classList.remove('selected', 'error');
     }
 
-    // 重新绘制整个棋盘 (用于加载新游戏)
     function renderBoard() {
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
           updateCellDisplay(r, c);
         }
       }
-      // 清除选中
       selectedRow = -1;
       selectedCol = -1;
       gameWon = false;
@@ -337,9 +354,7 @@
       statusEl.textContent = '点击格子开始';
     }
 
-    // 高亮选中的格子 (不改变其他状态)
     function highlightSelected() {
-      // 清除所有 selected 类
       for (let i = 0; i < 81; i++) {
         boardEl.children[i].classList.remove('selected');
       }
@@ -349,28 +364,12 @@
       }
     }
 
-    // 更新整个状态栏 (胜利/错误信息)
-    function updateStatusMessage() {
-      if (gameWon) {
-        statusEl.innerHTML = '<span class="win-message">🎉 恭喜你完成了数独！ 🎉</span>';
-      } else {
-        // 检查是否有冲突(仅提示, 不阻止填写) —— 但可以显示
-        if (hasAnyConflict()) {
-          statusEl.textContent = '⚠️ 有冲突，请检查数字';
-        } else {
-          statusEl.textContent = '点击格子开始';
-        }
-      }
-    }
-
-    // 检查当前棋盘是否有冲突 (忽略空)
     function hasAnyConflict() {
-      const boardCopy = board; // 只读
+      const boardCopy = board;
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
           const val = boardCopy[r][c];
           if (val === 0) continue;
-          // 检查同行同列同宫
           for (let k = 0; k < 9; k++) {
             if (k !== c && boardCopy[r][k] === val) return true;
             if (k !== r && boardCopy[k][c] === val) return true;
@@ -389,28 +388,8 @@
       return false;
     }
 
-    // 检查填完后的胜利条件 (且有效)
-    function checkWin() {
-      if (isBoardValidAndComplete(board)) {
-        gameWon = true;
-        updateStatusMessage();
-        // 移除所有错误标记
-        clearErrorHighlights();
-      } else {
-        // 如果未赢，但可能有冲突
-        if (hasAnyConflict()) {
-          statusEl.textContent = '⚠️ 有冲突，请检查数字';
-        } else {
-          if (!gameWon) statusEl.textContent = '点击格子开始';
-        }
-      }
-    }
-
-    // 尝试在选中格填入数字 (通过按钮点击)
     function tryFillNumber(num) {
-      if (gameWon) {
-        return;
-      }
+      if (gameWon) return;
       if (selectedRow === -1 || selectedCol === -1) {
         statusEl.textContent = '请先点击一个空格';
         return;
@@ -421,22 +400,16 @@
       }
 
       const row = selectedRow, col = selectedCol;
-      // 填入数字
       board[row][col] = num;
       updateCellDisplay(row, col);
-
-      // 额外移除这个格子的错误标记 (已经移除过)
-      // 检查是否有冲突并高亮所有冲突单元格？为了体验，可以高亮所有冲突行/列/宫
       highlightConflicts();
 
-      // 检查胜利
       if (!gameWon) {
         if (isBoardValidAndComplete(board)) {
           gameWon = true;
-          updateStatusMessage();
-          clearErrorHighlights(); // 胜利时清除所有错误
+          statusEl.innerHTML = '<span class="win-message">🎉 恭喜你完成了数独！ 🎉</span>';
+          clearErrorHighlights();
         } else {
-          // 未胜利，但可能冲突，更新状态
           if (hasAnyConflict()) {
             statusEl.textContent = '⚠️ 有冲突，请检查数字';
           } else {
@@ -444,11 +417,9 @@
           }
         }
       }
-      // 保持选中状态不变 (重新高亮)
       highlightSelected();
     }
 
-    // 清除选中格的数字
     function clearSelectedCell() {
       if (gameWon) return;
       if (selectedRow === -1 || selectedCol === -1) {
@@ -461,8 +432,7 @@
       }
       board[selectedRow][selectedCol] = 0;
       updateCellDisplay(selectedRow, selectedCol);
-      // 清除可能的高亮错误
-      highlightConflicts();  // 重新计算冲突
+      highlightConflicts();
       if (!gameWon) {
         if (hasAnyConflict()) {
           statusEl.textContent = '⚠️ 有冲突，请检查数字';
@@ -473,33 +443,26 @@
       highlightSelected();
     }
 
-    // 重新计算并高亮所有冲突格子 (整个棋盘冲突)
     function highlightConflicts() {
-      // 先清除所有错误标记
       clearErrorHighlights();
-
-      // 对每个非空格子检查冲突，并标记 (为了体验，把冲突的双方都标红)
-      const conflictMap = new Set(); // 存放 "r,c" 索引
+      const conflictMap = new Set();
 
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
           const val = board[r][c];
           if (val === 0) continue;
-          // 检查行
           for (let k = 0; k < 9; k++) {
             if (k !== c && board[r][k] === val) {
               conflictMap.add(`${r},${c}`);
               conflictMap.add(`${r},${k}`);
             }
           }
-          // 列
           for (let k = 0; k < 9; k++) {
             if (k !== r && board[k][c] === val) {
               conflictMap.add(`${r},${c}`);
               conflictMap.add(`${k},${c}`);
             }
           }
-          // 宫
           const boxRow = 3 * Math.floor(r / 3);
           const boxCol = 3 * Math.floor(c / 3);
           for (let br = 0; br < 3; br++) {
@@ -515,81 +478,55 @@
         }
       }
 
-      // 应用错误类
       conflictMap.forEach(pos => {
         const [r, c] = pos.split(',').map(Number);
         const idx = r * 9 + c;
         const cellEl = boardEl.children[idx];
-        // 只对可编辑格子加error? 但为了醒目，固定的格子也加一点？不过固定格子不会错（除非题目本身有冲突），但题目都是合法题，不担心
-        if (!fixedCells[r][c]) {
-          cellEl.classList.add('error');
-        } else {
-          // 固定格子如果冲突（理论上不会），但还是标红？为了一致，也标红但保留fixed样式冲突？还是忽略？这里统一加error，会覆盖颜色，但简单处理。
-          cellEl.classList.add('error');
-        }
+        cellEl.classList.add('error');
       });
     }
 
-    // 加载指定模式的游戏
     function loadGame(mode) {
       currentMode = mode;
-      // 获取题目
       const puzzle = PUZZLES[mode];
       board = deepCopy(puzzle);
-      // 初始化 fixedCells
       fixedCells = board.map(row => row.map(cell => cell !== 0));
-
-      // 重置选中状态与胜利标记
       selectedRow = -1;
       selectedCol = -1;
       gameWon = false;
-
-      // 重绘棋盘
       renderBoard();
-      // 清除错误高亮
       clearErrorHighlights();
-      // 更新状态
       statusEl.textContent = '点击格子开始';
-      // 更新模式按钮样式
       document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === mode);
       });
     }
 
-    // ---------- 事件绑定 ----------
     function bindEvents() {
-      // 棋盘点击事件 (委托)
       boardEl.addEventListener('click', (e) => {
         const cell = e.target.closest('.cell');
         if (!cell) return;
-        // 如果游戏已经胜利，不再允许选中/修改? 但可以选中看看，不过不允许修改
-        // 为了体验，胜利后仍然可以选中但不可改
         const index = Array.from(boardEl.children).indexOf(cell);
         if (index === -1) return;
         const row = Math.floor(index / 9);
         const col = index % 9;
 
-        // 设置选中
         selectedRow = row;
         selectedCol = col;
         highlightSelected();
 
-        // 如果游戏胜利，不显示额外信息，但可以提示
         if (gameWon) {
           statusEl.innerHTML = '<span class="win-message">🎉 恭喜你完成了数独！ 🎉</span>';
           return;
         }
 
-        // 显示选中格信息
         if (fixedCells[row][col]) {
           statusEl.textContent = `固定数字 ${board[row][col]}`;
         } else {
           statusEl.textContent = `选中第 ${row+1} 行 第 ${col+1} 列`;
         }
-        // 不改变错误高亮状态，保留冲突显示
       });
 
-      // 数字键盘 (1-9 + 清除)
       numpadEl.addEventListener('click', (e) => {
         const btn = e.target.closest('.num-btn');
         if (!btn) return;
@@ -601,7 +538,6 @@
         }
       });
 
-      // 模式切换
       document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const mode = e.target.dataset.mode;
@@ -610,9 +546,7 @@
       });
     }
 
-    // 初始化数字键盘按钮 (1-9 和清除)
     function initNumpad() {
-      // 1-9
       for (let i = 1; i <= 9; i++) {
         const btn = document.createElement('button');
         btn.classList.add('num-btn');
@@ -620,7 +554,6 @@
         btn.textContent = i;
         numpadEl.appendChild(btn);
       }
-      // 清除按钮
       const clearBtn = document.createElement('button');
       clearBtn.classList.add('num-btn', 'clear-btn');
       clearBtn.dataset.num = 'clear';
@@ -628,22 +561,18 @@
       numpadEl.appendChild(clearBtn);
     }
 
-    // 初始化棋盘格子
     function initBoardCells() {
       for (let i = 0; i < 81; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cell');
-        // 初始无文本
         boardEl.appendChild(cell);
       }
     }
 
-    // ---------- 启动 ----------
     function init() {
       initBoardCells();
       initNumpad();
       bindEvents();
-      // 默认加载简易模式
       loadGame('easy');
     }
 
