@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小游戏集合 · 牛马刷子工具合集</title>
+  <style>
+    /* 重置 & 基础 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    * {
+      caret-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+      background-color: #f2f7fd;
+      color: #1e3e5c;
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 背景线条 */
+    body::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45;
+      background-image: 
+        linear-gradient(45deg, #c8daf0 1px, transparent 1px),
+        linear-gradient(-45deg, #c8daf0 1px, transparent 1px),
+        linear-gradient(30deg, #b8cce6 1px, transparent 1px),
+        linear-gradient(-30deg, #b8cce6 1px, transparent 1px);
+      background-size: 70px 70px, 70px 70px, 110px 110px, 110px 110px;
+      background-position: 0 0, 15px 15px, 35px 35px, 55px 55px;
+    }
+    body::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.15;
+      background-image: repeating-linear-gradient(45deg, #9bb6d0 0px, #9bb6d0 1px, transparent 1px, transparent 20px);
+    }
+
+    /* 主布局 */
+    .app {
+      display: flex; width: 100%; height: 100vh; position: relative; z-index: 1;
+      padding: 24px; gap: 24px; align-items: stretch;
+    }
+
+    /* 左侧游戏展示区 */
+    .game-stage {
+      flex: 1; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+      border-radius: 40px; box-shadow: 0 20px 35px -8px rgba(30, 62, 92, 0.08), 0 4px 16px rgba(255, 255, 255, 0.7) inset;
+      border: 1px solid rgba(255, 255, 255, 0.9); padding: 28px 32px;
+      display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1); min-width: 0;
+    }
+
+    .game-stage-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-shrink: 0;
+    }
+    .game-stage-header h2 {
+      font-size: 1.8rem; font-weight: 500; letter-spacing: -0.02em; color: #1e3e5c;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .game-stage-header h2 span {
+      font-size: 0.9rem; font-weight: 400; background: #d9e8fa; padding: 6px 16px;
+      border-radius: 40px; color: #2b4e6e; border: 1px solid #ffffff;
+    }
+
+    /* 唯一开关按钮 (改为三条杠) */
+    .panel-toggle {
+      background: #ffffffdd; backdrop-filter: blur(8px); width: 44px; height: 44px;
+      border-radius: 14px; box-shadow: 0 4px 12px rgba(40, 70, 100, 0.08); border: 1px solid #ffffff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: all 0.2s ease; color: #1e3e5c; font-size: 22px; line-height: 1; user-select: none;
+    }
+    .panel-toggle:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(30, 62, 92, 0.12); transform: scale(1.03); }
+    .panel-toggle:active { transform: scale(0.97); }
+
+    /* 预览区域 */
+    .preview-box {
+      flex: 1; border-radius: 32px; background: #ffffffd0; border: 1px dashed #b0c9e2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #4d6885; transition: 0.2s; position: relative; overflow: hidden;
+      box-shadow: inset 0 2px 12px rgba(180, 205, 230, 0.12); backdrop-filter: blur(2px);
+    }
+
+    /* 🔥 新增：预览区内部的关闭游戏按钮（位于红框位置） */
+    .close-game-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 36px;
+      height: 36px;
+      background: #ffffffdd;
+      backdrop-filter: blur(4px);
+      border: 1px solid #e0ebf5;
+      border-radius: 10px;
+      display: none; /* 默认隐藏 */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: #5b7d9e;
+      z-index: 20;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .close-game-btn:hover {
+      background: #fff;
+      color: #1e3e5c;
+      border-color: #b8cfe3;
+      transform: scale(1.05);
+    }
+
+    /* 默认欢迎内容 */
+    .welcome-content {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 24px; animation: fadeIn 0.6s ease; width: 100%; height: 100%;
+    }
+    .welcome-content svg { opacity: 0.7; margin-bottom: 16px; }
+    .welcome-content h3 { font-size: 2rem; font-weight: 300; color: #2b4e6e; letter-spacing: -0.01em; margin-bottom: 8px; }
+    .welcome-content p { font-size: 1.1rem; color: #6c8aa8; font-weight: 300; max-width: 380px; line-height: 1.6; margin-bottom: 24px; }
+    
+    .welcome-content .hint-badge { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .welcome-content .hint-badge span {
+      background: #e7f0fc; padding: 8px 20px; border-radius: 40px; font-size: 0.9rem;
+      color: #1e4e74; border: 1px solid #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02); transition: all 0.15s;
+    }
+    .welcome-content .hint-badge span:hover { background: #d4e5fa; }
+
+    /* 内嵌游戏 iframe */
+    #gameIframe {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      border: none; border-radius: 32px; display: none; background: #fff; z-index: 10;
+    }
+
+    /* 右侧游戏库面板 */
+    .games-panel {
+      width: 33.333%; min-width: 320px; max-width: 440px;
+      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+      border-radius: 40px; box-shadow: 0 20px 35px -8px rgba(30, 62, 92, 0.08), 0 4px 12px rgba(255, 255, 255, 0.8) inset;
+      border: 1px solid rgba(255, 255, 255, 0.9); padding: 24px 20px 24px 24px;
+      display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+      overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #b8d0e8 transparent;
+      position: relative; z-index: 5; max-height: 100%; flex-shrink: 0;
+    }
+
+    .games-panel.collapsed {
+      transform: translateX(calc(100% + 24px)); width: 0; min-width: 0;
+      padding-left: 0; padding-right: 0; margin-left: -24px; opacity: 0; pointer-events: none; border: none;
+    }
+
+    .panel-header { display: flex; align-items: center; margin-bottom: 20px; padding: 0 4px; white-space: nowrap; }
+    .panel-header h3 { font-size: 1.5rem; font-weight: 500; color: #1e3e5c; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+
+    .category { margin-bottom: 20px; }
+    .category-title {
+      font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #3c6080; margin-bottom: 10px; padding: 5px 0 5px 14px; border-left: 5px solid #7fa9cc;
+      line-height: 1.3; background: linear-gradient(to right, #d4e5f8, transparent);
+      border-radius: 0 40px 40px 0; width: fit-content; padding-right: 20px;
+    }
+
+    .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+
+    /* 游戏卡片 */
+    .game-card {
+      background: #ffffffd9; border: 1px solid #d6e6f5; border-radius: 16px; padding: 10px 2px;
+      text-align: center; font-size: 0.7rem; font-weight: 500; color: #1e3e5c;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02); transition: all 0.15s ease; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; backdrop-filter: blur(2px);
+      aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      line-height: 1.2; letter-spacing: -0.01em;
+    }
+    .game-card:hover { background: #ffffff; border-color: #9dc0df; transform: translateY(-2px); box-shadow: 0 8px 14px rgba(70, 120, 170, 0.12); }
+    .game-card .icon { font-size: 1.4rem; margin-bottom: 6px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.02)); }
+
+    /* 滚动条 */
+    .games-panel::-webkit-scrollbar { width: 5px; }
+    .games-panel::-webkit-scrollbar-track { background: transparent; }
+    .games-panel::-webkit-scrollbar-thumb { background: #b8d0e8; border-radius: 10px; }
+
+    @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 1000px) {
+      .app { padding: 16px; gap: 16px; }
+      .game-grid { gap: 6px; }
+      .game-card { font-size: 0.6rem; padding: 6px 2px; }
+      .game-card .icon { font-size: 1.2rem; }
+      .welcome-content h3 { font-size: 1.6rem; }
+    }
+    @media (max-width: 800px) {
+      .app { flex-direction: column; overflow-y: auto; }
+      .game-stage { flex: none; width: 100%; min-height: 500px; }
+      .games-panel { width: 100%; max-width: none; flex: none; }
+      .games-panel.collapsed { display: none; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 左侧游戏展示区 -->
+    <div class="game-stage">
+      <div class="game-stage-header">
+        <h2>
+          🎮 放空一下吧
+          <span>我系渣渣辉，介四里没有挽过的船新版本</span>
+        </h2>
+        <!-- 开关面板按钮统一用 ☰ -->
+        <div class="panel-toggle" id="togglePanelBtn" title="展开/收起游戏面板">☰</div>
+      </div>
+      
+      <div class="preview-box" id="previewBox">
+        <!-- 🔥 红框位置的关闭游戏按钮 -->
+        <div class="close-game-btn" id="closeGameBtn" title="关闭当前游戏">✕</div>
+
+        <!-- 默认欢迎内容 -->
+        <div class="welcome-content" id="welcomeContent">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#7fa9cc" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
+            <circle cx="9" cy="9" r="1.5" fill="#7fa9cc" stroke="none" />
+            <circle cx="15" cy="9" r="1.5" fill="#7fa9cc" stroke="none" />
+            <path d="M8 15 Q12 19 16 15" stroke="#7fa9cc" stroke-width="1.5" fill="none" />
+          </svg>
+          <h3>开始探索</h3>
+          <p>从右侧游戏库选择一款游戏<br>立即开始你的休闲时光</p>
+          <div class="hint-badge">
+            <span>✨ 益智</span>
+            <span>🎲 休闲</span>
+            <span>♟️ 棋牌</span>
+            <span>🧠 答题</span>
+            <span>⚡ 动作</span>
+          </div>
+        </div>
+
+        <!-- 内嵌 iframe 用于加载游戏 -->
+        <iframe id="gameIframe" src="" title="游戏运行区"></iframe>
+      </div>
+    </div>
+
+    <!-- 右侧游戏库 -->
+    <div class="games-panel" id="gamesPanel">
+      <div class="panel-header">
+        <h3>游戏库</h3>
+      </div>
+
+      <!-- 益智 -->
+      <div class="category">
+        <div class="category-title">益智</div>
+        <div class="game-grid">
+          <div class="game-card" data-src="GameCenter/game2048.html"><span class="icon">🔢</span>2048</div>
+          <div class="game-card"><span class="icon">🧩</span>数独</div>
+          <div class="game-card"><span class="icon">🔗</span>连连看</div>
+          <div class="game-card"><span class="icon">📦</span>推箱子</div>
+          <div class="game-card"><span class="icon">🧩</span>华容道</div>
+        </div>
+      </div>
+
+      <!-- 休闲 -->
+      <div class="category">
+        <div class="category-title">休闲</div>
+        <div class="game-grid">
+          <div class="game-card"><span class="icon">🧩</span>拼图</div>
+          <div class="game-card"><span class="icon">💣</span>扫雷</div>
+          <div class="game-card"><span class="icon">🐍</span>贪吃蛇</div>
+          <div class="game-card"><span class="icon">🧱</span>俄罗斯方块</div>
+          <div class="game-card"><span class="icon">🍬</span>消消乐</div>
+        </div>
+      </div>
+
+      <!-- 棋牌 -->
+      <div class="category">
+        <div class="category-title">棋牌</div>
+        <div class="game-grid">
+          <div class="game-card"><span class="icon">⚫</span>五子棋</div>
+          <div class="game-card"><span class="icon">♟️</span>象棋</div>
+          <div class="game-card"><span class="icon">❌</span>井字棋</div>
+          <div class="game-card"><span class="icon">🃏</span>斗地主</div>
+        </div>
+      </div>
+
+      <!-- 答题 -->
+      <div class="category">
+        <div class="category-title">答题</div>
+        <div class="game-grid">
+          <div class="game-card"><span class="icon">🧠</span>知识竞赛</div>
+          <div class="game-card"><span class="icon">💭</span>猜词</div>
+          <div class="game-card"><span class="icon">📜</span>成语接龙</div>
+        </div>
+      </div>
+
+      <!-- 动作 -->
+      <div class="category">
+        <div class="category-title">动作</div>
+        <div class="game-grid">
+          <div class="game-card"><span class="icon">🧱</span>打砖块</div>
+          <div class="game-card"><span class="icon">🐦</span>Flappy Bird</div>
+          <div class="game-card"><span class="icon">🏃</span>跳跃闯关</div>
+          <div class="game-card"><span class="icon">🚧</span>躲避障碍</div>
+          <div class="game-card"><span class="icon">✈️</span>飞机大战</div>
+          <div class="game-card"><span class="icon">🍎</span>接水果</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const gameCards = document.querySelectorAll('.game-card');
+      const panel = document.getElementById('gamesPanel');
+      const toggleBtn = document.getElementById('togglePanelBtn');
+      const welcomeContent = document.getElementById('welcomeContent');
+      const gameIframe = document.getElementById('gameIframe');
+      const closeGameBtn = document.getElementById('closeGameBtn'); // 新增关闭按钮
+
+      // 点击卡片 -> 加载游戏
+      gameCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+          const gameSrc = this.getAttribute('data-src');
+
+          if (gameSrc) {
+            welcomeContent.style.display = 'none';
+            gameIframe.style.display = 'block';
+            gameIframe.src = gameSrc;
+            closeGameBtn.style.display = 'flex'; // 显示红框位置的关闭按钮
+          } else {
+            welcomeContent.style.display = 'flex';
+            gameIframe.style.display = 'none';
+            gameIframe.src = '';
+            closeGameBtn.style.display = 'none'; // 隐藏红框位置的关闭按钮
+            
+            const gameName = this.childNodes[1] ? this.childNodes[1].textContent.trim() : this.textContent.trim();
+            alert(`【${gameName}】游戏文件还没添加哦，把对应 HTML 路径加到卡片的 data-src 属性里就行啦！`);
+          }
+        });
+      });
+
+      // 🔥 新增：点击红框位置的按钮关闭当前游戏
+      closeGameBtn.addEventListener('click', function() {
+        welcomeContent.style.display = 'flex';
+        gameIframe.style.display = 'none';
+        gameIframe.src = ''; // 清空 iframe 释放资源
+        closeGameBtn.style.display = 'none'; // 关闭后隐藏自己
+      });
+
+      // 切换面板显示/隐藏 (统一使用三条杠)
+      toggleBtn.addEventListener('click', function() {
+        panel.classList.toggle('collapsed');
+        // 图标保持不变，始终为 ☰，依靠面板位置来判断状态
+      });
+    })();
+  </script>
+</body>
+</html>
