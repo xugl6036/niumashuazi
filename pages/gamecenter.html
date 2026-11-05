@@ -52,49 +52,36 @@
       padding: 24px; gap: 24px; align-items: stretch;
     }
 
-    /* 左侧游戏展示区 */
+    /* 左侧游戏展示区 (已移除标题栏，占满) */
     .game-stage {
       flex: 1; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
       border-radius: 40px; box-shadow: 0 20px 35px -8px rgba(30, 62, 92, 0.08), 0 4px 16px rgba(255, 255, 255, 0.7) inset;
-      border: 1px solid rgba(255, 255, 255, 0.9); padding: 28px 32px;
+      border: 1px solid rgba(255, 255, 255, 0.9); padding: 16px; /* 缩小内边距，最大化预览区 */
       display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1); min-width: 0;
+      position: relative; /* 为右上角按钮提供定位参考 */
     }
-
-    .game-stage-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-shrink: 0;
-    }
-    .game-stage-header h2 {
-      font-size: 1.8rem; font-weight: 500; letter-spacing: -0.02em; color: #1e3e5c;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .game-stage-header h2 span {
-      font-size: 0.9rem; font-weight: 400; background: #d9e8fa; padding: 6px 16px;
-      border-radius: 40px; color: #2b4e6e; border: 1px solid #ffffff;
-    }
-
-    /* 唯一开关按钮 (改为三条杠) */
-    .panel-toggle {
-      background: #ffffffdd; backdrop-filter: blur(8px); width: 44px; height: 44px;
-      border-radius: 14px; box-shadow: 0 4px 12px rgba(40, 70, 100, 0.08); border: 1px solid #ffffff;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      transition: all 0.2s ease; color: #1e3e5c; font-size: 22px; line-height: 1; user-select: none;
-    }
-    .panel-toggle:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(30, 62, 92, 0.12); transform: scale(1.03); }
-    .panel-toggle:active { transform: scale(0.97); }
 
     /* 预览区域 */
     .preview-box {
-      flex: 1; border-radius: 32px; background: #ffffffd0; border: 1px dashed #b0c9e2;
+      flex: 1; border-radius: 28px; background: #ffffffd0; border: 1px dashed #b0c9e2;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: #4d6885; transition: 0.2s; position: relative; overflow: hidden;
       box-shadow: inset 0 2px 12px rgba(180, 205, 230, 0.12); backdrop-filter: blur(2px);
+      width: 100%; height: 100%;
     }
 
-    /* 🔥 新增：预览区内部的关闭游戏按钮（位于红框位置） */
-    .close-game-btn {
+    /* 🔥 右上角控制按钮容器（关闭游戏 + 面板切换并排） */
+    .top-controls {
       position: absolute;
       top: 20px;
       right: 20px;
+      display: flex;
+      gap: 10px; /* 两个按钮之间的间距 */
+      z-index: 30;
+    }
+
+    /* 关闭游戏按钮 */
+    .close-game-btn {
       width: 36px;
       height: 36px;
       background: #ffffffdd;
@@ -107,7 +94,6 @@
       cursor: pointer;
       font-size: 18px;
       color: #5b7d9e;
-      z-index: 20;
       transition: all 0.2s;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
@@ -117,6 +103,16 @@
       border-color: #b8cfe3;
       transform: scale(1.05);
     }
+
+    /* 面板开关按钮 (三条杠) */
+    .panel-toggle {
+      background: #ffffffdd; backdrop-filter: blur(8px); width: 36px; height: 36px;
+      border-radius: 10px; box-shadow: 0 2px 8px rgba(40, 70, 100, 0.08); border: 1px solid #ffffff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: all 0.2s ease; color: #1e3e5c; font-size: 20px; line-height: 1; user-select: none;
+    }
+    .panel-toggle:hover { background: #ffffff; box-shadow: 0 4px 12px rgba(30, 62, 92, 0.12); transform: scale(1.05); }
+    .panel-toggle:active { transform: scale(0.97); }
 
     /* 默认欢迎内容 */
     .welcome-content {
@@ -137,7 +133,7 @@
     /* 内嵌游戏 iframe */
     #gameIframe {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      border: none; border-radius: 32px; display: none; background: #fff; z-index: 10;
+      border: none; border-radius: 28px; display: none; background: #fff; z-index: 10;
     }
 
     /* 右侧游戏库面板 */
@@ -205,20 +201,14 @@
 </head>
 <body>
   <div class="app">
-    <!-- 左侧游戏展示区 -->
+    <!-- 左侧游戏展示区（已移除标题栏） -->
     <div class="game-stage">
-      <div class="game-stage-header">
-        <h2>
-          放空一会吧
-          <span>我系渣渣辉，介四里没有挽过的船新版本</span>
-        </h2>
-        <!-- 开关面板按钮统一用 ☰ -->
-        <div class="panel-toggle" id="togglePanelBtn" title="展开/收起游戏面板">☰</div>
-      </div>
-      
       <div class="preview-box" id="previewBox">
-        <!-- 🔥 红框位置的关闭游戏按钮 -->
-        <div class="close-game-btn" id="closeGameBtn" title="关闭当前游戏">✕</div>
+        <!-- 🔥 右上角控制按钮区域（关闭游戏在前，面板切换在后） -->
+        <div class="top-controls">
+          <div class="close-game-btn" id="closeGameBtn" title="关闭当前游戏">✕</div>
+          <div class="panel-toggle" id="togglePanelBtn" title="展开/收起游戏面板">☰</div>
+        </div>
 
         <!-- 默认欢迎内容 -->
         <div class="welcome-content" id="welcomeContent">
@@ -265,7 +255,7 @@
       <div class="category">
         <div class="category-title">休闲</div>
         <div class="game-grid">
-          <div class="game-card" data-src="../gamecenter/game-minesweeper.html""><span class="icon">💣</span>扫雷</div>
+          <div class="game-card" data-src="../gamecenter/game-minesweeper.html"><span class="icon">💣</span>扫雷</div>
           <div class="game-card" data-src="../gamecenter/game-snake.html"><span class="icon">🐍</span>贪吃蛇</div>
           <div class="game-card" data-src="../gamecenter/game-tetris.html"><span class="icon">🧱</span>俄罗斯方块</div>
         </div>
@@ -313,7 +303,7 @@
       const toggleBtn = document.getElementById('togglePanelBtn');
       const welcomeContent = document.getElementById('welcomeContent');
       const gameIframe = document.getElementById('gameIframe');
-      const closeGameBtn = document.getElementById('closeGameBtn'); // 新增关闭按钮
+      const closeGameBtn = document.getElementById('closeGameBtn');
 
       // 点击卡片 -> 加载游戏
       gameCards.forEach(card => {
@@ -324,12 +314,12 @@
             welcomeContent.style.display = 'none';
             gameIframe.style.display = 'block';
             gameIframe.src = gameSrc;
-            closeGameBtn.style.display = 'flex'; // 显示红框位置的关闭按钮
+            closeGameBtn.style.display = 'flex'; // 显示关闭游戏按钮
           } else {
             welcomeContent.style.display = 'flex';
             gameIframe.style.display = 'none';
             gameIframe.src = '';
-            closeGameBtn.style.display = 'none'; // 隐藏红框位置的关闭按钮
+            closeGameBtn.style.display = 'none'; // 隐藏关闭游戏按钮
             
             const gameName = this.childNodes[1] ? this.childNodes[1].textContent.trim() : this.textContent.trim();
             alert(`【${gameName}】乖乖肉哦！这个游戏还不能玩`);
@@ -337,7 +327,7 @@
         });
       });
 
-      // 🔥 新增：点击红框位置的按钮关闭当前游戏
+      // 点击关闭游戏按钮 -> 恢复欢迎页
       closeGameBtn.addEventListener('click', function() {
         welcomeContent.style.display = 'flex';
         gameIframe.style.display = 'none';
@@ -345,10 +335,10 @@
         closeGameBtn.style.display = 'none'; // 关闭后隐藏自己
       });
 
-      // 切换面板显示/隐藏 (统一使用三条杠)
+      // 切换面板显示/隐藏
       toggleBtn.addEventListener('click', function() {
         panel.classList.toggle('collapsed');
-        // 图标保持不变，始终为 ☰，依靠面板位置来判断状态
+        // 图标保持不变，始终为 ☰
       });
     })();
   </script>
