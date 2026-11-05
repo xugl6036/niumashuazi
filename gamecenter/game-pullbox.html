@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推箱子 · 经典仓库番</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(145deg, #2b3a4a 0%, #1d2a35 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        .game-wrapper {
+            background: #3f4e5b;
+            padding: 2rem 2rem 1.5rem 2rem;
+            border-radius: 3rem 3rem 2rem 2rem;
+            box-shadow: 0 25px 35px rgba(0, 0, 0, 0.6), inset 0 1px 4px rgba(255, 255, 255, 0.2);
+        }
+        .game-panel {
+            background: #1e2a32;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            box-shadow: inset 0 0 10px #0b0f12, 0 10px 10px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0 0.5rem;
+        }
+        .level-badge {
+            background: #5d7a8c;
+            color: #f0f7ff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0.4rem 1.2rem;
+            border-radius: 3rem;
+            letter-spacing: 1px;
+            box-shadow: inset 0 -3px 0 #2e3f4b;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .reset-btn, .next-btn {
+            border: none;
+            border-radius: 3rem;
+            padding: 0.4rem 1.6rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.07s ease;
+            letter-spacing: 0.5px;
+            border: 1px solid;
+        }
+        .reset-btn {
+            background: #cfb87c;
+            color: #1e2a32;
+            box-shadow: 0 8px 0 #867a56, 0 5px 15px rgba(0, 0, 0, 0.4);
+            border-color: #eedba8;
+        }
+        .reset-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #867a56, 0 8px 12px rgba(0, 0, 0, 0.3);
+        }
+        .next-btn {
+            background: #6a9e7a;
+            color: #0d1f14;
+            box-shadow: 0 6px 0 #3e6b4e, 0 5px 15px rgba(0,0,0,0.4);
+            border-color: #a8d5b5;
+        }
+        .next-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 1px 0 #3e6b4e, 0 8px 12px rgba(0,0,0,0.3);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .grid-container {
+            display: grid;
+            gap: 5px;
+            background: #172027;
+            padding: 12px;
+            border-radius: 1.8rem;
+            box-shadow: inset 0 0 0 2px #0f161c, 0 15px 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1.2rem;
+        }
+        .cell {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            transition: background 0.08s ease;
+            background: #2e3f4b;
+            box-shadow: inset 0 -5px 0 #1b262e, inset 0 2px 6px #506a7a;
+        }
+        .cell.floor {
+            background: #3b4b56;
+            box-shadow: inset 0 -5px 0 #222f38, inset 0 2px 8px #5d7484;
+        }
+        .cell.wall {
+            background: #4a5f6e;
+            box-shadow: inset 0 -6px 0 #1a232c, inset 0 4px 12px #c0d4e0, 0 0 0 2px #18212a;
+            border: 1px solid #0e1419;
+            background-image: repeating-linear-gradient(45deg, #4e6779 0px, #4e6779 4px, #39505f 4px, #39505f 8px);
+            border-radius: 10px;
+        }
+        .cell.target {
+            background: #3b5e4b;
+            box-shadow: inset 0 -5px 0 #1e3a2b, inset 0 2px 12px #7daa8a;
+            position: relative;
+        }
+        .cell.target::after {
+            content: "●";
+            font-size: 1.6rem;
+            color: #d4e8a5;
+            opacity: 0.85;
+            text-shadow: 0 0 6px #b6ff9e;
+            line-height: 1;
+        }
+        .cell.box {
+            background: #c9a86b;
+            box-shadow: inset 0 -7px 0 #8f6f42, inset 0 3px 12px #eedba0, 0 0 0 2px #6b4f2c;
+            background-image: repeating-linear-gradient(45deg, #b89452 0px, #b89452 4px, #dabf7e 4px, #dabf7e 8px);
+            border-radius: 12px;
+        }
+        .cell.box-on-target {
+            background: #c9a86b;
+            box-shadow: inset 0 -7px 0 #5c7a4b, inset 0 3px 12px #f5f0c0, 0 0 0 3px #93c47d;
+            background-image: repeating-linear-gradient(45deg, #b89452 0px, #b89452 4px, #dabf7e 4px, #dabf7e 8px);
+        }
+        .cell.box-on-target::after {
+            content: "✓";
+            font-size: 1.8rem;
+            color: #2b4d21;
+            font-weight: 900;
+            text-shadow: 0 0 8px #b3ffa7;
+            opacity: 0.8;
+        }
+        .cell.player {
+            background: #3b4b56;
+            box-shadow: inset 0 -5px 0 #222f38, inset 0 2px 8px #5d7484;
+            position: relative;
+        }
+        .cell.player::after {
+            content: "🧍";
+            font-size: 2.2rem;
+            line-height: 1;
+            filter: drop-shadow(0 6px 4px rgba(0,0,0,0.5));
+            transform: scale(1.1);
+        }
+        .cell.player.target::after {
+            content: "🧍";
+            font-size: 2.2rem;
+            filter: drop-shadow(0 0 8px #ffffb0);
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.8rem 0 0.8rem;
+            color: #b7cfdd;
+            font-weight: 500;
+            text-shadow: 0 2px 2px black;
+        }
+        .move-counter {
+            background: #1e2a32;
+            padding: 0.3rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 1rem;
+            box-shadow: inset 0 2px 6px #0b1115, 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .message {
+            font-size: 1rem;
+            background: #2d4e5c;
+            padding: 0.3rem 1.2rem;
+            border-radius: 2rem;
+            color: #e7f3b0;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .win-message {
+            color: #ffe484;
+            text-shadow: 0 0 10px #ffe15e;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .arrow-hint {
+            font-size: 0.9rem;
+            color: #899fae;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding-top: 0.5rem;
+        }
+        .arrow-hint span {
+            background: #27323b;
+            padding: 0.2rem 0.8rem;
+            border-radius: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-panel">
+            <div class="header">
+                <div class="level-badge" id="levelDisplay">第 1 关</div>
+                <!-- 按钮组：下一关在左，重来在右 -->
+                <div class="btn-group">
+                    <button class="next-btn hidden" id="nextLevelBtn">下一关</button>
+                    <button class="reset-btn" id="resetButton">↻ 重来</button>
+                </div>
+            </div>
+            <div class="grid-container" id="gridContainer"></div>
+            <div class="status">
+                <div class="move-counter" id="moveCounter">步数: 0</div>
+                <div class="message" id="messageBox">把箱子推到目标点上</div>
+            </div>
+            <div class="arrow-hint">
+                <span>← ↑ ↓ →</span>
+                <span>R 重开</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            // ----- 关卡数据 -----
+            const LEVELS = [
+                {
+                    width: 7,
+                    height: 7,
+                    map: [
+                        "#######",
+                        "#     #",
+                        "# .$  #",
+                        "#  $ .#",
+                        "#  @  #",
+                        "#     #",
+                        "#######"
+                    ]
+                },
+                {
+                    width: 8,
+                    height: 7,
+                    map: [
+                        "########",
+                        "#  .   #",
+                        "#  $   #",
+                        "#  @$  #",
+                        "#   .  #",
+                        "#      #",
+                        "########"
+                    ]
+                },
+                {
+                    width: 9,
+                    height: 7,
+                    map: [
+                        "#########",
+                        "#   #   #",
+                        "# . # $ #",
+                        "# @$  . #",
+                        "#   #   #",
+                        "#  $ .  #",
+                        "#########"
+                    ]
+                },
+                {
+                    width: 9,
+                    height: 9,
+                    map: [
+                        "#########",
+                        "# .   . #",
+                        "#  $ $  #",
+                        "#   #   #",
+                        "#  @    #",
+                        "#   #   #",
+                        "#  $ $  #",
+                        "# .   . #",
+                        "#########"
+                    ]
+                },
+                {
+                    width: 9,
+                    height: 8,
+                    map: [
+                        "#########",
+                        "# .   . #",
+                        "#  $ $  #",
+                        "#   #   #",
+                        "#  @    #",
+                        "#   #   #",
+                        "#  $ .  #",
+                        "#########"
+                    ]
+                },
+                {
+                    width: 10,
+                    height: 10,
+                    map: [
+                        "##########",
+                        "#  .   . #",
+                        "#  $ # $ #",
+                        "#    #   #",
+                        "#  @     #",
+                        "#    #   #",
+                        "#  $ # $ #",
+                        "#  .   . #",
+                        "#        #",
+                        "##########"
+                    ]
+                }
+            ];
+
+            const SYMBOL = {
+                WALL: '#',
+                FLOOR: ' ',
+                TARGET: '.',
+                BOX: '$',
+                PLAYER: '@',
+                BOX_ON_TARGET: '*',
+                PLAYER_ON_TARGET: '+'
+            };
+
+            let currentLevel = 0;
+            let grid = [];
+            let boxes = [];
+            let player = { x: 0, y: 0 };
+            let moveCount = 0;
+            let gameWin = false;
+
+            const gridContainer = document.getElementById('gridContainer');
+            const levelDisplay = document.getElementById('levelDisplay');
+            const moveCounter = document.getElementById('moveCounter');
+            const messageBox = document.getElementById('messageBox');
+            const nextLevelBtn = document.getElementById('nextLevelBtn');
+
+            function loadLevel(levelIndex) {
+                if (levelIndex >= LEVELS.length) {
+                    gameWin = true;
+                    messageBox.textContent = '🎉 已通关全部关卡！';
+                    messageBox.classList.add('win-message');
+                    nextLevelBtn.classList.add('hidden');
+                    return;
+                }
+
+                currentLevel = levelIndex;
+                const level = LEVELS[levelIndex];
+                const map = level.map;
+                const height = map.length;
+                const width = map[0].length;
+
+                grid = Array(height).fill().map(() => Array(width).fill(SYMBOL.FLOOR));
+                boxes = [];
+                player = { x: 0, y: 0 };
+                moveCount = 0;
+                gameWin = false;
+
+                for (let row = 0; row < height; row++) {
+                    for (let col = 0; col < width; col++) {
+                        const ch = map[row][col];
+                        if (ch === SYMBOL.WALL) {
+                            grid[row][col] = SYMBOL.WALL;
+                        } else if (ch === SYMBOL.TARGET) {
+                            grid[row][col] = SYMBOL.TARGET;
+                        } else if (ch === SYMBOL.BOX) {
+                            grid[row][col] = SYMBOL.FLOOR;
+                            boxes.push({ x: col, y: row });
+                        } else if (ch === SYMBOL.PLAYER) {
+                            grid[row][col] = SYMBOL.FLOOR;
+                            player = { x: col, y: row };
+                        } else if (ch === SYMBOL.BOX_ON_TARGET) {
+                            grid[row][col] = SYMBOL.TARGET;
+                            boxes.push({ x: col, y: row });
+                        } else if (ch === SYMBOL.PLAYER_ON_TARGET) {
+                            grid[row][col] = SYMBOL.TARGET;
+                            player = { x: col, y: row };
+                        }
+                    }
+                }
+
+                levelDisplay.textContent = `第 ${levelIndex + 1} 关`;
+                updateMoveCounter();
+                messageBox.textContent = '把箱子推到目标点上';
+                messageBox.classList.remove('win-message');
+                nextLevelBtn.classList.add('hidden');
+                renderGrid();
+            }
+
+            function renderGrid() {
+                const height = grid.length;
+                const width = grid[0].length;
+
+                gridContainer.style.gridTemplateColumns = `repeat(${width}, 56px)`;
+                gridContainer.innerHTML = '';
+
+                const boxSet = new Set();
+                boxes.forEach(b => boxSet.add(`${b.x},${b.y}`));
+
+                for (let row = 0; row < height; row++) {
+                    for (let col = 0; col < width; col++) {
+                        const cellDiv = document.createElement('div');
+                        cellDiv.className = 'cell';
+
+                        const base = grid[row][col];
+                        const isBox = boxSet.has(`${col},${row}`);
+                        const isPlayer = (player.x === col && player.y === row);
+                        const isTarget = (base === SYMBOL.TARGET);
+
+                        if (base === SYMBOL.WALL) {
+                            cellDiv.classList.add('wall');
+                        } else {
+                            if (isTarget) {
+                                cellDiv.classList.add('target');
+                            } else {
+                                cellDiv.classList.add('floor');
+                            }
+
+                            if (isBox) {
+                                if (isTarget) {
+                                    cellDiv.classList.add('box-on-target');
+                                } else {
+                                    cellDiv.classList.add('box');
+                                }
+                            } else if (isPlayer) {
+                                cellDiv.classList.add('player');
+                            }
+                        }
+
+                        gridContainer.appendChild(cellDiv);
+                    }
+                }
+            }
+
+            function updateMoveCounter() {
+                moveCounter.textContent = `步数: ${moveCount}`;
+            }
+
+            function checkWin() {
+                for (let b of boxes) {
+                    if (grid[b.y][b.x] !== SYMBOL.TARGET) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function tryMove(dx, dy) {
+                if (gameWin) return;
+
+                const newX = player.x + dx;
+                const newY = player.y + dy;
+
+                if (newY < 0 || newY >= grid.length || newX < 0 || newX >= grid[0].length) return;
+                if (grid[newY][newX] === SYMBOL.WALL) return;
+
+                const boxIndex = boxes.findIndex(b => b.x === newX && b.y === newY);
+
+                if (boxIndex !== -1) {
+                    const pushX = newX + dx;
+                    const pushY = newY + dy;
+
+                    if (pushY < 0 || pushY >= grid.length || pushX < 0 || pushX >= grid[0].length) return;
+                    if (grid[pushY][pushX] === SYMBOL.WALL) return;
+                    if (boxes.some(b => b.x === pushX && b.y === pushY)) return;
+
+                    boxes[boxIndex] = { x: pushX, y: pushY };
+                    player.x = newX;
+                    player.y = newY;
+
+                    moveCount++;
+                    updateMoveCounter();
+
+                    if (checkWin()) {
+                        gameWin = true;
+                        messageBox.textContent = '🎉 恭喜！通关！';
+                        messageBox.classList.add('win-message');
+                        nextLevelBtn.classList.remove('hidden');
+                    } else {
+                        messageBox.textContent = '继续推箱子...';
+                        messageBox.classList.remove('win-message');
+                    }
+
+                    renderGrid();
+                } else {
+                    player.x = newX;
+                    player.y = newY;
+
+                    moveCount++;
+                    updateMoveCounter();
+
+                    if (checkWin()) {
+                        gameWin = true;
+                        messageBox.textContent = '🎉 恭喜！通关！';
+                        messageBox.classList.add('win-message');
+                        nextLevelBtn.classList.remove('hidden');
+                    } else {
+                        messageBox.textContent = '继续推箱子...';
+                        messageBox.classList.remove('win-message');
+                    }
+
+                    renderGrid();
+                }
+            }
+
+            function resetLevel() {
+                loadLevel(currentLevel);
+            }
+
+            function goToNextLevel() {
+                if (currentLevel + 1 < LEVELS.length) {
+                    loadLevel(currentLevel + 1);
+                } else {
+                    gameWin = true;
+                    messageBox.textContent = '🎉 已通关全部关卡！';
+                    messageBox.classList.add('win-message');
+                    nextLevelBtn.classList.add('hidden');
+                }
+            }
+
+            function onKeyDown(e) {
+                const key = e.key;
+                if (key.startsWith('Arrow') || key === 'r' || key === 'R') {
+                    e.preventDefault();
+                }
+
+                if (key === 'r' || key === 'R') {
+                    resetLevel();
+                    return;
+                }
+
+                if (gameWin) return;
+
+                switch (key) {
+                    case 'ArrowUp':    tryMove(0, -1); break;
+                    case 'ArrowDown':  tryMove(0, 1);  break;
+                    case 'ArrowLeft':  tryMove(-1, 0); break;
+                    case 'ArrowRight': tryMove(1, 0);  break;
+                    default: return;
+                }
+            }
+
+            window.addEventListener('load', () => {
+                loadLevel(0);
+                window.addEventListener('keydown', onKeyDown);
+                document.getElementById('resetButton').addEventListener('click', resetLevel);
+                nextLevelBtn.addEventListener('click', goToNextLevel);
+                window.focus();
+            });
+
+            document.addEventListener('click', () => {
+                window.focus();
+            });
+
+        })();
+    </script>
+</body>
+</html>

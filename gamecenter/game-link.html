@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>连连看 · 连线消除效果</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      background: linear-gradient(145deg, #2b4b3c 0%, #1f3a2e 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+    .game-wrapper {
+      background: #3a5e4b;
+      padding: 24px 30px 30px;
+      border-radius: 48px 48px 32px 32px;
+      box-shadow: 0 18px 28px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+      border: 1px solid #69a183;
+      position: relative;
+    }
+    .game-panel {
+      background: #f3efdd;
+      padding: 18px;
+      border-radius: 28px;
+      box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 16px 8px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2f4235;
+      text-shadow: 2px 2px 0 #cbbf9b;
+      letter-spacing: 2px;
+    }
+    .stats {
+      display: flex;
+      gap: 28px;
+      background: #d9d0b5;
+      padding: 8px 28px;
+      border-radius: 100px;
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+    .stats span {
+      font-weight: 600;
+      color: #2f4235;
+      font-size: 20px;
+    }
+    .stats .value {
+      background: #1e2e26;
+      color: #f5eac9;
+      padding: 2px 14px;
+      border-radius: 40px;
+      margin-left: 8px;
+      box-shadow: inset 0 -2px 0 #0e1511;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(8, 66px);
+      grid-template-rows: repeat(8, 66px);
+      gap: 8px;
+      background: #6b8f78;
+      padding: 14px;
+      border-radius: 28px;
+      box-shadow: inset 0 0 0 4px #4d6b58, inset 0 0 18px #1d2e24;
+      position: relative; 
+    }
+    /* 画布覆盖在网格的 padding 内部，与格子中心对齐 */
+    #lineCanvas {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: calc(100% - 28px);
+      height: calc(100% - 28px);
+      pointer-events: none;
+      z-index: 30;
+    }
+    .cell {
+      background: #ebdfc1;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      box-shadow: 0 5px 0 #a28d64, 0 7px 12px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.06s ease;
+      color: #3a2a1a;
+      text-shadow: 1px 1px 0 white;
+      font-weight: 600;
+      transform: translateY(0);
+    }
+    .cell.empty {
+      background: #b9ad8f;
+      box-shadow: inset 0 6px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: default;
+      color: transparent;
+      text-shadow: none;
+      transform: translateY(2px);
+    }
+    .cell.selected {
+      box-shadow: 0 0 0 5px #f9e874, 0 0 0 9px #d4a024, 0 8px 12px black;
+      transform: scale(1.02) translateY(-2px);
+      background: #fff3d1;
+      z-index: 2;
+    }
+    .cell:not(.empty):hover {
+      background: #f7efd0;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #a28d64, 0 10px 16px rgba(0, 0, 0, 0.4);
+    }
+    .footer {
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+    }
+    button {
+      background: #d8c9a3;
+      border: none;
+      padding: 12px 48px;
+      border-radius: 60px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #2b3e31;
+      box-shadow: 0 8px 0 #8f7a55, 0 8px 16px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: 0.06s linear;
+      letter-spacing: 2px;
+      border: 1px solid #f7efd6;
+      transform: translateY(0);
+    }
+    button:active {
+      box-shadow: 0 3px 0 #8f7a55, 0 5px 12px black;
+      transform: translateY(6px);
+    }
+    .message {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      color: #f1e9d0;
+      text-shadow: 2px 2px 0 #1a2a20;
+      min-height: 46px;
+      margin-top: 12px;
+      transition: 0.2s;
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrapper">
+  <div class="game-panel">
+    <div class="header">
+      <div class="title">🀄 连连看 · 连线</div>
+      <div class="stats">
+        <span>剩余 <span class="value" id="remainCount">64</span></span>
+      </div>
+    </div>
+
+    <div class="grid-container" id="grid">
+      <canvas id="lineCanvas"></canvas>
+    </div>
+
+    <div class="footer">
+      <button id="resetBtn">🔄 重新洗牌</button>
+    </div>
+    <div class="message" id="message"></div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const ROWS = 8;
+    const COLS = 8;
+    const SYMBOLS = ['🍎','🍊','🍇','🍉','🍓','🍒','🍋','🍑','🥝','🍌','🍍','🥥'];
+    const PAIRS_COUNT = (ROWS * COLS) / 2;
+
+    let grid = [];              
+    let selected = null;       
+    let remainingPairs = PAIRS_COUNT;
+    let gameOver = false;
+    
+    let canvas, ctx;
+    let lineTimer = null;      
+
+    const gridContainer = document.getElementById('grid');
+    const remainSpan = document.getElementById('remainCount');
+    const messageDiv = document.getElementById('message');
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function createRandomBoard() {
+      const pairs = [];
+      for (let i = 0; i < PAIRS_COUNT; i++) {
+        const sym = SYMBOLS[i % SYMBOLS.length];
+        pairs.push(sym, sym);
+      }
+      const shuffled = shuffleArray(pairs);
+      const board = [];
+      let idx = 0;
+      for (let r = 0; r < ROWS; r++) {
+        const row = [];
+        for (let c = 0; c < COLS; c++) {
+          row.push(shuffled[idx++]);
+        }
+        board.push(row);
+      }
+      return board;
+    }
+
+    // 连通性算法 (同前)
+    function getConnectPath(r1, c1, r2, c2) {
+      if (r1 === r2 && c1 === c2) return null;
+      if (grid[r1][c1] === null || grid[r2][c2] === null) return null;
+      if (grid[r1][c1] !== grid[r2][c2]) return null;
+
+      if (r1 === r2) {
+        let minC = Math.min(c1, c2);
+        let maxC = Math.max(c1, c2);
+        let allEmpty = true;
+        for (let cc = minC + 1; cc < maxC; cc++) {
+          if (grid[r1][cc] !== null) { allEmpty = false; break; }
+        }
+        if (allEmpty) return [{row:r1, col:c1}, {row:r1, col:c2}];
+      }
+      if (c1 === c2) {
+        let minR = Math.min(r1, r2);
+        let maxR = Math.max(r1, r2);
+        let allEmpty = true;
+        for (let rr = minR + 1; rr < maxR; rr++) {
+          if (grid[rr][c1] !== null) { allEmpty = false; break; }
+        }
+        if (allEmpty) return [{row:r1, col:c1}, {row:r2, col:c2}];
+      }
+
+      if (grid[r1][c2] === null) {
+        let horizontalClear = true;
+        let minC12 = Math.min(c1, c2);
+        let maxC12 = Math.max(c1, c2);
+        for (let cc = minC12 + 1; cc < maxC12; cc++) {
+          if (grid[r1][cc] !== null) { horizontalClear = false; break; }
+        }
+        let verticalClear = true;
+        let minR12 = Math.min(r1, r2);
+        let maxR12 = Math.max(r1, r2);
+        for (let rr = minR12 + 1; rr < maxR12; rr++) {
+          if (grid[rr][c2] !== null) { verticalClear = false; break; }
+        }
+        if (horizontalClear && verticalClear) {
+          return [{row:r1, col:c1}, {row:r1, col:c2}, {row:r2, col:c2}];
+        }
+      }
+      if (grid[r2][c1] === null) {
+        let horizontalClear = true;
+        let minC21 = Math.min(c1, c2);
+        let maxC21 = Math.max(c1, c2);
+        for (let cc = minC21 + 1; cc < maxC21; cc++) {
+          if (grid[r2][cc] !== null) { horizontalClear = false; break; }
+        }
+        let verticalClear = true;
+        let minR21 = Math.min(r1, r2);
+        let maxR21 = Math.max(r1, r2);
+        for (let rr = minR21 + 1; rr < maxR21; rr++) {
+          if (grid[rr][c1] !== null) { verticalClear = false; break; }
+        }
+        if (horizontalClear && verticalClear) {
+          return [{row:r1, col:c1}, {row:r2, col:c1}, {row:r2, col:c2}];
+        }
+      }
+
+      for (let rr = 0; rr < ROWS; rr++) {
+        if (rr === r1 || rr === r2) continue;
+        if (grid[rr][c1] !== null || grid[rr][c2] !== null) continue;
+
+        let vert1Clear = true;
+        let minR1 = Math.min(r1, rr);
+        let maxR1 = Math.max(r1, rr);
+        for (let rrr = minR1 + 1; rrr < maxR1; rrr++) {
+          if (grid[rrr][c1] !== null) { vert1Clear = false; break; }
+        }
+        if (!vert1Clear) continue;
+
+        let horzClear = true;
+        let minC = Math.min(c1, c2);
+        let maxC = Math.max(c1, c2);
+        for (let cc = minC + 1; cc < maxC; cc++) {
+          if (grid[rr][cc] !== null) { horzClear = false; break; }
+        }
+        if (!horzClear) continue;
+
+        let vert2Clear = true;
+        let minR2 = Math.min(rr, r2);
+        let maxR2 = Math.max(rr, r2);
+        for (let rrr = minR2 + 1; rrr < maxR2; rrr++) {
+          if (grid[rrr][c2] !== null) { vert2Clear = false; break; }
+        }
+        if (vert2Clear) {
+          return [
+            {row:r1, col:c1},
+            {row:rr, col:c1},
+            {row:rr, col:c2},
+            {row:r2, col:c2}
+          ];
+        }
+      }
+
+      for (let cc = 0; cc < COLS; cc++) {
+        if (cc === c1 || cc === c2) continue;
+        if (grid[r1][cc] !== null || grid[r2][cc] !== null) continue;
+
+        let horz1Clear = true;
+        let minC1 = Math.min(c1, cc);
+        let maxC1 = Math.max(c1, cc);
+        for (let ccc = minC1 + 1; ccc < maxC1; ccc++) {
+          if (grid[r1][ccc] !== null) { horz1Clear = false; break; }
+        }
+        if (!horz1Clear) continue;
+
+        let vertClear = true;
+        let minR = Math.min(r1, r2);
+        let maxR = Math.max(r1, r2);
+        for (let rrr = minR + 1; rrr < maxR; rrr++) {
+          if (grid[rrr][cc] !== null) { vertClear = false; break; }
+        }
+        if (!vertClear) continue;
+
+        let horz2Clear = true;
+        let minC2 = Math.min(cc, c2);
+        let maxC2 = Math.max(cc, c2);
+        for (let ccc = minC2 + 1; ccc < maxC2; ccc++) {
+          if (grid[r2][ccc] !== null) { horz2Clear = false; break; }
+        }
+        if (horz2Clear) {
+          return [
+            {row:r1, col:c1},
+            {row:r1, col:cc},
+            {row:r2, col:cc},
+            {row:r2, col:c2}
+          ];
+        }
+      }
+
+      return null;
+    }
+
+    // --- 修复了坐标计算的画线函数 ---
+    function drawConnectionPath(path) {
+      if (!canvas || !ctx) return;
+      if (lineTimer) clearTimeout(lineTimer);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 直接读取Canvas的真实CSS尺寸
+      const canvasRect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvasRect.width * dpr;
+      canvas.height = canvasRect.height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); 
+      ctx.scale(dpr, dpr);
+      
+      // 获取格子的真实CSS尺寸
+      const cell = gridContainer.querySelector('.cell');
+      let cellWidth = 66, cellHeight = 66, gap = 8;
+      if (cell) {
+        const cellRect = cell.getBoundingClientRect();
+        cellWidth = cellRect.width;
+        cellHeight = cellRect.height;
+        const gridStyle = getComputedStyle(gridContainer);
+        gap = parseFloat(gridStyle.gap) || 8;
+      }
+
+      // 精确计算格子中心相对Canvas的坐标
+      function getCellCenter(row, col) {
+        return {
+          x: col * (cellWidth + gap) + cellWidth / 2,
+          y: row * (cellHeight + gap) + cellHeight / 2
+        };
+      }
+
+      const points = path.map(p => getCellCenter(p.row, p.col));
+
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      
+      // 绘制白色底边
+      ctx.beginPath();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 8;
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 12;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      // 绘制黄色亮线
+      ctx.beginPath();
+      ctx.strokeStyle = '#ffd966';
+      ctx.lineWidth = 5;
+      ctx.shadowColor = '#f0b400';
+      ctx.shadowBlur = 14;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      // 画拐点圆点
+      ctx.shadowBlur = 8;
+      points.forEach((p, idx) => {
+        if (idx !== 0 && idx !== points.length - 1) {
+          ctx.beginPath();
+          ctx.fillStyle = '#ffffff';
+          ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = '#f0b400';
+          ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      });
+      
+      // 起点终点圆点
+      [points[0], points[points.length-1]].forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = '#ffe484';
+        ctx.arc(p.x, p.y, 7, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#ffb800';
+        ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+
+      ctx.shadowBlur = 0;
+
+      lineTimer = setTimeout(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lineTimer = null;
+      }, 350);
+    }
+
+    function renderBoard() {
+      const cells = gridContainer.querySelectorAll('.cell');
+      cells.forEach(cell => cell.remove());
+
+      if (!canvas) {
+        canvas = document.getElementById('lineCanvas');
+        ctx = canvas.getContext('2d');
+      }
+      if (gridContainer.lastChild !== canvas) {
+        gridContainer.appendChild(canvas);
+      }
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if (grid[r][c] === null) {
+            cell.classList.add('empty');
+            cell.textContent = '';
+          } else {
+            cell.textContent = grid[r][c];
+          }
+          if (selected && selected.row === r && selected.col === c) {
+            cell.classList.add('selected');
+          }
+          cell.addEventListener('click', (function(row, col) {
+            return function() { onCellClick(row, col); };
+          })(r, c));
+          gridContainer.appendChild(cell);
+        }
+      }
+
+      remainSpan.textContent = remainingPairs * 2;
+      if (remainingPairs === 0 && !gameOver) {
+        gameOver = true;
+        messageDiv.textContent = '✨ 恭喜！你赢啦！ ✨';
+      } else {
+        if (!gameOver) messageDiv.textContent = '';
+      }
+    }
+
+    function onCellClick(row, col) {
+      if (gameOver) return;
+      
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (lineTimer) clearTimeout(lineTimer);
+
+      if (grid[row][col] === null) {
+        if (selected) {
+          selected = null;
+          renderBoard();
+        }
+        return;
+      }
+
+      if (!selected) {
+        selected = { row, col };
+        renderBoard();
+        return;
+      }
+
+      const first = selected;
+      const second = { row, col };
+
+      if (first.row === row && first.col === col) {
+        selected = null;
+        renderBoard();
+        return;
+      }
+
+      if (grid[first.row][first.col] !== grid[row][col]) {
+        selected = { row, col };
+        renderBoard();
+        return;
+      }
+
+      const path = getConnectPath(first.row, first.col, row, col);
+      if (path) {
+        grid[first.row][first.col] = null;
+        grid[row][col] = null;
+        remainingPairs--;
+        selected = null;
+        renderBoard();
+        drawConnectionPath(path); 
+      } else {
+        selected = { row, col };
+        renderBoard();
+      }
+    }
+
+    function resetGame() {
+      if (lineTimer) clearTimeout(lineTimer);
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      grid = createRandomBoard();
+      selected = null;
+      remainingPairs = PAIRS_COUNT;
+      gameOver = false;
+      messageDiv.textContent = '';
+      renderBoard();
+    }
+
+    function init() {
+      grid = createRandomBoard();
+      canvas = document.getElementById('lineCanvas');
+      ctx = canvas.getContext('2d');
+      selected = null;
+      remainingPairs = PAIRS_COUNT;
+      gameOver = false;
+      renderBoard();
+
+      document.getElementById('resetBtn').addEventListener('click', resetGame);
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
