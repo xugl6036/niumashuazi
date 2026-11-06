@@ -54,20 +54,23 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 16px;
+            padding: 20px;
             transition: background 0.3s ease;
         }
 
+        /* 改为上下结构的主容器 */
         .layout-container {
             display: flex;
-            align-items: stretch;
-            gap: 24px;
-            max-width: 1100px;
+            flex-direction: column;
+            gap: 20px;
             width: 100%;
-            justify-content: center;
+            max-width: 900px; /* 控制最大宽度，保证大屏不过分拉伸 */
         }
 
-        .game-area { flex: 1; max-width: 760px; display: flex; flex-direction: column; }
+        /* 游戏区域占满全宽 */
+        .game-area {
+            width: 100%;
+        }
 
         .canvas-container {
             background-color: #fff;
@@ -78,50 +81,95 @@
             transition: box-shadow 0.3s ease;
         }
 
-        canvas { display: block; width: 100%; height: auto; background-color: #fff; cursor: pointer; border-radius: 16px; }
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: auto; 
+            background-color: #fff; 
+            cursor: pointer; 
+            border-radius: 16px; 
+        }
 
-        .side-panel { width: 280px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
+        /* 底部操作栏：左右分布 */
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
 
+        /* 左侧记分板（横排） */
         .score-panel {
-            background: var(--panel-bg); border-radius: 16px; padding: 20px;
-            box-shadow: var(--panel-shadow); display: flex; flex-direction: column; gap: 16px;
+            background: var(--panel-bg); 
+            border-radius: 12px; 
+            padding: 12px 24px;
+            box-shadow: var(--panel-shadow); 
+            display: flex; 
+            align-items: center;
+            gap: 32px;
             transition: background 0.3s ease;
         }
 
-        .score-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--kbd-border); }
-        .score-item:last-child { border-bottom: none; padding-bottom: 0; }
-        .score-label-group { display: flex; align-items: center; gap: 10px; color: var(--text-sub); font-size: 13px; font-weight: 600; }
-        .score-icon { font-size: 22px; }
-        .score-value { font-size: 24px; font-weight: 700; color: var(--text-main); font-family: 'Courier New', monospace; }
-
-        .btn {
-            border: none; border-radius: 10px; padding: 0 12px; font-size: 14px; font-weight: 600;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
-            transition: all 0.2s ease; width: 100%; height: 44px;
-            white-space: nowrap; /* 防止文字换行 */
+        .score-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .score-label-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: var(--text-sub); 
+            font-size: 14px; 
+            font-weight: 600; 
+        }
+        
+        .score-icon { font-size: 18px; }
+        
+        .score-value { 
+            font-size: 22px; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            font-family: 'Courier New', monospace; 
+            min-width: 40px;
         }
 
-        .btn-primary { background: var(--btn-primary); color: #fff; box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3); }
-        .btn-primary:hover { background: var(--btn-primary-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-
-        /* 布局区域调整 */
+        /* 右侧按钮组 */
         .actions-panel {
             display: flex;
-            flex-direction: column;
             gap: 12px;
+            align-items: center;
         }
 
-        /* 上方两个按钮并排 */
-        .action-top-row {
-            display: flex;
-            gap: 12px;
-        }
-        .action-top-row .btn {
-            flex: 1; /* 保证等宽 */
+        .btn {
+            border: none; 
+            border-radius: 10px; 
+            padding: 0 16px; 
+            font-size: 14px; 
+            font-weight: 600;
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 6px;
+            transition: all 0.2s ease; 
+            height: 44px;
+            white-space: nowrap;
         }
 
-        /* 玩法按钮（继承基础按钮，但视觉上更像次级按钮） */
+        .btn-primary { 
+            background: var(--btn-primary); 
+            color: #fff; 
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3); 
+        }
+        .btn-primary:hover { 
+            background: var(--btn-primary-hover); 
+            transform: translateY(-1px); 
+        }
+        .btn:active { transform: translateY(0); }
+
         .btn-help {
             background: var(--panel-bg); 
             color: var(--text-main); 
@@ -133,7 +181,6 @@
             transform: translateY(-1px);
         }
 
-        /* 主题切换按钮 */
         .btn-theme {
             background: var(--theme-btn-bg);
             color: var(--theme-btn-text);
@@ -215,26 +262,41 @@
 
         .modal-close-btn {
             margin-top: 24px;
+            width: 100%;
         }
 
-        @media (max-width: 900px) {
-            .layout-container { flex-direction: column; align-items: center; gap: 16px; }
-            .side-panel { width: 100%; max-width: 760px; }
-            .score-panel { flex-direction: row; justify-content: space-around; }
-            .score-item { border-bottom: none; padding-bottom: 0; flex-direction: column; gap: 8px; }
+        /* 响应式：小屏幕时上下排列 */
+        @media (max-width: 768px) {
+            .bottom-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .score-panel {
+                justify-content: space-around;
+            }
+            .actions-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .btn {
+                padding: 0 8px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="layout-container">
+        <!-- 上方游戏区 -->
         <div class="game-area">
             <div class="canvas-container">
                 <canvas id="gameCanvas" width="720" height="280"></canvas>
             </div>
         </div>
 
-        <div class="side-panel">
-            <!-- 记分板 -->
+        <!-- 下方操作栏 -->
+        <div class="bottom-bar">
+            <!-- 左侧：横排记分板 -->
             <div class="score-panel">
                 <div class="score-item">
                     <div class="score-label-group">
@@ -252,21 +314,11 @@
                 </div>
             </div>
 
-            <!-- 操作按钮 -->
+            <!-- 右侧：按钮组 (玩法、主题、重开) -->
             <div class="actions-panel">
-                <!-- 上排：玩法和深色/浅色 (等宽) -->
-                <div class="action-top-row">
-                    <button class="btn btn-help" id="helpBtn">
-                        💡 玩法
-                    </button>
-                    <button class="btn btn-theme" id="themeBtn">
-                        🌙 深色
-                    </button>
-                </div>
-                <!-- 下排：重新开始 -->
-                <button class="btn btn-primary" id="restartBtn">
-                    🔄 重新开始
-                </button>
+                <button class="btn btn-help" id="helpBtn">💡 玩法</button>
+                <button class="btn btn-theme" id="themeBtn">🌙 深色</button>
+                <button class="btn btn-primary" id="restartBtn">🔄 重新开始</button>
             </div>
         </div>
     </div>
@@ -308,7 +360,6 @@
         const themeBtn = document.getElementById('themeBtn');
         const body = document.body;
         
-        // 检查本地存储
         const savedTheme = localStorage.getItem('dinoTheme');
         if (savedTheme === 'dark') {
             body.classList.add('dark-mode');
@@ -374,7 +425,6 @@
         }
 
         function resetGame() {
-            // 加入 hasDoubleJumped 标记
             dino = { x: 80, y: DINO_STAND_Y, width: DINO_WIDTH, height: DINO_HEIGHT, vy: 0, isJumping: false, isDucking: false, isDead: false, legFrame: 0, hasDoubleJumped: false };
             obstacles = []; gameSpeed = BASE_SPEED; score = 0; frameCount = 0; isGameOver = false; isStarted = false; deathFlash = 0;
             generateInitialObstacles(); initClouds(); initGroundBumps(); updateScoreDisplay();
