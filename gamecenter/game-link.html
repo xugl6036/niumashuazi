@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>连连看 · 连线消除效果</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>连连看 · 连线消除</title>
   <style>
     * {
       box-sizing: border-box;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     html, body {
       height: 100%;
       margin: 0;
-      overflow: hidden; /* 禁止页面滚动 */
+      overflow: hidden;
+      background: linear-gradient(145deg, #2b4b3c 0%, #1f3a2e 100%);
     }
     body {
-      background: linear-gradient(145deg, #2b4b3c 0%, #1f3a2e 100%);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -25,82 +26,119 @@
 
     .game-wrapper {
       background: #3a5e4b;
-      padding: min(16px, 1.6vh) min(20px, 1.8vw) min(20px, 1.8vh);
-      border-radius: 40px 40px 28px 28px;
+      padding: min(12px, 1.5vh) min(16px, 1.5vw);
+      border-radius: 32px;
       box-shadow: 0 18px 28px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.2);
       border: 1px solid #69a183;
-      position: relative;
-      max-height: 98vh;
-      max-width: 98vw;
+      /* 占满可用高度和宽度 */
+      width: 100%;
+      max-width: 600px;
+      height: 100%;
+      max-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
+    
     .game-panel {
       background: #f3efdd;
-      padding: min(12px, 1.2vh) min(14px, 1.2vw);
-      border-radius: 24px;
+      padding: min(10px, 1vh) min(12px, 1vw);
+      border-radius: 20px;
       box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.3);
-      position: relative;
       display: flex;
       flex-direction: column;
+      height: 100%;
       overflow: hidden;
     }
+    
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 6px min(10px, 1vh) 6px;
+      padding-bottom: min(8px, 1vh);
       flex-shrink: 0;
     }
+    
     .title {
-      font-size: clamp(1.1rem, min(3vh, 3vw), 1.75rem);
+      font-size: clamp(1rem, min(2.8vh, 2.8vw), 1.6rem);
       font-weight: 800;
       color: #2f4235;
-      text-shadow: 2px 2px 0 #cbbf9b;
+      text-shadow: 1px 1px 0 #cbbf9b;
       letter-spacing: 1px;
       white-space: nowrap;
     }
-    .stats {
-      display: flex;
-      gap: min(16px, 1.5vw);
-      background: #d9d0b5;
-      padding: min(4px, 0.5vh) min(16px, 1.4vw);
-      border-radius: 100px;
-      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
-      flex-shrink: 0;
-    }
-    .stats span {
-      font-weight: 600;
-      color: #2f4235;
-      font-size: clamp(0.8rem, min(2.2vh, 2.2vw), 1.25rem);
+    
+    .controls {
       display: flex;
       align-items: center;
+      gap: 8px;
     }
+    
+    .stats {
+      display: flex;
+      background: #d9d0b5;
+      padding: 4px 12px;
+      border-radius: 100px;
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15);
+      font-size: clamp(0.8rem, min(2.2vh, 2.2vw), 1.2rem);
+      font-weight: 600;
+      color: #2f4235;
+    }
+    
     .stats .value {
       background: #1e2e26;
       color: #f5eac9;
-      padding: min(1px, 0.2vh) min(8px, 0.8vw);
-      border-radius: 40px;
+      padding: 1px 8px;
+      border-radius: 20px;
       margin-left: 6px;
       box-shadow: inset 0 -2px 0 #0e1511;
     }
+    
+    .icon-btn {
+      background: #d8c9a3;
+      border: 1px solid #f7efd6;
+      border-radius: 50%;
+      width: clamp(28px, 4vh, 36px);
+      height: clamp(28px, 4vh, 36px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(0.9rem, 2.2vh, 1.2rem);
+      cursor: pointer;
+      box-shadow: 0 4px 0 #8f7a55;
+      transition: 0.05s linear;
+      color: #2b3e31;
+    }
+    
+    .icon-btn:active {
+      box-shadow: 0 1px 0 #8f7a55;
+      transform: translateY(3px);
+    }
 
-    /* 自适应棋盘：单元格尺寸随视口缩放，最大 66px，最小 28px */
+    /* 核心棋盘容器 */
     .grid-container {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: min(6px, 0.6vh);
+      gap: 4px;
       background: #6b8f78;
-      padding: min(10px, 1vh);
-      border-radius: 22px;
+      /* 留出大内边距，作为外框连线的显示区域 */
+      padding: clamp(12px, 2vh, 24px); 
+      border-radius: 16px;
       box-shadow: inset 0 0 0 3px #4d6b58, inset 0 0 18px #1d2e24;
       position: relative;
-      flex-shrink: 0;
-      width: fit-content;
+      flex-grow: 1;
+      width: 100%;
+      height: 100%;
+      /* 保持正方形，如果不允许滚屏，限制最大宽高 */
+      max-width: min(100vw - 40px, 100vh - 120px);
+      max-height: min(100vw - 40px, 100vh - 120px);
+      aspect-ratio: 1;
       margin: 0 auto;
+      /* 确保连线可以溢出边界显示 */
+      overflow: visible; 
     }
+    
+    /* 画布覆盖整个网格容器，支持外框连线 */
     #lineCanvas {
       position: absolute;
       top: 0;
@@ -108,103 +146,55 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 30;
+      z-index: 10;
     }
+
     .cell {
-      /* 核心自适应：同时考虑高度与宽度 */
-      width: clamp(28px, min(7.5vh, 7.5vw), 66px);
-      height: clamp(28px, min(7.5vh, 7.5vw), 66px);
       background: #ebdfc1;
-      border-radius: min(14px, 1.4vh);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(1rem, min(3.8vh, 3.8vw), 2.4rem);
-      box-shadow: 0 5px 0 #a28d64, 0 7px 12px rgba(0, 0, 0, 0.3);
+      font-size: clamp(1rem, 4vh, 2.2rem);
+      box-shadow: 0 4px 0 #a28d64, 0 5px 8px rgba(0, 0, 0, 0.3);
       cursor: pointer;
-      transition: all 0.06s ease;
+      transition: all 0.05s ease;
       color: #3a2a1a;
       text-shadow: 1px 1px 0 white;
       font-weight: 600;
       transform: translateY(0);
     }
+    
     .cell.empty {
       background: #b9ad8f;
-      box-shadow: inset 0 6px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.2);
       cursor: default;
       color: transparent;
       text-shadow: none;
       transform: translateY(2px);
     }
+    
     .cell.selected {
-      box-shadow: 0 0 0 4px #f9e874, 0 0 0 7px #d4a024, 0 8px 12px black;
-      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 0 0 3px #f9e874, 0 0 0 5px #d4a024, 0 6px 10px black;
+      transform: scale(1.05) translateY(-2px);
       background: #fff3d1;
       z-index: 2;
     }
-    .cell:not(.empty):hover {
-      background: #f7efd0;
-      transform: translateY(-2px);
-      box-shadow: 0 7px 0 #a28d64, 0 10px 16px rgba(0, 0, 0, 0.4);
-    }
-    .footer {
-      display: flex;
-      justify-content: center;
-      margin-top: min(12px, 1.2vh);
-      flex-shrink: 0;
-    }
-    button {
-      background: #d8c9a3;
-      border: none;
-      padding: min(8px, 0.8vh) min(28px, 2.5vw);
-      border-radius: 60px;
-      font-size: clamp(0.9rem, min(2.4vh, 2.4vw), 1.25rem);
-      font-weight: 700;
-      color: #2b3e31;
-      box-shadow: 0 8px 0 #8f7a55, 0 8px 16px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
-      transition: 0.06s linear;
-      letter-spacing: 2px;
-      border: 1px solid #f7efd6;
-      transform: translateY(0);
-    }
-    button:active {
-      box-shadow: 0 3px 0 #8f7a55, 0 5px 12px black;
-      transform: translateY(6px);
-    }
+    
     .message {
       text-align: center;
-      font-size: clamp(0.9rem, min(2.6vh, 2.6vw), 1.4rem);
+      font-size: clamp(0.9rem, min(2.6vh, 2.6vw), 1.2rem);
       font-weight: 600;
       color: #f1e9d0;
       text-shadow: 2px 2px 0 #1a2a20;
-      min-height: 1.6em;
-      margin-top: min(8px, 0.8vh);
-      transition: 0.2s;
+      min-height: 1.2em;
+      margin-top: 8px;
       flex-shrink: 0;
     }
 
-    /* 针对特别矮的屏幕进一步压缩 */
-    @media (max-height: 700px) {
-      .game-wrapper { padding: 8px 12px 12px; border-radius: 24px 24px 18px 18px; }
-      .game-panel { padding: 8px 10px; border-radius: 18px; }
-      .header { padding-bottom: 6px; }
-      .grid-container { gap: 4px; padding: 8px; border-radius: 18px; }
-      .cell { width: clamp(26px, min(7vh, 7vw), 58px); height: clamp(26px, min(7vh, 7vw), 58px); font-size: clamp(0.9rem, min(3.4vh, 3.4vw), 2rem); }
-      .footer { margin-top: 6px; }
-    }
-
-    /* 横屏手机或极窄屏幕 */
-    @media (max-width: 600px) and (max-height: 500px) {
-      .game-wrapper { padding: 4px 6px 8px; border-radius: 16px; }
-      .game-panel { padding: 6px; border-radius: 14px; }
-      .title { font-size: 0.9rem; }
-      .stats { padding: 2px 8px; }
-      .stats span { font-size: 0.75rem; }
-      .grid-container { gap: 3px; padding: 6px; border-radius: 14px; }
-      .cell { width: clamp(22px, min(6.5vh, 6.5vw), 48px); height: clamp(22px, min(6.5vh, 6.5vw), 48px); font-size: clamp(0.8rem, min(3vh, 3vw), 1.6rem); }
-      button { padding: 6px 18px; font-size: 0.8rem; }
-      .message { font-size: 0.8rem; margin-top: 4px; }
+    @media (max-height: 650px) {
+      .grid-container { gap: 3px; padding: 10px; }
+      .cell { font-size: clamp(0.8rem, 3.5vh, 1.8rem); border-radius: 6px; }
     }
   </style>
 </head>
@@ -212,9 +202,12 @@
 <div class="game-wrapper">
   <div class="game-panel">
     <div class="header">
-      <div class="title">🀄 连连看 · 连线</div>
-      <div class="stats">
-        <span>剩余 <span class="value" id="remainCount">64</span></span>
+      <div class="title">🀄 连连看</div>
+      <div class="controls">
+        <div class="stats">
+          剩余 <span class="value" id="remainCount">64</span>
+        </div>
+        <button class="icon-btn" id="resetBtn" title="重新洗牌">🔄</button>
       </div>
     </div>
 
@@ -222,9 +215,6 @@
       <canvas id="lineCanvas"></canvas>
     </div>
 
-    <div class="footer">
-      <button id="resetBtn">🔄 重新洗牌</button>
-    </div>
     <div class="message" id="message"></div>
   </div>
 </div>
@@ -275,132 +265,105 @@
       return board;
     }
 
+    // 支持外框连线的寻路算法
     function getConnectPath(r1, c1, r2, c2) {
       if (r1 === r2 && c1 === c2) return null;
       if (grid[r1][c1] === null || grid[r2][c2] === null) return null;
       if (grid[r1][c1] !== grid[r2][c2]) return null;
 
-      if (r1 === r2) {
-        let minC = Math.min(c1, c2);
-        let maxC = Math.max(c1, c2);
-        let allEmpty = true;
-        for (let cc = minC + 1; cc < maxC; cc++) {
-          if (grid[r1][cc] !== null) { allEmpty = false; break; }
+      // 检查两点之间直线是否通畅 (如果在棋盘内)
+      function checkHorizontalClear(row, colA, colB) {
+        let minC = Math.min(colA, colB);
+        let maxC = Math.max(colA, colB);
+        if (maxC - minC === 1) return true;
+        for (let c = minC + 1; c < maxC; c++) {
+          if (grid[row][c] !== null) return false;
         }
-        if (allEmpty) return [{row:r1, col:c1}, {row:r1, col:c2}];
+        return true;
       }
-      if (c1 === c2) {
-        let minR = Math.min(r1, r2);
-        let maxR = Math.max(r1, r2);
-        let allEmpty = true;
-        for (let rr = minR + 1; rr < maxR; rr++) {
-          if (grid[rr][c1] !== null) { allEmpty = false; break; }
+      
+      function checkVerticalClear(col, rowA, rowB) {
+        let minR = Math.min(rowA, rowB);
+        let maxR = Math.max(rowA, rowB);
+        if (maxR - minR === 1) return true;
+        for (let r = minR + 1; r < maxR; r++) {
+          if (grid[r][col] !== null) return false;
         }
-        if (allEmpty) return [{row:r1, col:c1}, {row:r2, col:c2}];
-      }
-
-      if (grid[r1][c2] === null) {
-        let horizontalClear = true;
-        let minC12 = Math.min(c1, c2);
-        let maxC12 = Math.max(c1, c2);
-        for (let cc = minC12 + 1; cc < maxC12; cc++) {
-          if (grid[r1][cc] !== null) { horizontalClear = false; break; }
-        }
-        let verticalClear = true;
-        let minR12 = Math.min(r1, r2);
-        let maxR12 = Math.max(r1, r2);
-        for (let rr = minR12 + 1; rr < maxR12; rr++) {
-          if (grid[rr][c2] !== null) { verticalClear = false; break; }
-        }
-        if (horizontalClear && verticalClear) {
-          return [{row:r1, col:c1}, {row:r1, col:c2}, {row:r2, col:c2}];
-        }
-      }
-      if (grid[r2][c1] === null) {
-        let horizontalClear = true;
-        let minC21 = Math.min(c1, c2);
-        let maxC21 = Math.max(c1, c2);
-        for (let cc = minC21 + 1; cc < maxC21; cc++) {
-          if (grid[r2][cc] !== null) { horizontalClear = false; break; }
-        }
-        let verticalClear = true;
-        let minR21 = Math.min(r1, r2);
-        let maxR21 = Math.max(r1, r2);
-        for (let rr = minR21 + 1; rr < maxR21; rr++) {
-          if (grid[rr][c1] !== null) { verticalClear = false; break; }
-        }
-        if (horizontalClear && verticalClear) {
-          return [{row:r1, col:c1}, {row:r2, col:c1}, {row:r2, col:c2}];
-        }
+        return true;
       }
 
-      for (let rr = 0; rr < ROWS; rr++) {
-        if (rr === r1 || rr === r2) continue;
-        if (grid[rr][c1] !== null || grid[rr][c2] !== null) continue;
+      // 1. 直线连通
+      if (r1 === r2 && checkHorizontalClear(r1, c1, c2)) {
+        return [{row:r1, col:c1}, {row:r1, col:c2}];
+      }
+      if (c1 === c2 && checkVerticalClear(c1, r1, r2)) {
+        return [{row:r1, col:c1}, {row:r2, col:c2}];
+      }
 
-        let vert1Clear = true;
-        let minR1 = Math.min(r1, rr);
-        let maxR1 = Math.max(r1, rr);
-        for (let rrr = minR1 + 1; rrr < maxR1; rrr++) {
-          if (grid[rrr][c1] !== null) { vert1Clear = false; break; }
-        }
-        if (!vert1Clear) continue;
+      // 2. 一次折角连通
+      if (grid[r1][c2] === null && checkHorizontalClear(r1, c1, c2) && checkVerticalClear(c2, r1, r2)) {
+        return [{row:r1, col:c1}, {row:r1, col:c2}, {row:r2, col:c2}];
+      }
+      if (grid[r2][c1] === null && checkHorizontalClear(r2, c1, c2) && checkVerticalClear(c1, r1, r2)) {
+        return [{row:r1, col:c1}, {row:r2, col:c1}, {row:r2, col:c2}];
+      }
 
-        let horzClear = true;
-        let minC = Math.min(c1, c2);
-        let maxC = Math.max(c1, c2);
-        for (let cc = minC + 1; cc < maxC; cc++) {
-          if (grid[rr][cc] !== null) { horzClear = false; break; }
+      // 3. 两次折角连通（包含外框绕行）
+      for (let i = 0; i <= ROWS + 1; i++) {
+        let vr = (i === 0) ? -1 : (i === ROWS + 1 ? ROWS : i - 1);
+        if (vr >= 0 && vr < ROWS && (vr === r1 || vr === r2)) continue;
+        
+        let vClear1 = true, vClear2 = true;
+        let minVR = Math.min(r1, vr), maxVR = Math.max(r1, vr);
+        for(let r = minVR + 1; r < maxVR; r++) {
+          if (r >= 0 && r < ROWS && grid[r][c1] !== null) { vClear1 = false; break; }
         }
-        if (!horzClear) continue;
+        let minVR2 = Math.min(r2, vr), maxVR2 = Math.max(r2, vr);
+        for(let r = minVR2 + 1; r < maxVR2; r++) {
+          if (r >= 0 && r < ROWS && grid[r][c2] !== null) { vClear2 = false; break; }
+        }
+        
+        let hClear = true;
+        let minC = Math.min(c1, c2), maxC = Math.max(c1, c2);
+        for(let c = minC + 1; c < maxC; c++) {
+          if (vr >= 0 && vr < ROWS && grid[vr][c] !== null) { hClear = false; break; }
+        }
 
-        let vert2Clear = true;
-        let minR2 = Math.min(rr, r2);
-        let maxR2 = Math.max(rr, r2);
-        for (let rrr = minR2 + 1; rrr < maxR2; rrr++) {
-          if (grid[rrr][c2] !== null) { vert2Clear = false; break; }
-        }
-        if (vert2Clear) {
+        if (vClear1 && vClear2 && hClear) {
           return [
             {row:r1, col:c1},
-            {row:rr, col:c1},
-            {row:rr, col:c2},
+            {row:vr, col:c1},
+            {row:vr, col:c2},
             {row:r2, col:c2}
           ];
         }
       }
 
-      for (let cc = 0; cc < COLS; cc++) {
-        if (cc === c1 || cc === c2) continue;
-        if (grid[r1][cc] !== null || grid[r2][cc] !== null) continue;
+      for (let i = 0; i <= COLS + 1; i++) {
+        let vc = (i === 0) ? -1 : (i === COLS + 1 ? COLS : i - 1);
+        if (vc >= 0 && vc < COLS && (vc === c1 || vc === c2)) continue;
 
-        let horz1Clear = true;
-        let minC1 = Math.min(c1, cc);
-        let maxC1 = Math.max(c1, cc);
-        for (let ccc = minC1 + 1; ccc < maxC1; ccc++) {
-          if (grid[r1][ccc] !== null) { horz1Clear = false; break; }
+        let hClear1 = true, hClear2 = true;
+        let minVC = Math.min(c1, vc), maxVC = Math.max(c1, vc);
+        for(let c = minVC + 1; c < maxVC; c++) {
+          if (c >= 0 && c < COLS && grid[r1][c] !== null) { hClear1 = false; break; }
         }
-        if (!horz1Clear) continue;
+        let minVC2 = Math.min(c2, vc), maxVC2 = Math.max(c2, vc);
+        for(let c = minVC2 + 1; c < maxVC2; c++) {
+          if (c >= 0 && c < COLS && grid[r2][c] !== null) { hClear2 = false; break; }
+        }
 
-        let vertClear = true;
-        let minR = Math.min(r1, r2);
-        let maxR = Math.max(r1, r2);
-        for (let rrr = minR + 1; rrr < maxR; rrr++) {
-          if (grid[rrr][cc] !== null) { vertClear = false; break; }
+        let vClear = true;
+        let minR = Math.min(r1, r2), maxR = Math.max(r1, r2);
+        for(let r = minR + 1; r < maxR; r++) {
+          if (vc >= 0 && vc < COLS && grid[r][vc] !== null) { vClear = false; break; }
         }
-        if (!vertClear) continue;
 
-        let horz2Clear = true;
-        let minC2 = Math.min(cc, c2);
-        let maxC2 = Math.max(cc, c2);
-        for (let ccc = minC2 + 1; ccc < maxC2; ccc++) {
-          if (grid[r2][ccc] !== null) { horz2Clear = false; break; }
-        }
-        if (horz2Clear) {
+        if (hClear1 && hClear2 && vClear) {
           return [
             {row:r1, col:c1},
-            {row:r1, col:cc},
-            {row:r2, col:cc},
+            {row:r1, col:vc},
+            {row:r2, col:vc},
             {row:r2, col:c2}
           ];
         }
@@ -422,24 +385,30 @@
       ctx.clearRect(0, 0, canvasRect.width, canvasRect.height);
 
       const cell = gridContainer.querySelector('.cell');
-      let cellWidth = 66, cellHeight = 66, gap = 8;
-      if (cell) {
-        const cellRect = cell.getBoundingClientRect();
-        cellWidth = cellRect.width;
-        cellHeight = cellRect.height;
-        const gridStyle = getComputedStyle(gridContainer);
-        gap = parseFloat(gridStyle.gap) || 8;
-      }
-
-      // Canvas 起点在棋盘 padding 内侧，所以计算时以 padding 内部左上角为原点
+      if (!cell) return;
+      
+      const cellRect = cell.getBoundingClientRect();
+      const cellWidth = cellRect.width;
+      const cellHeight = cellRect.height;
+      
       const gridStyle = getComputedStyle(gridContainer);
-      const padding = parseFloat(gridStyle.paddingLeft) || 0;
+      const gap = parseFloat(gridStyle.gap) || 4;
+      const pLeft = parseFloat(gridStyle.paddingLeft) || 0;
+      const pTop = parseFloat(gridStyle.paddingTop) || 0;
 
+      // 核心修正：处理 border 边界外的坐标 (-1 或 ROWS/COLS)
+      // 利用 cellWidth 和 gap 外推坐标，使线条正好画在边界之外。
       function getCellCenter(row, col) {
-        return {
-          x: col * (cellWidth + gap) + cellWidth / 2,
-          y: row * (cellHeight + gap) + cellHeight / 2
-        };
+        let x = pLeft + col * (cellWidth + gap) + cellWidth / 2;
+        let y = pTop + row * (cellHeight + gap) + cellHeight / 2;
+        
+        // 处理外边框绕行时的特殊坐标
+        if (row === -1) y = pTop - gap - 4; // 上方外框
+        if (row === ROWS) y = pTop + ROWS * (cellHeight + gap) - gap + 4; // 下方外框
+        if (col === -1) x = pLeft - gap - 4; // 左侧外框
+        if (col === COLS) x = pLeft + COLS * (cellWidth + gap) - gap + 4; // 右侧外框
+
+        return { x, y };
       }
 
       const points = path.map(p => getCellCenter(p.row, p.col));
@@ -447,25 +416,27 @@
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       
+      // 外发光
       ctx.beginPath();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 8;
       ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 10;
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      // 主线条
+      ctx.beginPath();
+      ctx.strokeStyle = '#ffd966';
+      ctx.lineWidth = 5;
+      ctx.shadowColor = '#f0b400';
       ctx.shadowBlur = 12;
       ctx.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.strokeStyle = '#ffd966';
-      ctx.lineWidth = 5;
-      ctx.shadowColor = '#f0b400';
-      ctx.shadowBlur = 14;
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-      ctx.stroke();
-
-      ctx.shadowBlur = 8;
+      // 折点
       points.forEach((p, idx) => {
         if (idx !== 0 && idx !== points.length - 1) {
           ctx.beginPath();
@@ -478,6 +449,7 @@
         }
       });
       
+      // 首尾点
       [points[0], points[points.length-1]].forEach(p => {
         ctx.beginPath();
         ctx.fillStyle = '#ffe484';
@@ -493,7 +465,7 @@
       lineTimer = setTimeout(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lineTimer = null;
-      }, 350);
+      }, 300);
     }
 
     function renderBoard() {

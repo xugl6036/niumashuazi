@@ -102,11 +102,18 @@
             transform: translateY(3px);
         }
 
+        /* ---------- 修改点：统一高度布局 ---------- */
         .board-wrapper {
             position: relative;
             overflow-x: auto;
             max-width: 100%;
             padding-bottom: 4px;
+            /* 设定一个统一的最小高度，保证任何难度切换时高度不抖动 */
+            /* 高级模式棋盘高度 = 16行 * 28px + 边框阴影部分(约24px) = 472px */
+            min-height: 472px; 
+            display: flex;
+            align-items: center; /* 让内部棋盘垂直居中 */
+            justify-content: center;
         }
 
         .board {
