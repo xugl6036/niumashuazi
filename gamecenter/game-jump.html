@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小恐龙跳跃 · 谷歌断网游戏</title>
+    <style>
+        :root {
+            /* 浅色主题变量 */
+            --bg-gradient: linear-gradient(160deg, #f1f3f4 0%, #e8eaed 100%);
+            --text-main: #202124;
+            --text-sub: #5f6368;
+            --panel-bg: #ffffff;
+            --panel-shadow: 0 4px 12px rgba(60, 64, 67, 0.08);
+            --canvas-shadow: 0 8px 24px rgba(60, 64, 67, 0.12);
+            --kbd-bg: #fff;
+            --kbd-border: #dadce0;
+            --kbd-text: #3c4043;
+            --btn-primary: #1a73e8;
+            --btn-primary-hover: #1765cc;
+            
+            /* 主题按钮：浅色状态下的深色按钮 */
+            --theme-btn-bg: #3c4043;
+            --theme-btn-text: #ffffff;
+            --theme-btn-hover: #202124;
+        }
+
+        body.dark-mode {
+            /* 深色主题变量 */
+            --bg-gradient: linear-gradient(160deg, #202124 0%, #171717 100%);
+            --text-main: #e8eaed;
+            --text-sub: #9aa0a6;
+            --panel-bg: #2d2e31;
+            --panel-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --canvas-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            --kbd-bg: #3c4043;
+            --kbd-border: #5f6368;
+            --kbd-text: #e8eaed;
+            --btn-primary: #8ab4f8;
+            --btn-primary-hover: #aecbfa;
+            
+            /* 主题按钮：深色状态下的浅色按钮 */
+            --theme-btn-bg: #f1f3f4;
+            --theme-btn-text: #202124;
+            --theme-btn-hover: #e8eaed;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: var(--bg-gradient);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .layout-container {
+            display: flex;
+            align-items: stretch;
+            gap: 24px;
+            max-width: 1100px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .game-area { flex: 1; max-width: 760px; display: flex; flex-direction: column; }
+
+        .canvas-container {
+            background-color: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--canvas-shadow);
+            width: 100%;
+            transition: box-shadow 0.3s ease;
+        }
+
+        canvas { display: block; width: 100%; height: auto; background-color: #fff; cursor: pointer; border-radius: 16px; }
+
+        .side-panel { width: 280px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
+
+        .score-panel {
+            background: var(--panel-bg); border-radius: 16px; padding: 20px;
+            box-shadow: var(--panel-shadow); display: flex; flex-direction: column; gap: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .score-item { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--kbd-border); }
+        .score-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .score-label-group { display: flex; align-items: center; gap: 10px; color: var(--text-sub); font-size: 13px; font-weight: 600; }
+        .score-icon { font-size: 22px; }
+        .score-value { font-size: 24px; font-weight: 700; color: var(--text-main); font-family: 'Courier New', monospace; }
+
+        .btn {
+            border: none; border-radius: 10px; padding: 0 12px; font-size: 14px; font-weight: 600;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
+            transition: all 0.2s ease; width: 100%; height: 44px;
+            white-space: nowrap; /* 防止文字换行 */
+        }
+
+        .btn-primary { background: var(--btn-primary); color: #fff; box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3); }
+        .btn-primary:hover { background: var(--btn-primary-hover); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        /* 布局区域调整 */
+        .actions-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 上方两个按钮并排 */
+        .action-top-row {
+            display: flex;
+            gap: 12px;
+        }
+        .action-top-row .btn {
+            flex: 1; /* 保证等宽 */
+        }
+
+        /* 玩法按钮（继承基础按钮，但视觉上更像次级按钮） */
+        .btn-help {
+            background: var(--panel-bg); 
+            color: var(--text-main); 
+            border: 1px solid var(--kbd-border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .btn-help:hover {
+            background: var(--kbd-bg);
+            transform: translateY(-1px);
+        }
+
+        /* 主题切换按钮 */
+        .btn-theme {
+            background: var(--theme-btn-bg);
+            color: var(--theme-btn-text);
+        }
+        .btn-theme:hover {
+            background: var(--theme-btn-hover);
+            transform: translateY(-1px);
+        }
+
+        /* 模态框 (玩法说明) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 24px;
+            width: 90%;
+            max-width: 340px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.2s ease;
+            color: var(--text-main);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hint-row { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 14px; 
+            color: var(--text-sub); 
+            margin-bottom: 16px; 
+            line-height: 1.5;
+        }
+
+        .hint-row:last-child { margin-bottom: 0; }
+
+        kbd {
+            background-color: var(--kbd-bg); 
+            border: 1px solid var(--kbd-border); 
+            border-radius: 6px;
+            padding: 3px 8px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px;
+            color: var(--kbd-text); 
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); 
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .modal-close-btn {
+            margin-top: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .layout-container { flex-direction: column; align-items: center; gap: 16px; }
+            .side-panel { width: 100%; max-width: 760px; }
+            .score-panel { flex-direction: row; justify-content: space-around; }
+            .score-item { border-bottom: none; padding-bottom: 0; flex-direction: column; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-container">
+        <div class="game-area">
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="720" height="280"></canvas>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <!-- 记分板 -->
+            <div class="score-panel">
+                <div class="score-item">
+                    <div class="score-label-group">
+                        <span class="score-icon">🏆</span>
+                        <span>最高分</span>
+                    </div>
+                    <div class="score-value" id="highScoreDisplay">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label-group">
+                        <span class="score-icon">🎯</span>
+                        <span>当前分</span>
+                    </div>
+                    <div class="score-value" id="scoreDisplay">0</div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="actions-panel">
+                <!-- 上排：玩法和深色/浅色 (等宽) -->
+                <div class="action-top-row">
+                    <button class="btn btn-help" id="helpBtn">
+                        💡 玩法
+                    </button>
+                    <button class="btn btn-theme" id="themeBtn">
+                        🌙 深色
+                    </button>
+                </div>
+                <!-- 下排：重新开始 -->
+                <button class="btn btn-primary" id="restartBtn">
+                    🔄 重新开始
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 玩法弹窗 -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-title">💡 玩法说明</div>
+            <div class="hint-row">
+                <kbd>空格</kbd> <span>或</span> <kbd>↑</kbd> <span>跳跃</span>
+            </div>
+            <div class="hint-row">
+                <kbd>↓</kbd> <span>下蹲 (空中按下快速下落)</span>
+            </div>
+            <div class="hint-row">
+                <span>👆 点击屏幕或画布也能跳跃</span>
+            </div>
+            <div class="hint-row">
+                <span>空中可以再跳跃一次（二段补救）</span>
+            </div>
+            <button class="btn btn-primary modal-close-btn" id="closeHelpBtn">我知道了</button>
+        </div>
+    </div>
+
+<script>
+    (function() {
+        // ---------- 模态框控制 ----------
+        const helpModal = document.getElementById('helpModal');
+        const helpBtn = document.getElementById('helpBtn');
+        const closeHelpBtn = document.getElementById('closeHelpBtn');
+
+        helpBtn.addEventListener('click', () => helpModal.classList.add('active'));
+        closeHelpBtn.addEventListener('click', () => helpModal.classList.remove('active'));
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.classList.remove('active');
+        });
+
+        // ---------- 主题切换逻辑 ----------
+        const themeBtn = document.getElementById('themeBtn');
+        const body = document.body;
+        
+        // 检查本地存储
+        const savedTheme = localStorage.getItem('dinoTheme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            themeBtn.innerHTML = '☀️ 浅色';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            themeBtn.innerHTML = isDark ? '☀️ 浅色' : '🌙 深色';
+            localStorage.setItem('dinoTheme', isDark ? 'dark' : 'light');
+        });
+
+        // ---------- 游戏设置 ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const W = 720, H = 280;
+        canvas.width = W; canvas.height = H;
+
+        const GROUND_Y = 222;
+        const GRAVITY = 0.62;
+        const JUMP_FORCE = -13.2;
+        const MIN_OBSTACLE_GAP = 210;
+        const MAX_OBSTACLE_GAP = 400;
+        const BASE_SPEED = 5.2;
+        const MAX_SPEED = 12.5;
+        const SPEED_INCREMENT = 0.0005;
+
+        const DINO_WIDTH = 46;
+        const DINO_HEIGHT = 50;
+        const DINO_STAND_Y = GROUND_Y - DINO_HEIGHT;
+        const DUCK_WIDTH = 58;
+        const DUCK_HEIGHT = 30;
+        const DUCK_Y = GROUND_Y - DUCK_HEIGHT;
+
+        let dino = {};
+        let obstacles = [], clouds = [], groundBumps = [];
+        let gameSpeed = BASE_SPEED, score = 0, highScore = 0;
+        let frameCount = 0, isGameOver = false, isStarted = false, deathFlash = 0;
+
+        try {
+            const savedScore = localStorage.getItem('dinoHighScore');
+            if (savedScore) highScore = parseInt(savedScore, 10) || 0;
+        } catch (e) {}
+        highScoreDisplay.textContent = highScore;
+
+        function initClouds() {
+            clouds = [];
+            for (let i = 0; i < 6; i++) {
+                clouds.push({ x: Math.random() * W, y: 25 + Math.random() * 95, speed: 0.2 + Math.random() * 0.4, scale: 0.5 + Math.random() * 0.7, alpha: 0.4 + Math.random() * 0.4 });
+            }
+        }
+
+        function initGroundBumps() {
+            groundBumps = [];
+            for (let i = 0; i < 40; i++) {
+                groundBumps.push({ x: Math.random() * W, y: GROUND_Y + 8 + Math.random() * 24, w: 2 + Math.random() * 10, h: 1 + Math.random() * 3, alpha: 0.3 + Math.random() * 0.4 });
+            }
+        }
+
+        function resetGame() {
+            // 加入 hasDoubleJumped 标记
+            dino = { x: 80, y: DINO_STAND_Y, width: DINO_WIDTH, height: DINO_HEIGHT, vy: 0, isJumping: false, isDucking: false, isDead: false, legFrame: 0, hasDoubleJumped: false };
+            obstacles = []; gameSpeed = BASE_SPEED; score = 0; frameCount = 0; isGameOver = false; isStarted = false; deathFlash = 0;
+            generateInitialObstacles(); initClouds(); initGroundBumps(); updateScoreDisplay();
+        }
+
+        function generateInitialObstacles() {
+            obstacles = [];
+            let firstX = 580;
+            obstacles.push(createObstacle(firstX, 'small'));
+            let secondX = firstX + MIN_OBSTACLE_GAP + Math.random() * 100;
+            obstacles.push(createObstacle(secondX, Math.random() > 0.5 ? 'small' : 'large'));
+        }
+
+        function createObstacle(x, type) {
+            if (type === 'small') return { x: x, y: GROUND_Y - 26, width: 18, height: 26, type: 'small' };
+            return { x: x, y: GROUND_Y - 42, width: 24, height: 42, type: 'large' };
+        }
+
+        function spawnObstacle() {
+            const lastObs = obstacles[obstacles.length - 1];
+            if (!lastObs) { obstacles.push(createObstacle(W + 120, 'small')); return; }
+            const difficultyFactor = Math.min(1, score / 600);
+            const minGap = MIN_OBSTACLE_GAP * (1 - difficultyFactor * 0.2);
+            const maxGap = MAX_OBSTACLE_GAP * (1 - difficultyFactor * 0.25);
+            const gap = minGap + Math.random() * (maxGap - minGap);
+            const newX = lastObs.x + gap;
+            let type = 'small';
+            if (Math.random() < 0.3 + difficultyFactor * 0.2) type = 'large';
+            obstacles.push(createObstacle(newX, type));
+        }
+
+        function updateScoreDisplay() {
+            const displayScore = Math.floor(score);
+            scoreDisplay.textContent = displayScore;
+            if (displayScore > highScore) {
+                highScore = displayScore;
+                highScoreDisplay.textContent = highScore;
+                try { localStorage.setItem('dinoHighScore', highScore); } catch (e) {}
+            }
+        }
+
+        function jump() {
+            if (isGameOver) { resetGame(); return; }
+            if (!isStarted) isStarted = true;
+            if (dino.isDucking) stopDuck();
+            
+            if (!dino.isJumping) {
+                dino.vy = JUMP_FORCE;
+                dino.isJumping = true;
+                dino.isDucking = false;
+                dino.height = DINO_HEIGHT;
+                dino.width = DINO_WIDTH;
+                dino.hasDoubleJumped = false;
+            } else if (!dino.hasDoubleJumped) {
+                dino.vy = JUMP_FORCE * 0.85;
+                dino.hasDoubleJumped = true;
+            }
+        }
+
+        function startDuck() {
+            if (isGameOver || !isStarted) return;
+            if (dino.isJumping) {
+                if (dino.vy < 0) dino.vy = 2;
+                else dino.vy += 4;
+                return;
+            }
+            if (!dino.isDucking) {
+                dino.isDucking = true;
+                dino.height = DUCK_HEIGHT;
+                dino.width = DUCK_WIDTH;
+                dino.y = DUCK_Y;
+            }
+        }
+
+        function stopDuck() {
+            if (dino.isDucking && !dino.isJumping) {
+                dino.isDucking = false;
+                dino.height = DINO_HEIGHT;
+                dino.width = DINO_WIDTH;
+                dino.y = DINO_STAND_Y;
+            }
+        }
+
+        function update() {
+            if (isGameOver) { if (deathFlash > 0) deathFlash -= 0.04; return; }
+            if (!isStarted) return;
+
+            gameSpeed = Math.min(MAX_SPEED, BASE_SPEED + score * SPEED_INCREMENT);
+
+            if (dino.isJumping) {
+                dino.vy += GRAVITY;
+                dino.y += dino.vy;
+                if (dino.y >= DINO_STAND_Y) {
+                    dino.y = DINO_STAND_Y;
+                    dino.vy = 0;
+                    dino.isJumping = false;
+                    dino.hasDoubleJumped = false;
+                    dino.height = DINO_HEIGHT;
+                    dino.width = DINO_WIDTH;
+                    if (dino.isDucking) {
+                        dino.height = DUCK_HEIGHT;
+                        dino.width = DUCK_WIDTH;
+                        dino.y = DUCK_Y;
+                    }
+                }
+            } else if (dino.isDucking) {
+                dino.height = DUCK_HEIGHT;
+                dino.width = DUCK_WIDTH;
+                dino.y = DUCK_Y;
+            } else {
+                dino.height = DINO_HEIGHT;
+                dino.width = DINO_WIDTH;
+                dino.y = DINO_STAND_Y;
+            }
+
+            if (!dino.isJumping && !dino.isDucking) dino.legFrame = (dino.legFrame + 0.22) % 2;
+            else if (dino.isDucking) dino.legFrame = (dino.legFrame + 0.08) % 2;
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i]; obs.x -= gameSpeed;
+                if (obs.x + obs.width < -60) obstacles.splice(i, 1);
+            }
+
+            if (obstacles.length > 0) {
+                const last = obstacles[obstacles.length - 1];
+                if (last.x < W - 160) spawnObstacle();
+            } else { spawnObstacle(); }
+
+            const dinoHitbox = { x: dino.x + 7, y: dino.y + 5, w: dino.width - 14, h: dino.height - 10 };
+            for (const obs of obstacles) {
+                const obsHitbox = { x: obs.x + 5, y: obs.y + 5, w: obs.width - 10, h: obs.height - 10 };
+                if (rectCollide(dinoHitbox.x, dinoHitbox.y, dinoHitbox.w, dinoHitbox.h, obsHitbox.x, obsHitbox.y, obsHitbox.w, obsHitbox.h)) {
+                    isGameOver = true; dino.isDead = true; deathFlash = 1; break;
+                }
+            }
+
+            if (!isGameOver) { score += gameSpeed * 0.028; updateScoreDisplay(); }
+
+            for (const cloud of clouds) {
+                cloud.x -= cloud.speed * (gameSpeed / BASE_SPEED) * 0.7;
+                if (cloud.x < -120) {
+                    cloud.x = W + 80; cloud.y = 20 + Math.random() * 100; cloud.scale = 0.5 + Math.random() * 0.7; cloud.alpha = 0.4 + Math.random() * 0.4;
+                }
+            }
+
+            for (const bump of groundBumps) {
+                bump.x -= gameSpeed * 0.55;
+                if (bump.x < -12) { bump.x = W + Math.random() * 40; bump.y = GROUND_Y + 8 + Math.random() * 24; }
+            }
+            frameCount++;
+        }
+
+        function rectCollide(x1, y1, w1, h1, x2, y2, w2, h2) {
+            return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+        }
+
+        function draw() {
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#fafbfc'); bgGrad.addColorStop(0.7, '#f8f9fa'); bgGrad.addColorStop(1, '#f1f3f4');
+            ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+
+            for (const cloud of clouds) { ctx.globalAlpha = cloud.alpha; drawCloud(cloud.x, cloud.y, cloud.scale); }
+            ctx.globalAlpha = 1;
+
+            ctx.fillStyle = '#e8eaed'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+            ctx.fillStyle = '#dadce0'; ctx.fillRect(0, GROUND_Y, W, 2);
+
+            for (const bump of groundBumps) { ctx.globalAlpha = bump.alpha; ctx.fillStyle = '#d2d5d9'; ctx.fillRect(bump.x, bump.y, bump.w, bump.h); }
+            ctx.globalAlpha = 1;
+
+            for (const obs of obstacles) drawCactus(obs);
+
+            if (!dino.isDead) drawDino(); else drawDeadDino();
+
+            if (deathFlash > 0) { ctx.fillStyle = `rgba(255, 60, 60, ${deathFlash * 0.25})`; ctx.fillRect(0, 0, W, H); }
+
+            if (isGameOver) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.78)'; ctx.fillRect(0, 0, W, H);
+                const cardW = 280, cardH = 140, cardX = (W - cardW) / 2, cardY = (H - cardH) / 2;
+                ctx.shadowColor = 'rgba(60, 64, 67, 0.15)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 6;
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(cardX, cardY, cardW, cardH, 18); ctx.fill();
+                ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
+
+                ctx.font = '600 22px -apple-system, sans-serif'; ctx.fillStyle = '#202124'; ctx.textAlign = 'center';
+                ctx.fillText('游戏结束', W / 2, cardY + 50);
+                ctx.font = '15px -apple-system, sans-serif'; ctx.fillStyle = '#5f6368';
+                ctx.fillText('得分  ' + Math.floor(score), W / 2, cardY + 82);
+                ctx.font = '13px -apple-system, sans-serif'; ctx.fillStyle = '#9aa0a6';
+                ctx.fillText('按空格或点击重新开始', W / 2, cardY + 114);
+                ctx.textAlign = 'left';
+            }
+
+            if (!isStarted && !isGameOver) {
+                ctx.font = '14px -apple-system, sans-serif'; ctx.fillStyle = '#9aa0a6'; ctx.textAlign = 'center';
+                ctx.fillText('按空格或点击屏幕开始', W / 2, H / 2 - 10); ctx.textAlign = 'left';
+            }
+        }
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+                this.moveTo(x + r, y); this.lineTo(x + w - r, y); this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r); this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h); this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r); this.quadraticCurveTo(x, y, x + r, y); return this;
+            };
+        }
+
+        function drawCloud(x, y, scale) {
+            const s = scale; ctx.fillStyle = '#ffffff'; ctx.beginPath();
+            ctx.arc(x, y, 16 * s, 0, Math.PI * 2); ctx.arc(x + 18 * s, y - 7 * s, 20 * s, 0, Math.PI * 2);
+            ctx.arc(x + 40 * s, y, 14 * s, 0, Math.PI * 2); ctx.arc(x + 22 * s, y + 5 * s, 16 * s, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawCactus(obs) {
+            const x = obs.x, y = obs.y, w = obs.width, h = obs.height;
+            ctx.fillStyle = 'rgba(60, 64, 67, 0.06)'; ctx.beginPath(); ctx.ellipse(x + w / 2, GROUND_Y + 4, w * 0.9, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+            if (obs.type === 'small') {
+                ctx.fillStyle = '#34a853';
+                ctx.beginPath(); ctx.roundRect(x + w * 0.22, y, w * 0.56, h, 6); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x, y + h * 0.32, w * 0.22, h * 0.32, 4); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x + w * 0.78, y + h * 0.22, w * 0.22, h * 0.38, 4); ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'; ctx.beginPath(); ctx.roundRect(x + w * 0.28, y + 5, w * 0.14, h - 12, 4); ctx.fill();
+                ctx.fillStyle = '#1e7e34'; ctx.fillRect(x + w * 0.18, y + h * 0.18, 3, 5); ctx.fillRect(x + w * 0.64, y + h * 0.12, 3, 5);
+            } else {
+                ctx.fillStyle = '#34a853';
+                ctx.beginPath(); ctx.roundRect(x + 2, y + 8, w * 0.38, h - 8, 7); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x + w * 0.6, y, w * 0.38, h, 7); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x + w * 0.32, y + h * 0.42, w * 0.36, h * 0.26, 5); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x - 4, y + h * 0.5, w * 0.28, h * 0.22, 4); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x + w * 0.84, y + h * 0.28, w * 0.24, h * 0.28, 4); ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.beginPath(); ctx.roundRect(x + 8, y + 14, w * 0.14, h - 26, 4); ctx.fill();
+                ctx.beginPath(); ctx.roundRect(x + w * 0.66, y + 6, w * 0.12, h - 14, 4); ctx.fill();
+                ctx.fillStyle = '#1e7e34'; ctx.fillRect(x + 4, y + h * 0.24, 3, 6); ctx.fillRect(x + w * 0.7, y + h * 0.16, 3, 6);
+            }
+        }
+
+        function drawDino() {
+            const x = dino.x, y = dino.y, w = dino.width, h = dino.height;
+            if (!dino.isJumping) {
+                ctx.fillStyle = 'rgba(60, 64, 67, 0.08)'; ctx.beginPath(); ctx.ellipse(x + w / 2, GROUND_Y + 2, w * 0.6, 4, 0, 0, Math.PI * 2); ctx.fill();
+            }
+            const bodyColor = '#34a853', bodyDark = '#1e7e34', bodyLight = '#5bbd72';
+
+            if (dino.isDucking) {
+                // 下蹲形态
+                ctx.fillStyle = bodyColor; ctx.beginPath(); ctx.ellipse(x + w * 0.5, y + h * 0.55, w * 0.5, h * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(x + w * 0.82, y + h * 0.42, w * 0.26, h * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(x + w * 0.15, y + h * 0.5); ctx.quadraticCurveTo(x - 10, y + h * 0.3, x - 16, y + h * 0.5); ctx.quadraticCurveTo(x - 10, y + h * 0.7, x + w * 0.15, y + h * 0.6); ctx.fill();
+                ctx.fillStyle = bodyLight; ctx.beginPath(); ctx.ellipse(x + w * 0.4, y + h * 0.35, w * 0.2, h * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x + w * 0.92, y + h * 0.3, 5.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#202124'; ctx.beginPath(); ctx.arc(x + w * 0.94, y + h * 0.3, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x + w * 0.935, y + h * 0.285, 1.2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = bodyDark; ctx.beginPath(); ctx.roundRect(x + w * 0.3, y + h - 6, 8, 6, 2); ctx.fill(); ctx.beginPath(); ctx.roundRect(x + w * 0.6, y + h - 6, 8, 6, 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(x + w * 0.65, y + h * 0.52, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+            } else if (!dino.isJumping) {
+                // 奔跑形态
+                const legOffset = Math.sin(dino.legFrame * Math.PI) * 5;
+                ctx.fillStyle = bodyDark; ctx.beginPath(); ctx.roundRect(x + 10, y + h - 8 + legOffset, 9, 14, 3); ctx.fill();
+                ctx.beginPath(); 
+                ctx.roundRect(x + 26, y + h - 8 - legOffset, 9, 14, 3); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyColor; 
+                ctx.beginPath(); 
+                ctx.moveTo(x + 4, y + h * 0.5); 
+                ctx.quadraticCurveTo(x - 14, y + h * 0.25, x - 22, y + h * 0.45); 
+                ctx.quadraticCurveTo(x - 14, y + h * 0.7, x + 4, y + h * 0.65); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.45, y + h * 0.4, w * 0.4, h * 0.36, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyLight; 
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.38, y + h * 0.28, w * 0.2, h * 0.16, -0.2, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyColor; 
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.78, y + h * 0.28, w * 0.24, h * 0.28, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.96, y + h * 0.28, w * 0.07, h * 0.11, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.84, y + h * 0.2, 5.5, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#202124'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.86, y + h * 0.2, 3, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.855, y + h * 0.185, 1.2, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyDark; 
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.55, y + h * 0.45, 11, 4, -0.2, 0, Math.PI * 2); 
+                ctx.fill();
+            } else {
+                // === 跳跃形态 ===
+                ctx.fillStyle = bodyColor; 
+                ctx.beginPath(); 
+                ctx.moveTo(x + 4, y + h * 0.5); 
+                ctx.quadraticCurveTo(x - 14, y + h * 0.25, x - 20, y + h * 0.45); 
+                ctx.quadraticCurveTo(x - 14, y + h * 0.68, x + 4, y + h * 0.6); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.45, y + h * 0.42, w * 0.4, h * 0.34, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyLight; 
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.36, y + h * 0.3, w * 0.18, h * 0.14, -0.2, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyColor; 
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.78, y + h * 0.26, w * 0.24, h * 0.27, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.96, y + h * 0.26, w * 0.07, h * 0.1, 0, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.84, y + h * 0.18, 5.5, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#202124'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.86, y + h * 0.18, 3, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = '#ffffff'; 
+                ctx.beginPath(); 
+                ctx.arc(x + w * 0.855, y + h * 0.165, 1.2, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = bodyDark; 
+                ctx.beginPath(); 
+                ctx.roundRect(x + 12, y + h - 6, 9, 12, 3); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.roundRect(x + 28, y + h - 10, 9, 14, 3); 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.ellipse(x + w * 0.55, y + h * 0.46, 11, 4, 0.4, 0, Math.PI * 2); 
+                ctx.fill();
+            }
+        }
+
+        // 绘制死亡恐龙
+        function drawDeadDino() {
+            const x = dino.x, y = dino.y, w = dino.width, h = dino.height;
+            const bodyColor = '#34a853', bodyDark = '#1e7e34';
+
+            ctx.fillStyle = bodyDark;
+            ctx.beginPath(); ctx.roundRect(x + 10, y + h - 8, 9, 14, 3); ctx.fill();
+            ctx.beginPath(); ctx.roundRect(x + 26, y + h - 8, 9, 14, 3); ctx.fill();
+
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath(); 
+            ctx.moveTo(x + 4, y + h * 0.5); 
+            ctx.quadraticCurveTo(x - 14, y + h * 0.25, x - 22, y + h * 0.45); 
+            ctx.quadraticCurveTo(x - 14, y + h * 0.7, x + 4, y + h * 0.65);
+            ctx.fill();
+
+            ctx.beginPath(); ctx.ellipse(x + w * 0.45, y + h * 0.4, w * 0.4, h * 0.36, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(x + w * 0.78, y + h * 0.28, w * 0.24, h * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(x + w * 0.96, y + h * 0.28, w * 0.07, h * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+
+            // 死亡 X 眼
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+            const eyeX = x + w * 0.84, eyeY = y + h * 0.2;
+            ctx.beginPath(); ctx.moveTo(eyeX - 4, eyeY - 4); ctx.lineTo(eyeX + 4, eyeY + 4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(eyeX + 4, eyeY - 4); ctx.lineTo(eyeX - 4, eyeY + 4); ctx.stroke();
+
+            ctx.fillStyle = bodyDark;
+            ctx.beginPath(); ctx.ellipse(x + w * 0.55, y + h * 0.45, 11, 4, -0.2, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // ---------- 主循环与事件绑定 ----------
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Space' || e.code === 'Space') {
+                e.preventDefault(); 
+                jump();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault(); 
+                jump();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault(); 
+                startDuck();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault(); 
+                stopDuck();
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            jump();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            jump();
+        }, { passive: false });
+
+        restartBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            resetGame();
+        });
+
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // 初始化
+        resetGame();
+        gameLoop();
+    })();
+</script>
+</body>
+</html>
