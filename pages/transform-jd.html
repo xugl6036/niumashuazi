@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>京东服务+工单数据转换工具</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+    html, body { height: 100%; }
+    body { background: linear-gradient(145deg, #eef2f7 0%, #f8fafc 100%); display: flex; flex-direction: column; align-items: center; padding: 16px 24px; gap: 12px; overflow: hidden; }
+    .shell { width: 1440px; max-width: 100%; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; min-height: 0; }
+    
+    .topbar { background: linear-gradient(135deg, #1e3a5f 0%, #152c47 100%); border-radius: 16px; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px -8px rgba(30, 58, 95, 0.35); flex-shrink: 0; }
+    .topbar .topbar-title { font-size: 1.1rem; font-weight: 600; color: #ffffff; letter-spacing: 0.02em; display: flex; align-items: center; gap: 10px; }
+    .topbar .topbar-title i { font-size: 1.2rem; color: #7cb3e8; filter: drop-shadow(0 2px 6px rgba(124, 179, 232, 0.3)); }
+    
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar .version { font-size: 0.82rem; font-weight: 500; color: #a8c6e8; letter-spacing: 0.04em; background: rgba(255, 255, 255, 0.08); padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(2px); }
+    .topbar .popout-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); color: #a8c6e8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; backdrop-filter: blur(2px); }
+    .topbar .popout-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; transform: scale(1.05); }
+    
+    .app { display: flex; width: 100%; gap: 24px; flex: 1 1 auto; min-height: 0; }
+    
+    /* 左侧布局容器 */
+    .left-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+    
+    /* 自定义功能区 */
+    .settings-card { 
+      background: #ffffff; 
+      border-radius: 16px; 
+      box-shadow: 0 4px 16px -6px rgba(0, 0, 0, 0.05); 
+      border: 1px solid rgba(255, 255, 255, 0.6); 
+      padding: 12px 18px; 
+      flex-shrink: 0; 
+      display: flex; 
+      flex-direction: row; 
+      align-items: center; 
+      gap: 12px; 
+      flex-wrap: nowrap; /* 强制在一行 */
+    }
+    .settings-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+    .settings-row label { font-size: 0.8rem; font-weight: 600; color: #475569; white-space: nowrap; }
+    .settings-row input { flex: 1; width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; color: #1e293b; outline: none; transition: border 0.2s; font-family: inherit; background: #f8fafc; }
+    .settings-row input:focus { border-color: #3b82f6; background: #ffffff; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+    /* 必填项红框提示 */
+    .settings-row input.error { border-color: #ef4444; background: #fef2f2; }
+
+    /* 通用卡片 */
+    .card { background: #ffffff; border-radius: 24px; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 8px 24px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.5); backdrop-filter: blur(2px); transition: box-shadow 0.25s ease; }
+    .card:hover { box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.16), 0 8px 24px -8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+    
+    .left { flex: 1; min-width: 0; }
+    
+    /* 右侧布局 */
+    .right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px; background: transparent; box-shadow: none; border: none; overflow: visible; min-height: 0; }
+    
+    .output-card { background: #ffffff; border-radius: 24px; box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.1), 0 4px 16px -6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8); border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; overflow: hidden; min-height: 0; flex-shrink: 0; transition: all 0.2s ease; }
+    .output-card:hover { box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.14), 0 6px 20px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+    .output-card:nth-child(1) { flex: 3; }
+    .output-card:nth-child(2) { flex: 1; }
+    
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; background: linear-gradient(to bottom, #fbfdff, #f7fafd); border-bottom: 1px solid rgba(0, 0, 0, 0.04); flex-shrink: 0; gap: 12px; }
+    .card-header .title { font-size: 0.95rem; font-weight: 600; color: #1e293b; letter-spacing: 0.01em; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .card-header .title i { font-size: 1.05rem; color: #3b82f6; width: 1.2rem; text-align: center; filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2)); }
+    .action-buttons { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { background: transparent; border: none; width: 32px; height: 32px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 1rem; transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(241, 245, 249, 0.7); backdrop-filter: blur(2px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); }
+    .icon-btn:hover { background: #ffffff; color: #1e293b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); border-color: rgba(59, 130, 246, 0.2); }
+    .icon-btn:active { transform: translateY(0) scale(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+    .icon-btn.paste-btn:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .icon-btn.regen-btn:hover { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .icon-btn.clear-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .text-area { flex: 1; width: 100%; border: none; outline: none; resize: none; padding: 18px 22px; font-size: 0.95rem; line-height: 1.65; color: #0f172a; background: #ffffff; font-family: inherit; overflow-y: auto; transition: background 0.2s; scrollbar-width: thin; scrollbar-color: #cbd5e1 #ffffff; min-height: 0; }
+    .text-area::placeholder { color: #b0c1d9; font-weight: 400; font-size: 0.9rem; letter-spacing: 0.01em; }
+    .text-area:focus { background: #ffffff; }
+    .output-textarea { background: #ffffff; font-size: 0.95rem; color: #1e293b; line-height: 1.75; }
+    .output-textarea:focus { background: #fdfeff; }
+    .text-area::-webkit-scrollbar { width: 5px; }
+    .text-area::-webkit-scrollbar-track { background: transparent; }
+    .text-area::-webkit-scrollbar-thumb { background: #d1dbe8; border-radius: 12px; border: 1px solid transparent; background-clip: padding-box; }
+    .text-area::-webkit-scrollbar-thumb:hover { background: #a8b8cc; border: 1px solid transparent; background-clip: padding-box; }
+    .copy-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 500; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; flex-shrink: 0; font-family: inherit; line-height: 1.3; letter-spacing: 0.01em; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); backdrop-filter: blur(2px); }
+    .copy-btn i { font-size: 0.78rem; transition: transform 0.2s; }
+    .copy-btn:hover { background: #ffffff; color: #1e293b; border-color: #cbd5e1; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04); }
+    .copy-btn:active { transform: translateY(0) scale(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+    .copy-btn.copied { background: #e6f7e6; color: #15803d; border-color: #b8e6b8; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.08); }
+    .copy-btn.copied i { color: #15803d; transform: scale(1.05); }
+    .footer { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 8px 0 4px; flex-shrink: 0; width: 100%; }
+    .footer .footer-line { flex: 1; max-width: 300px; height: 1px; background: linear-gradient(to right, transparent, #b6c6da, #b6c6da, transparent); border-radius: 1px; }
+    .footer .footer-text { font-size: 0.78rem; font-weight: 500; color: #7c8ea6; letter-spacing: 0.08em; white-space: nowrap; text-transform: uppercase; }
+    .footer .footer-text i { margin-right: 6px; color: #3b82f6; font-size: 0.8rem; }
+    
+    @media (max-width: 900px) {
+      body { padding: 12px 16px; gap: 10px; overflow: auto; }
+      .shell { gap: 10px; }
+      .topbar { padding: 12px 18px; }
+      .topbar .topbar-title { font-size: 0.9rem; }
+      .topbar .version { font-size: 0.7rem; padding: 4px 10px; }
+      .app { flex-direction: column; gap: 16px; flex: 0 1 auto; }
+      .right { flex: none; height: 500px; }
+      .left-col { flex: none; }
+      .left { height: 380px; flex: none; }
+      .card-header { padding: 12px 18px; }
+      .text-area { padding: 16px 18px; font-size: 0.9rem; }
+      .footer .footer-line { max-width: 80px; }
+      .footer .footer-text { font-size: 0.68rem; letter-spacing: 0.04em; }
+      .settings-card { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="topbar-title">
+        <i class="fas fa-gears"></i> 京东服务+工单数据转换工具 【灰测，出问题或者新订单发数据源给我】
+      </div>
+      <div class="topbar-right">
+        <div class="version">V2.0</div>
+        <!-- 新增的独立窗口按钮 -->
+        <button class="popout-btn" id="popoutBtn" title="独立窗口打开">
+          <i class="fas fa-up-right-from-square"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="app">
+      <!-- 左侧列：自定义功能区 + 数据源 -->
+      <div class="left-col">
+        <!-- 自定义参数设置区 -->
+        <div class="settings-card">
+          <div class="settings-row">
+            <label>服务时间：</label>
+            <input type="text" id="serviceTimeInput" value="09:00-12:00 、 13:30-20:00" placeholder="输入服务时间...">
+          </div>
+          <div class="settings-row">
+            <label>网点电话：</label>
+            <input type="text" id="outletPhoneInput" value="" placeholder="输入网点电话...">
+          </div>
+          <div class="settings-row">
+            <label>专属电话：</label>
+            <input type="text" id="exclusivePhoneInput" value="" placeholder="输入专属电话...">
+          </div>
+        </div>
+
+        <!-- 数据源卡片 -->
+        <div class="card left">
+          <div class="card-header">
+            <div class="title">
+              <i class="fas fa-database"></i> 数据源
+            </div>
+            <div class="action-buttons">
+              <button class="icon-btn paste-btn" id="pasteBtn" title="粘贴生成 (从剪贴板读取并生成)">
+                <i class="fas fa-paste"></i>
+              </button>
+              <button class="icon-btn regen-btn" id="regenBtn" title="重新生成 (基于当前文本重新解析)">
+                <i class="fas fa-rotate-right"></i>
+              </button>
+              <button class="icon-btn clear-btn" id="clearBtn" title="清空 (清空原始内容及所有输出)">
+                <i class="fas fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+          <textarea class="text-area" id="sourceInput" placeholder="在此粘贴原始内容，可点击右上角图标快速生成..."></textarea>
+        </div>
+      </div>
+
+      <!-- 右侧列：输出区 -->
+      <div class="right">
+        <div class="output-card">
+          <div class="card-header">
+            <div class="title">
+              <i class="fas fa-bullhorn"></i> 群公告
+            </div>
+            <button class="copy-btn" data-target="announcementOutput" id="copyAnnouncement">
+              <i class="fas fa-copy"></i> 复制
+            </button>
+          </div>
+          <textarea class="text-area output-textarea" id="announcementOutput" placeholder="群公告将显示在这里..."></textarea>
+        </div>
+
+        <div class="output-card">
+          <div class="card-header">
+            <div class="title">
+              <i class="fas fa-users"></i> 群名
+            </div>
+            <button class="copy-btn" data-target="groupNameOutput" id="copyGroupName">
+              <i class="fas fa-copy"></i> 复制
+            </button>
+          </div>
+          <textarea class="text-area output-textarea" id="groupNameOutput" placeholder="群名将显示在这里..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span class="footer-line"></span>
+      <span class="footer-text"><i class="fas fa-code"></i> Powered by XUGL</span>
+      <span class="footer-line"></span>
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+      const sourceInput = document.getElementById('sourceInput');
+      const announcementOutput = document.getElementById('announcementOutput');
+      const groupNameOutput = document.getElementById('groupNameOutput');
+
+      const pasteBtn = document.getElementById('pasteBtn');
+      const regenBtn = document.getElementById('regenBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const popoutBtn = document.getElementById('popoutBtn');
+
+      const serviceTimeInput = document.getElementById('serviceTimeInput');
+      const outletPhoneInput = document.getElementById('outletPhoneInput');
+      const exclusivePhoneInput = document.getElementById('exclusivePhoneInput');
+
+      const copyBtns = document.querySelectorAll('.copy-btn');
+
+      // 独立窗口打开逻辑
+      popoutBtn.addEventListener('click', () => {
+        const width = 1440;
+        const height = 850;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        // 打开新窗口，带上当前页面的 URL
+        window.open(window.location.href, '_blank', `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+      });
+
+      function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+      function toDateStr(y, m, d) { return y + '-' + pad2(m) + '-' + pad2(d); }
+
+      function parsePurchaseDate(str) {
+        if (!str) return null;
+        const m = str.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (!m) return null;
+        return { y: parseInt(m[1], 10), m: parseInt(m[2], 10), d: parseInt(m[3], 10) };
+      }
+
+      function addYearsMinusOneDay(pd, years) {
+        if (!pd) return null;
+        let y = pd.y + years;
+        let m = pd.m;
+        let d = pd.d;
+        let date = new Date(y, m - 1, d);
+        date.setDate(date.getDate() - 1);
+        return toDateStr(date.getFullYear(), date.getMonth() + 1, date.getDate());
+      }
+
+      function simplifyAddress(district, address) {
+        if (!address) return '';
+        let result = address;
+        if (district) {
+          const parts = district.split('-').map(s => s.trim()).filter(Boolean);
+          parts.forEach(part => {
+            if (!part) return;
+            result = result.split(part).join('');
+          });
+        }
+        result = result.replace(/\s+/g, '');
+        return result.trim();
+      }
+
+      function extractData(raw) {
+        let data = {
+          type: '', serviceId: '', brand: '', name: '', phone: '',
+          district: '', address: '', parkingSpot: '', userRemark: '',
+          userOrderId: '', carVIN: '', productName: '', buyerPhone: '',
+          qualification: '', meterLength: '20米', purchaseDate: '', benefitEndDate: ''
+        };
+
+        if (raw.includes('中小件送装一体')) {
+          data.type = 'small_item'; data.brand = '未知品牌';
+        } else if (raw.includes('勘探并安装')) {
+          data.type = 'install'; data.brand = '未知品牌';
+        } else {
+          data.type = 'geely'; data.brand = '吉利银河';
+        }
+
+        const brandMatch = raw.match(/商品品牌[：:]\s*\n?\s*([^\n\r]+)/);
+        if (brandMatch) {
+          data.brand = brandMatch[1].trim();
+        } else {
+          if (raw.includes('吉利银河')) data.brand = '吉利银河';
+          else if (raw.includes('雷迪恩')) data.brand = '雷迪恩';
+          else if (raw.includes('XIAOMI') || raw.includes('小米')) data.brand = 'XIAOMI';
+          else if (raw.includes('挚达')) data.brand = '挚达';
+          else if (raw.includes('领克')) data.brand = '领克';
+        }
+
+        const orderMatch = raw.match(/服务单\s*\n?\s*(\d+)/i);
+        if (orderMatch) data.serviceId = orderMatch[1];
+
+        const nameMatch = raw.match(/客户姓名[：:]\s*\n?\s*([^\n\r]+)/);
+        if (nameMatch) data.name = nameMatch[1].trim();
+
+        const phoneMatch = raw.match(/客户电话[：:]\s*\n?\s*([0-9\-]+)/);
+        if (phoneMatch) data.phone = phoneMatch[1].trim();
+
+        const buyerPhoneMatch = raw.match(/下单人手机号[：:]\s*\n?\s*(\d+)/);
+        if (buyerPhoneMatch) data.buyerPhone = buyerPhoneMatch[1].trim();
+
+        const districtMatch = raw.match(/所在地区[：:]\s*\n?\s*([^\n\r]+)/);
+        if (districtMatch) data.district = districtMatch[1].trim();
+
+        const addressMatch = raw.match(/详细地址[：:]\s*\n?\s*([^\n\r]+)/);
+        if (addressMatch) {
+          data.address = addressMatch[1].trim();
+          data.address = simplifyAddress(data.district, data.address);
+        }
+
+        const spotMatch = raw.match(/详细车位[：:]\s*([^\n\r；]+)/);
+        if (spotMatch) data.parkingSpot = spotMatch[1].trim();
+
+        const remarkMatch = raw.match(/用户备注[：:]\s*([^\n\r；]+)/);
+        if (remarkMatch) data.userRemark = remarkMatch[1].trim();
+
+        const userOrderMatch = raw.match(/用户工单号[：:]\s*([A-Z0-9]+)/);
+        if (userOrderMatch) data.userOrderId = userOrderMatch[1];
+
+        const vinMatch = raw.match(/车架号[：:]\s*([A-Z0-9]+)/);
+        if (vinMatch) data.carVIN = vinMatch[1];
+
+        const qualMatch = raw.match(/单据资质[：:]\s*\n?\s*([^\n\r]+)/);
+        if (qualMatch) data.qualification = qualMatch[1].trim();
+
+        const productMatch = raw.match(/商品名称[：:]\s*\n?\s*([^\n\r]+)/);
+        if (productMatch) {
+          data.productName = productMatch[1].trim();
+        } else {
+          const fallbackMatch = raw.match(/(?:【[^】]+】)?[^\n\r]*充电桩安装服务[^\n\r]*/);
+          if (fallbackMatch) data.productName = fallbackMatch[0].trim();
+        }
+
+        if (data.productName) {
+          const meterMatch = data.productName.match(/(\d+米)/);
+          if (meterMatch) data.meterLength = meterMatch[1];
+        }
+
+        let purchaseRaw = '';
+        const purchaseLineMatch = raw.match(/购车时间[：:]\s*([0-9]{4}[-\/][0-9]{1,2}[-\/][0-9]{1,2}[^\n\r；;]*)/);
+        if (purchaseLineMatch) {
+          purchaseRaw = purchaseLineMatch[1];
+        } else {
+          const anyMatch = raw.match(/购车时间[：:]\s*([0-9]{4}[-\/][0-9]{1,2}[-\/][0-9]{1,2})/);
+          if (anyMatch) purchaseRaw = anyMatch[1];
+        }
+
+        if (purchaseRaw) {
+          const pd = parsePurchaseDate(purchaseRaw);
+          if (pd) {
+            data.purchaseDate = toDateStr(pd.y, pd.m, pd.d);
+            const isLynk = data.brand.includes('领克') || raw.includes('领克');
+            const years = isLynk ? 2 : 1;
+            data.benefitEndDate = addYearsMinusOneDay(pd, years) || '';
+          }
+        }
+
+        return data;
+      }
+
+      // 去除输入框错误状态
+      function clearInputErrors() {
+        outletPhoneInput.classList.remove('error');
+        exclusivePhoneInput.classList.remove('error');
+      }
+
+      // 校验电话号码是否填写
+      function validatePhones() {
+        const oPhone = outletPhoneInput.value.trim();
+        const ePhone = exclusivePhoneInput.value.trim();
+        
+        if (!oPhone && !ePhone) {
+          alert('请输入联系电话');
+          outletPhoneInput.classList.add('error');
+          exclusivePhoneInput.classList.add('error');
+          return false;
+        }
+        
+        clearInputErrors();
+        return true;
+      }
+
+      function generateOutputs() {
+        const raw = sourceInput.value;
+        if (!raw || raw.trim() === '') {
+          announcementOutput.value = '';
+          groupNameOutput.value = '';
+          return;
+        }
+
+        const data = extractData(raw);
+
+        if (!data.name && !data.serviceId) {
+          announcementOutput.value = "未能识别数据，请检查左侧文本是否包含【服务单】、【客户姓名】等关键内容。";
+          return;
+        }
+
+        let shortDistrict = "某区";
+        if (data.district) {
+          const parts = data.district.split('-');
+          if (parts.length >= 3) shortDistrict = parts[2];
+          else shortDistrict = data.district;
+        }
+
+        if (data.type === 'small_item') {
+          let groupNameStr = `送装 7kW-${data.name}${shortDistrict}·${data.brand}交流充电桩`;
+          groupNameOutput.value = groupNameStr;
+
+          let announcement = `京东服务+//中小件送装一体${data.serviceId}
+${data.brand}交流充电桩
+客户姓名：${data.name}
+客户电话：${data.phone}
+所在地区：${data.district}
+详细地址：${data.address}
+下单人手机号：${data.buyerPhone || data.phone}
+服务单号：${data.serviceId}
+单据资质：${data.qualification}
+商品名称：${data.productName}`.trim();
+
+          announcementOutput.value = announcement;
+        }
+        else {
+          let groupNameStr = `${data.brand}7KW-${data.name}${data.meterLength}-${shortDistrict}-充电桩安装服务群`;
+          groupNameOutput.value = groupNameStr;
+
+          let extraInfo = '';
+          if (data.parkingSpot) extraInfo += `详细车位：${data.parkingSpot}\n`;
+          if (data.userRemark) extraInfo += `用户备注：${data.userRemark}\n`;
+
+          const sTime = serviceTimeInput.value.trim() || '09:00-12:00 、 13:30-20:00';
+          const oPhone = outletPhoneInput.value.trim();
+          const ePhone = exclusivePhoneInput.value.trim();
+
+          const fixedNotice = `
+【本群服务时间】${sTime} ；法定节假日正常提供服务；
+【问题反馈】若对我们的服务有任何不满联系电话：${oPhone}（网点电话），或致电吉利安装专属电话：${ePhone}`;
+
+          let buyerInfo = '';
+          if (data.carVIN) {
+            buyerInfo = `购车人姓名：${data.name}\n`;
+            if (data.purchaseDate) buyerInfo += `购车时间：${data.purchaseDate}\n`;
+            if (data.benefitEndDate) buyerInfo += `权益截止：${data.benefitEndDate}\n`;
+            buyerInfo += `车架号：${data.carVIN}`;
+          }
+
+          let announcement = `京东服务+//${data.brand}${data.serviceId}
+客户姓名：${data.name}
+客户电话：${data.phone}
+所在地区：${data.district}
+详细地址：${data.address}
+${extraInfo}用户工单号：${data.userOrderId || data.serviceId}
+${buyerInfo}
+${data.productName}
+${fixedNotice}
+`.replace(/\n{3,}/g, '\n\n').trim();
+
+          announcementOutput.value = announcement;
+        }
+
+        resetAllCopyBtns();
+      }
+
+      function resetAllCopyBtns() {
+        copyBtns.forEach(btn => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+        });
+      }
+
+      async function copyTextToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (err) {
+          try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            const success = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return success;
+          } catch (e) {
+            return false;
+          }
+        }
+      }
+
+      async function handleCopyClick(event) {
+        const btn = event.currentTarget;
+        const targetId = btn.getAttribute('data-target');
+        const targetEl = document.getElementById(targetId);
+        if (!targetEl) return;
+
+        const textToCopy = targetEl.value;
+        const success = await copyTextToClipboard(textToCopy);
+
+        if (success) {
+          btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+          btn.classList.add('copied');
+
+          setTimeout(() => {
+            if (btn.classList.contains('copied')) {
+              btn.classList.remove('copied');
+              btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+            }
+          }, 2000);
+        } else {
+          alert('复制失败，请手动选择文本复制');
+        }
+      }
+
+      // 粘贴生成逻辑，加入校验
+      async function pasteAndGenerate() {
+        if (!validatePhones()) return;
+
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            sourceInput.value = text;
+            generateOutputs();
+          } else {
+            generateOutputs();
+          }
+        } catch (err) {
+          alert('无法直接读取剪贴板，请手动粘贴到左侧文本框，然后点击重新生成。\n错误: ' + err.message);
+          generateOutputs();
+        }
+      }
+
+      // 重新生成逻辑，加入校验
+      function regenAndGenerate() {
+        if (!validatePhones()) return;
+        generateOutputs();
+      }
+
+      function clearAll() {
+        sourceInput.value = '';
+        announcementOutput.value = '';
+        groupNameOutput.value = '';
+        clearInputErrors();
+        resetAllCopyBtns();
+        sourceInput.focus();
+      }
+
+      pasteBtn.addEventListener('click', pasteAndGenerate);
+      regenBtn.addEventListener('click', regenAndGenerate);
+      clearBtn.addEventListener('click', clearAll);
+
+      // 用户手动输入时，如果有输入内容，则清除红框报错
+      outletPhoneInput.addEventListener('input', () => {
+        if (outletPhoneInput.value.trim() || exclusivePhoneInput.value.trim()) {
+          clearInputErrors();
+        }
+        generateOutputs();
+      });
+      
+      exclusivePhoneInput.addEventListener('input', () => {
+        if (outletPhoneInput.value.trim() || exclusivePhoneInput.value.trim()) {
+          clearInputErrors();
+        }
+        generateOutputs();
+      });
+      
+      serviceTimeInput.addEventListener('input', generateOutputs);
+
+      copyBtns.forEach(btn => {
+        btn.addEventListener('click', handleCopyClick);
+      });
+    })();
+  </script>
+</body>
+</html>
