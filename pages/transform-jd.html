@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,12 +10,10 @@
     html, body { height: 100%; }
     body { background: linear-gradient(145deg, #eef2f7 0%, #f8fafc 100%); display: flex; flex-direction: column; align-items: center; padding: 16px 24px; gap: 12px; overflow: hidden; }
     
-    /* 全局主题色大红色 */
     :root { --current-theme-color: #e63946; }
     
     .shell { width: 1440px; max-width: 100%; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; min-height: 0; }
     
-    /* Topbar */
     .topbar { background: linear-gradient(135deg, #1e3a5f 0%, #152c47 100%); border-radius: 16px; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px -8px rgba(30, 58, 95, 0.35); flex-shrink: 0; flex-wrap: wrap; gap: 10px 16px; user-select: none; }
     .topbar-left { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
     .topbar-title { font-size: 1.1rem; font-weight: 600; color: #ffffff; letter-spacing: 0.02em; display: flex; align-items: center; gap: 10px; user-select: none; cursor: default; }
@@ -27,14 +25,12 @@
     .icon-btn-top:hover { background: rgba(255, 255, 255, 0.22); color: #ffffff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border-color: rgba(255, 255, 255, 0.4); }
     .icon-btn-top:active { transform: translateY(0) scale(0.96); }
     
-    /* App Layout */
     .app { display: flex; width: 100%; gap: 24px; flex: 1 1 auto; min-height: 0; }
     .card { background: #ffffff; border-radius: 24px; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 8px 24px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.5); backdrop-filter: blur(2px); transition: box-shadow 0.25s ease; }
     .card:hover { box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.16), 0 8px 24px -8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
     .left { flex: 1; min-width: 0; }
     .right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px; background: transparent; box-shadow: none; border: none; overflow: visible; min-height: 0; }
     
-    /* Output Cards - 京东布局 */
     .output-card { background: #ffffff; border-radius: 24px; box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.1), 0 4px 16px -6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8); border: 1px solid rgba(255, 255, 255, 0.6); display: flex; flex-direction: column; overflow: hidden; min-height: 0; flex-shrink: 0; transition: all 0.2s ease; }
     .output-card:hover { box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.14), 0 6px 20px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
     
@@ -46,20 +42,17 @@
     .card-header .title { font-size: 0.95rem; font-weight: 600; color: #1e293b; letter-spacing: 0.01em; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .card-header .title i { font-size: 1.05rem; color: var(--current-theme-color); width: 1.2rem; text-align: center; transition: color 0.3s ease, filter 0.3s ease; }
     
-    /* 京东标签并排 */
     .jd-header-tabs { display: flex; align-items: center; gap: 8px; margin-left: 8px; }
     .jd-header-tab { background: rgba(248, 250, 252, 0.8); border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
     .jd-header-tab:hover { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
     .jd-header-tab.active { background: var(--current-theme-color); border-color: var(--current-theme-color); color: #ffffff; box-shadow: 0 2px 6px rgba(230, 57, 70, 0.3); }
 
-    /* 左侧数据源的技术支持按钮 */
     .tech-support-btn { background: #e6f7e6; border: 1px solid #b8e6b8; color: #15803d; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; user-select: none; }
     .tech-support-btn:hover { background: #d1f2d1; border-color: #a3e6a3; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(21, 128, 61, 0.15); }
     .tech-support-btn:active { transform: translateY(0); }
 
     .action-buttons { display: flex; align-items: center; gap: 8px; }
     
-    /* Icon Buttons */
     .icon-btn { background: transparent; border: none; width: 32px; height: 32px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 1rem; transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(241, 245, 249, 0.7); backdrop-filter: blur(2px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); }
     .icon-btn:hover { background: #ffffff; color: #1e293b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); border-color: rgba(59, 130, 246, 0.2); }
     .icon-btn:active { transform: translateY(0) scale(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
@@ -67,20 +60,17 @@
     .icon-btn.regen-btn:hover { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
     .icon-btn.clear-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
     
-    /* Textareas */
     .text-area { flex: 1; width: 100%; border: none; outline: none; resize: none; padding: 18px 22px; font-size: 0.95rem; line-height: 1.65; color: #0f172a; background: #ffffff; font-family: inherit; overflow-y: auto; transition: background 0.2s; scrollbar-width: thin; scrollbar-color: #cbd5e1 #ffffff; min-height: 0; }
     .text-area::placeholder { color: #b0c1d9; font-weight: 400; font-size: 0.9rem; letter-spacing: 0.01em; }
     .text-area:focus { background: #ffffff; }
     .output-textarea { background: #ffffff; font-size: 0.95rem; color: #1e293b; }
     .output-textarea:focus { background: #fdfeff; }
     
-    /* Custom Scrollbar */
     .text-area::-webkit-scrollbar { width: 5px; height: 5px; }
     .text-area::-webkit-scrollbar-track { background: transparent; }
     .text-area::-webkit-scrollbar-thumb { background: #d1dbe8; border-radius: 12px; border: 1px solid transparent; background-clip: padding-box; }
     .text-area::-webkit-scrollbar-thumb:hover { background: #a8b8cc; border: 1px solid transparent; background-clip: padding-box; }
     
-    /* Copy Button */
     .copy-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 500; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; flex-shrink: 0; font-family: inherit; line-height: 1.3; letter-spacing: 0.01em; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); backdrop-filter: blur(2px); }
     .copy-btn i { font-size: 0.78rem; transition: transform 0.2s; }
     .copy-btn:hover { background: #ffffff; color: #1e293b; border-color: #cbd5e1; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04); }
@@ -88,7 +78,6 @@
     .copy-btn.copied { background: #e6f7e6; color: #15803d; border-color: #b8e6b8; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.08); }
     .copy-btn.copied i { color: #15803d; transform: scale(1.05); }
     
-    /* Footer */
     .footer { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 8px 0 4px; flex-shrink: 0; width: 100%; user-select: none; }
     .footer .footer-line { flex: 1; max-width: 300px; height: 1px; background: linear-gradient(to right, transparent, #b6c6da, #b6c6da, transparent); border-radius: 1px; }
     .footer .footer-text { font-size: 0.78rem; font-weight: 500; color: #7c8ea6; letter-spacing: 0.08em; white-space: nowrap; text-transform: uppercase; }
@@ -97,7 +86,7 @@
     /* 弹窗 */
     .jd-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
     .jd-modal-overlay.active { opacity: 1; visibility: visible; }
-    .jd-modal { background: #ffffff; width: 500px; max-width: 90%; border-radius: 20px; box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; overflow: hidden; transform: translateY(20px); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+    .jd-modal { background: #ffffff; width: 780px; max-width: 90%; border-radius: 20px; box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; overflow: hidden; transform: translateY(20px); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
     .jd-modal-overlay.active .jd-modal { transform: translateY(0); }
     .jd-modal-header { padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
     .jd-modal-title-input { font-size: 1.05rem; font-weight: 600; color: #1e293b; border: 1px solid transparent; background: transparent; outline: none; padding: 4px 8px; border-radius: 6px; width: 60%; transition: all 0.2s; }
@@ -105,17 +94,15 @@
     .jd-modal-title-input:disabled { cursor: default; color: #1e293b; }
     .jd-modal-close { background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
     .jd-modal-close:hover { background: #e2e8f0; color: #0f172a; }
-    .jd-modal-body { padding: 20px; }
-    .jd-modal-textarea { width: 100%; height: 200px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 0.95rem; line-height: 1.6; color: #1e293b; font-family: inherit; resize: none; outline: none; transition: border-color 0.2s; }
-    .jd-modal-textarea:focus { border-color: #e63946; box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1); }
-    .jd-modal-footer { padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
-    .jd-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
-    .jd-btn-cancel { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; }
-    .jd-btn-cancel:hover { background: #f1f5f9; }
-    .jd-btn-save { background: #e63946; color: #ffffff; box-shadow: 0 2px 6px rgba(230, 57, 70, 0.3); }
-    .jd-btn-save:hover { background: #d32f2f; box-shadow: 0 4px 10px rgba(230, 57, 70, 0.4); }
+    .jd-modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+    
+    .modal-section-title { font-size: 0.95rem; font-weight: 600; color: #1e293b; margin: 16px 0 10px 0; display: flex; align-items: center; gap: 6px; }
+    .modal-section-title:first-child { margin-top: 0; }
+    .modal-section-title i { color: var(--current-theme-color); font-size: 0.9rem; }
 
-    /* 弹窗表格样式 */
+    .jd-modal-textarea { width: 100%; height: 200px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 0.95rem; line-height: 1.6; color: #1e293b; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; }
+    .jd-modal-textarea:focus { border-color: #e63946; box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1); }
+    
     .jd-modal-table-wrap { overflow-x: auto; }
     .jd-modal-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     .jd-modal-table th { background: #f1f5f9; color: #334155; font-weight: 600; padding: 8px 6px; border: 1px solid #e2e8f0; text-align: center; white-space: nowrap; }
@@ -127,6 +114,21 @@
     .jd-modal-table .row-del-cell { width: 34px; text-align: center; }
     .jd-table-add-btn { margin-top: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; color: #475569; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
     .jd-table-add-btn:hover { background: #ffffff; border-color: #e63946; color: #e63946; }
+    
+    .config-row-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .config-row-table th { background: #f1f5f9; color: #334155; font-weight: 600; padding: 8px 6px; border: 1px solid #e2e8f0; text-align: center; white-space: nowrap; }
+    .config-row-table td { padding: 4px; border: 1px solid #e2e8f0; }
+    .config-row-table td input { width: 100%; border: none; outline: none; background: transparent; padding: 6px 4px; font-size: 0.88rem; color: #1e293b; font-family: inherit; text-align: center; }
+    .config-row-table td input:focus { background: #fff7f7; box-shadow: inset 0 0 0 1px rgba(230, 57, 70, 0.35); border-radius: 4px; }
+    .config-row-table td input::placeholder { color: #b0c1d9; }
+    
+    /* 弹窗底部按钮 - 右下角 */
+    .jd-modal-footer { padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
+    .jd-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
+    .jd-btn-cancel { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; }
+    .jd-btn-cancel:hover { background: #f1f5f9; }
+    .jd-btn-save { background: #e63946; color: #ffffff; box-shadow: 0 2px 6px rgba(230, 57, 70, 0.3); }
+    .jd-btn-save:hover { background: #d32f2f; box-shadow: 0 4px 10px rgba(230, 57, 70, 0.4); }
     
     @media (max-width: 900px) {
       body { padding: 12px 16px; gap: 10px; overflow: auto; }
@@ -143,6 +145,7 @@
       .footer .footer-text { font-size: 0.68rem; letter-spacing: 0.04em; }
       .jd-header-tabs { margin-left: 0; width: 100%; overflow-x: auto; padding-bottom: 4px; }
       .jd-header-tab { padding: 4px 10px; font-size: 0.75rem; flex-shrink: 0; }
+      .jd-modal { width: 95%; }
     }
   </style>
 </head>
@@ -155,7 +158,7 @@
         </div>
       </div>
       <div class="topbar-right">
-        <span class="version">V2.2</span>
+        <span class="version">V2.4</span>
         <button class="icon-btn-top" id="openWindowBtn" title="独立窗口打开">
           <i class="fas fa-clone"></i>
         </button>
@@ -167,9 +170,8 @@
         <div class="card-header">
           <div class="title">
             <i class="fas fa-database"></i> 数据源
-            <!-- 新增：技术支持按钮放在数据源旁边 -->
-            <div class="tech-support-btn" id="techSupportBtn" title="双击编辑技术支持表格">
-              <i class="fas fa-table"></i> 技术支持 (双击修改)
+            <div class="tech-support-btn" id="techSupportBtn" title="双击编辑网点信息">
+              网点信息配置
             </div>
           </div>
           <div class="action-buttons">
@@ -184,9 +186,18 @@
             </button>
           </div>
         </div>
-        <textarea class="text-area" id="sourceInput" placeholder="在京东平台订单详情页面全选复制，
-在此粘贴原始内容，
-点击右上角图标快速生成..."></textarea>
+        <textarea class="text-area" id="sourceInput" placeholder="在京东订单详情页面打开隐私，全选复制
+点击本输入框右上角“粘贴生成”图标，
+即可自动生成群公告和群名称，告别手搓！
+
+【使用说明】
+群公告中的预留网点信息的联系方式请双击“网点信息配置”
+网点联络人和专属客服，填写姓名电话
+技术支持填写属地师傅，目前以区县级匹配
+配置师傅信息将会根据订单所在地区的城市区县在群公告中的技术支持后展现
+如果没有配置属地师傅信息，则群公告中的技术支持将显示网点联络人的姓名电话
+————
+网点信息配置为前端本地化缓存，仅保存在当前电脑，刷新网页也不会丢失数据"></textarea>
       </div>
 
       <div class="right">
@@ -195,12 +206,8 @@
             <div class="title">
               <i class="fas fa-bullhorn"></i> 群公告
               <div class="jd-header-tabs" id="jdHeaderTabs">
-                <!-- 移除了技术支持，只保留尾巴标签 -->
                 <div class="jd-header-tab active" data-id="1">通用</div>
                 <div class="jd-header-tab" data-id="2">吉利</div>
-                <div class="jd-header-tab" data-id="3">自定义1</div>
-                <div class="jd-header-tab" data-id="4">自定义2</div>
-                <div class="jd-header-tab" data-id="5">自定义3</div>
               </div>
             </div>
             <button class="copy-btn" data-target="announcementOutput" id="copyAnnouncement">
@@ -252,8 +259,28 @@
         <button class="jd-modal-close" id="jdModalCloseBtn"><i class="fas fa-times"></i></button>
       </div>
       <div class="jd-modal-body">
-        <textarea class="jd-modal-textarea" id="jdModalTextarea" placeholder="在此输入便签内容..."></textarea>
-        <div class="jd-modal-table-wrap" id="jdModalTableWrap" style="display:none;">
+        <!-- 网点信息：单行四列 -->
+        <div class="modal-section-title" id="configSectionTitle"><i class="fas fa-building"></i> 网点信息</div>
+        <div class="jd-modal-table-wrap" id="configRowWrap">
+          <table class="config-row-table" id="configRowTable">
+            <thead>
+              <tr>
+                <th>网点联络人</th>
+                <th>专属客服</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="text" id="configPhone" placeholder="请输入网点联络人的姓名电话，如：张三13800000000"></td>
+                <td><input type="text" id="configSupport" placeholder="请输入专属客服的姓名电话，如：李四13012345678"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 技术支持(属地师傅) -->
+        <div class="modal-section-title" id="techSectionTitle"><i class="fas fa-headset"></i> 技术支持[属地师傅]（城市区县请输入完整的行政区划名称，如:南京市 江宁区）</div>
+        <div class="jd-modal-table-wrap" id="jdModalTableWrap">
           <table class="jd-modal-table" id="jdModalTable">
             <thead>
               <tr>
@@ -270,7 +297,11 @@
             <i class="fas fa-plus"></i> 添加行
           </button>
         </div>
+
+        <!-- 普通文本编辑区域（仅通用/吉利标签使用） -->
+        <textarea class="jd-modal-textarea" id="modalTextEditor" style="display: none;" placeholder="输入群公告小尾巴..."></textarea>
       </div>
+      <!-- 按钮在右下角 -->
       <div class="jd-modal-footer">
         <button class="jd-btn jd-btn-cancel" id="jdModalCancelBtn">取消</button>
         <button class="jd-btn jd-btn-save" id="jdModalSaveBtn">保存</button>
@@ -285,19 +316,24 @@
       const groupNameOutput = document.getElementById('groupNameOutput');
       const tableOutput = document.getElementById('tableOutput');
       
-      // 右侧的标签（不包含技术支持）
       const jdHeaderTabElements = document.querySelectorAll('.jd-header-tab');
       const techSupportBtn = document.getElementById('techSupportBtn');
 
       const jdModalOverlay = document.getElementById('jdModalOverlay');
       const jdModalTitleInput = document.getElementById('jdModalTitleInput');
-      const jdModalTextarea = document.getElementById('jdModalTextarea');
-      const jdModalTableWrap = document.getElementById('jdModalTableWrap');
       const jdModalTableBody = document.getElementById('jdModalTableBody');
       const jdTableAddRowBtn = document.getElementById('jdTableAddRowBtn');
       const jdModalCloseBtn = document.getElementById('jdModalCloseBtn');
       const jdModalCancelBtn = document.getElementById('jdModalCancelBtn');
       const jdModalSaveBtn = document.getElementById('jdModalSaveBtn');
+      const modalTextEditor = document.getElementById('modalTextEditor');
+
+      // 网点配置
+      const configPhoneInput = document.getElementById('configPhone');
+      const configSupportInput = document.getElementById('configSupport');
+      const configSectionTitle = document.getElementById('configSectionTitle');
+      const configRowWrap = document.getElementById('configRowWrap');
+      const techSectionTitle = document.getElementById('techSectionTitle');
 
       let currentEditingTabId = null;
 
@@ -311,15 +347,26 @@
       let currentJdTabId = '1';
 
       /* ==================== 本地缓存 ==================== */
-      const STORAGE_KEY = 'jd_workorder_notes_v6';
+      const STORAGE_KEY = 'jd_workorder_notes_v9';
 
+      // 0=网点信息配置，1=通用，2=吉利
       const DEFAULT_NOTES = {
-        '0': { title: '技术支持', type: 'table', content: '' },
-        '1': { title: '通用', type: 'text', content: '【人员信息】\n技术支持-\n信息协调-沙  俊  15252870520\n【本群服务时间】09:00-18:00 ；法定节假日正常提供服务；\n【问题反馈】若对我们的服务有任何不满联系项目经理电话：0527-80806203（网点电话），或致电 400-610-3600 转 5\n【热线服务时间】09：00-18：00；法定节假日正常提供服务' },
-        '2': { title: '吉利', type: 'text', content: '【本群服务时间】09:00-12:00 、 13:30-20:00 ；法定节假日正常提供服务；\n【问题反馈】若对我们的服务有任何不满联系电话：138****8888（网点电话），或致电吉利安装专属电话：138****8888' },
-        '3': { title: '自定义1', type: 'text', content: '' },
-        '4': { title: '自定义2', type: 'text', content: '' },
-        '5': { title: '自定义3', type: 'text', content: '' }
+        '0': { 
+          title: '网点信息配置', 
+          type: 'config', 
+          content: '',
+          config: { phone: '', support: '' }
+        },
+        '1': { 
+          title: '通用', 
+          type: 'text', 
+          content: '【本群服务时间】09:00-18:00 ；法定节假日正常提供服务；\n【问题反馈】若对我们的服务有任何不满联系项目经理电话：0527-80806203（网点联络人），或致电 400-610-3600 转 5\n【热线服务时间】09：00-18：00；法定节假日正常提供服务' 
+        },
+        '2': { 
+          title: '吉利', 
+          type: 'text', 
+          content: '【本群服务时间】09:00-12:00 、 13:30-20:00 ；法定节假日正常提供服务；\n【问题反馈】若对我们的服务有任何不满联系电话：***（网点联络人），或致电吉利安装专属电话：***' 
+        }
       };
 
       function loadNotes() {
@@ -329,18 +376,25 @@
             const obj = JSON.parse(saved);
             const merged = {};
             Object.keys(DEFAULT_NOTES).forEach(k => {
-              merged[k] = obj[k] ? Object.assign({}, DEFAULT_NOTES[k], obj[k]) : Object.assign({}, DEFAULT_NOTES[k]);
+              if (obj[k]) {
+                merged[k] = JSON.parse(JSON.stringify(DEFAULT_NOTES[k]));
+                if (obj[k].title) merged[k].title = obj[k].title;
+                if (obj[k].content !== undefined) merged[k].content = obj[k].content;
+                if (obj[k].config) merged[k].config = Object.assign({}, DEFAULT_NOTES[k].config || {}, obj[k].config);
+              } else {
+                merged[k] = JSON.parse(JSON.stringify(DEFAULT_NOTES[k]));
+              }
             });
             return merged;
           }
-        } catch (e) { /* 忽略解析错误，回退默认 */ }
+        } catch (e) { /* 回退默认 */ }
         return JSON.parse(JSON.stringify(DEFAULT_NOTES));
       }
 
       function saveNotes() {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(jdNotesData));
-        } catch (e) { /* 存储失败静默 */ }
+        } catch (e) { /* 静默 */ }
       }
 
       const jdNotesData = loadNotes();
@@ -353,7 +407,7 @@
       }
       refreshTabTitles();
 
-      // 右侧普通标签点击切换
+      // 标签点击切换
       jdHeaderTabElements.forEach(tab => {
         tab.addEventListener('click', function() {
           jdHeaderTabElements.forEach(t => t.classList.remove('active'));
@@ -368,7 +422,7 @@
         });
       });
 
-      // 左侧技术支持按钮双击打开
+      // 网点信息配置按钮
       techSupportBtn.addEventListener('dblclick', function(e) {
         e.preventDefault();
         openModalForTab('0');
@@ -438,24 +492,34 @@
       function openModalForTab(tabId) {
         currentEditingTabId = tabId;
         const note = jdNotesData[tabId];
-        jdModalTitleInput.value = note.title;
         
-        // 如果是技术支持(id=0)，禁止修改标题
         if (tabId === '0') {
+          jdModalTitleInput.value = '网点信息配置';
           jdModalTitleInput.disabled = true;
         } else {
+          jdModalTitleInput.value = note.title;
           jdModalTitleInput.disabled = false;
         }
 
-        const isTable = note.type === 'table';
-        jdModalTableWrap.style.display = isTable ? 'block' : 'none';
-        jdModalTextarea.style.display = isTable ? 'none' : 'block';
+        const isConfig = tabId === '0';
 
-        if (isTable) {
-          renderTableRows(parseTableContent(note.content));
+        // 显示/隐藏区域
+        configSectionTitle.style.display = isConfig ? 'flex' : 'none';
+        configRowWrap.style.display = isConfig ? 'block' : 'none';
+        techSectionTitle.style.display = isConfig ? 'flex' : 'none';
+        document.getElementById('jdModalTableWrap').style.display = isConfig ? 'block' : 'none';
+        modalTextEditor.style.display = isConfig ? 'none' : 'block';
+
+        if (isConfig) {
+          const cfg = note.config || { phone: '', support: '' };
+          configPhoneInput.value = cfg.phone || '';
+          configSupportInput.value = cfg.support || '';
+          const rows = parseTableContent(note.content || '');
+          renderTableRows(rows);
         } else {
-          jdModalTextarea.value = note.content;
+          modalTextEditor.value = note.content || '';
         }
+
         jdModalOverlay.classList.add('active');
       }
 
@@ -466,26 +530,29 @@
 
       function saveModalData() {
         if (!currentEditingTabId) return;
-        // 如果是技术支持，强制用默认标题
-        const newTitle = currentEditingTabId === '0' ? '技术支持' : (jdModalTitleInput.value.trim() || '未命名');
         const note = jdNotesData[currentEditingTabId];
-        
-        note.title = newTitle;
-        if (note.type === 'table') {
+
+        if (currentEditingTabId === '0') {
+          note.config = {
+            phone: configPhoneInput.value.trim(),
+            support: configSupportInput.value.trim()
+          };
           note.content = serializeTable(readTableFromModal());
+          note.title = '网点信息配置';
         } else {
-          note.content = jdModalTextarea.value;
+          const newTitle = jdModalTitleInput.value.trim() || '未命名';
+          note.title = newTitle;
+          note.content = modalTextEditor.value;
         }
 
         saveNotes();
 
         jdHeaderTabElements.forEach(tab => {
           if (tab.getAttribute('data-id') === currentEditingTabId) {
-            tab.textContent = newTitle;
+            tab.textContent = note.title;
           }
         });
 
-        // 如果改了当前显示的内容，刷新一下
         if (currentJdTabId === currentEditingTabId || currentEditingTabId === '0') {
           updateOutputs();
         }
@@ -501,6 +568,14 @@
       document.querySelector('.jd-modal').addEventListener('click', function(e) {
         e.stopPropagation();
       });
+
+      /* ============ 工具函数 ============ */
+      // 提取手机号（11位数字，以1开头）
+      function extractMobile(text) {
+        if (!text) return '';
+        const m = text.match(/(1[3-9]\d{9})/);
+        return m ? m[1] : '';
+      }
 
       /* ============ 技术支持匹配 ============ */
       function parseRegion(region) {
@@ -519,7 +594,7 @@
 
       function matchTechSupport(region) {
         const techNote = jdNotesData['0'];
-        if (!techNote || techNote.type !== 'table' || !techNote.content) return '';
+        if (!techNote || !techNote.content) return '';
         const rows = parseTableContent(techNote.content);
         if (!rows.length) return '';
 
@@ -747,7 +822,6 @@
         const raw = sourceInput.value;
         const parsed = parseSource(raw);
         
-        // 自动切换标签逻辑
         if (parsed.isGeelyFamily && currentJdTabId !== '2') {
           currentJdTabId = '2';
           jdHeaderTabElements.forEach(t => {
@@ -763,38 +837,44 @@
 
         const activeNote = jdNotesData[currentJdTabId];
         let noteText = '';
-        if (activeNote) {
-          // 现在的 currentJdTabId 只能是 1,2,3,4,5，都是纯文本类型
+        if (activeNote && activeNote.type === 'text') {
           noteText = activeNote.content;
         }
 
         if (parsed.announcement) {
           const parts = [];
 
-          // 1) 开头话术
           const brandName = parsed.brand || '京东';
           parts.push(`您好，我们是${brandName}授权充电桩安装服务商京东，我们是您本次充电桩安装的专属团队。\n以下是您的订单信息烦请确认:`);
 
-          // 2) 订单正文
           parts.push(parsed.announcement);
 
-          // 3) 标签尾巴处理（包含技术支持替换）
+          // 根据当前标签处理小尾巴
+          const config = jdNotesData['0'] ? (jdNotesData['0'].config || {}) : {};
+          const netContact = config.phone || '';      // 网点联络人（姓名电话）
+          const supportContact = config.support || '';
+
           let tail = noteText;
-          
-          // 只要有地区信息，就尝试匹配
-          if (parsed.region) {
+
+          if (currentJdTabId === '1') {
+            // 通用标签：追加【人员信息】区域
             const tech = matchTechSupport(parsed.region);
-            const replacement = tech ? `技术支持-${tech}` : `技术支持-`;
-            
-            // 安全替换：只替换“技术支持-”这一行，绝不跨行
-            if (/技术支持[-—:：]?[^\n]*/.test(tail)) {
-              tail = tail.replace(/技术支持[-—:：]?[^\n]*/, replacement);
+            // 修改点：如果属地师傅未匹配到，回退为网点联络人
+            const techLine = tech ? `技术支持-${tech}` : (netContact ? `技术支持-${netContact}` : `技术支持-`);
+            const supportLine = supportContact ? `信息协调-${supportContact}` : `信息协调-`;
+            tail = `【人员信息】\n${techLine}\n${supportLine}\n${tail}`;
+          } else if (currentJdTabId === '2') {
+            // 吉利标签：替换 *** 为手机号
+            const netMobile = extractMobile(netContact);
+            const supportMobile = extractMobile(supportContact);
+            const parts2 = tail.split('***');
+            if (parts2.length >= 3) {
+              tail = parts2[0] + (netMobile || netContact || '***') + parts2[1] + (supportMobile || supportContact || '***') + parts2.slice(2).join('***');
             }
           }
 
           if (tail) parts.push(tail);
 
-          // 用单换行拼接，不留空行
           announcementOutput.value = parts.join('\n');
         } else {
           announcementOutput.value = '';
@@ -896,6 +976,11 @@
       clearBtn.addEventListener('click', clearAll);
       openWindowBtn.addEventListener('click', openInNewWindow);
       copyBtns.forEach(btn => btn.addEventListener('click', handleCopyClick));
+
+      // 初始化
+      window.addEventListener('load', function() {
+        updateOutputs();
+      });
 
     })();
   </script>
