@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>到每家工单数据转换工具</title>
+
+  <hta:application
+    id="oHTA"
+    applicationname="ToEvery"
+    border="none"
+    caption="no"
+    maximizebutton="no"
+    minimizebutton="no"
+    sysmenu="no"
+    showintaskbar="yes"
+    scroll="no"
+    singleinstance="yes">
+  </hta:application>
+
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif; }
+    html, body { height: 100%; }
+    body { background: linear-gradient(145deg, #eef2f7 0%, #f8fafc 100%); display: flex; flex-direction: column; align-items: center; padding: 16px 24px; gap: 12px; overflow: hidden; }
+
+    :root { --current-theme-color: #e63946; }
+
+    .shell { width: 1440px; max-width: 100%; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; min-height: 0; }
+
+    /* ===== 顶部标题栏（京东风格） ===== */
+    .topbar {
+      background: linear-gradient(135deg, #1e3a5f 0%, #152c47 100%);
+      border-radius: 16px;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 24px -8px rgba(30, 58, 95, 0.35);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      user-select: none;
+      -webkit-app-region: drag;
+      cursor: move;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .topbar-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      cursor: default;
+    }
+    .topbar-title i {
+      font-size: 1.2rem;
+      color: #e63946;
+      filter: drop-shadow(0 2px 6px rgba(230, 57, 70, 0.4));
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; -webkit-app-region: no-drag; }
+    .version {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #a8c6e8;
+      letter-spacing: 0.04em;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(2px);
+      white-space: nowrap;
+      user-select: none;
+      cursor: default;
+    }
+    .icon-btn-top {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #d4e6ff;
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(4px);
+    }
+    .icon-btn-top:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .icon-btn-top:active { transform: translateY(0) scale(0.96); }
+
+    /* ===== 主内容区 ===== */
+    .app { display: flex; width: 100%; gap: 24px; flex: 1 1 auto; min-height: 0; }
+
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 8px 24px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(2px);
+      transition: box-shadow 0.25s ease;
+    }
+    .card:hover {
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.16), 0 8px 24px -8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    .left { flex: 1; min-width: 0; }
+    .right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px; background: transparent; box-shadow: none; border: none; overflow: visible; min-height: 0; }
+
+    .output-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.1), 0 4px 16px -6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .output-card:hover {
+      box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.14), 0 6px 20px -8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    .output-card:nth-child(1) { flex: 1.5; }
+    .output-card:nth-child(2) { flex: 0.5; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      background: linear-gradient(to bottom, #fbfdff, #f7fafd);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      flex-shrink: 0;
+      gap: 12px;
+      user-select: none;
+      cursor: default;
+    }
+    .card-header .title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1e293b;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .card-header .title i {
+      font-size: 1.05rem;
+      color: var(--current-theme-color);
+      width: 1.2rem;
+      text-align: center;
+      transition: color 0.3s ease, filter 0.3s ease;
+    }
+
+    .action-buttons { display: flex; align-items: center; gap: 8px; }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 1rem;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(241, 245, 249, 0.7);
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .icon-btn:hover {
+      background: #ffffff;
+      color: #1e293b;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    .icon-btn:active { transform: translateY(0) scale(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+    .icon-btn.paste-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .icon-btn.regen-btn:hover { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .icon-btn.clear-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+    .text-area {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 18px 22px;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: #0f172a;
+      background: #ffffff;
+      font-family: inherit;
+      overflow-y: auto;
+      transition: background 0.2s;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #ffffff;
+      min-height: 0;
+    }
+    .text-area::placeholder { color: #b0c1d9; font-weight: 400; font-size: 0.9rem; letter-spacing: 0.01em; }
+    .text-area:focus { background: #ffffff; }
+    .output-textarea { background: #ffffff; font-size: 0.95rem; color: #1e293b; }
+    .output-textarea:focus { background: #fdfeff; }
+
+    .text-area::-webkit-scrollbar { width: 5px; height: 5px; }
+    .text-area::-webkit-scrollbar-track { background: transparent; }
+    .text-area::-webkit-scrollbar-thumb { background: #d1dbe8; border-radius: 12px; border: 1px solid transparent; background-clip: padding-box; }
+    .text-area::-webkit-scrollbar-thumb:hover { background: #a8b8cc; border: 1px solid transparent; background-clip: padding-box; }
+
+    .copy-btn {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: inherit;
+      line-height: 1.3;
+      letter-spacing: 0.01em;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+      backdrop-filter: blur(2px);
+    }
+    .copy-btn i { font-size: 0.78rem; transition: transform 0.2s; }
+    .copy-btn:hover { background: #ffffff; color: #1e293b; border-color: #cbd5e1; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04); }
+    .copy-btn:active { transform: translateY(0) scale(0.96); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
+    .copy-btn.copied { background: #e6f7e6; color: #15803d; border-color: #b8e6b8; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.08); }
+    .copy-btn.copied i { color: #15803d; transform: scale(1.05); }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 8px 0 4px;
+      flex-shrink: 0;
+      width: 100%;
+      user-select: none;
+    }
+    .footer .footer-line { flex: 1; max-width: 300px; height: 1px; background: linear-gradient(to right, transparent, #b6c6da, #b6c6da, transparent); border-radius: 1px; }
+    .footer .footer-text { font-size: 0.78rem; font-weight: 500; color: #7c8ea6; letter-spacing: 0.08em; white-space: nowrap; text-transform: uppercase; }
+    .footer .footer-text i { margin-right: 6px; color: var(--current-theme-color); font-size: 0.8rem; }
+
+    @media (max-width: 900px) {
+      body { padding: 12px 16px; gap: 10px; overflow: auto; }
+      .shell { gap: 10px; }
+      .topbar { padding: 12px 18px; }
+      .topbar-title { font-size: 0.9rem; }
+      .version { font-size: 0.7rem; padding: 4px 10px; }
+      .app { flex-direction: column; gap: 16px; flex: 0 1 auto; }
+      .right { flex: none; min-height: 500px; height: auto; }
+      .left { height: 380px; flex: none; }
+      .card-header { padding: 12px 18px; flex-wrap: wrap; }
+      .text-area { padding: 16px 18px; font-size: 0.9rem; }
+      .footer .footer-line { max-width: 80px; }
+      .footer .footer-text { font-size: 0.68rem; letter-spacing: 0.04em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- ===== 京东风格标题栏 ===== -->
+    <header class="topbar" id="dragBar">
+      <div class="topbar-left">
+        <div class="topbar-title">
+          <i class="fas fa-gears"></i> 到每家工单数据转换工具
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="version">V1.0</span>
+        <button class="icon-btn-top" id="openWindowBtn" title="独立窗口打开">
+          <i class="fas fa-clone"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="app">
+      <div class="card left">
+        <div class="card-header">
+          <div class="title"><i class="fas fa-database"></i> 数据源</div>
+          <div class="action-buttons">
+            <button class="icon-btn paste-btn" id="pasteBtn" title="粘贴生成"><i class="fas fa-paste"></i></button>
+            <button class="icon-btn regen-btn" id="regenBtn" title="重新生成"><i class="fas fa-rotate-right"></i></button>
+            <button class="icon-btn clear-btn" id="clearBtn" title="清空"><i class="fas fa-trash-can"></i></button>
+          </div>
+        </div>
+        <textarea class="text-area" id="sourceInput" placeholder="在到每家后台管理系统中的工单列表，客户电话后面的眼睛打开，
+复制工单全部信息，点击本窗口右上角图标快速生成...
+
+【说明】
+针对客户名称后的字段已进行处理，与品牌并列
+对于维修工单和广汽需要车架号信息的，仍需进入工单拓展信息查看二次复制
+————
+本工具为前端离线工具，放心使用"></textarea>
+      </div>
+
+      <div class="right">
+        <div class="output-card">
+          <div class="card-header">
+            <div class="title"><i class="fas fa-bullhorn"></i> 群公告</div>
+            <button class="copy-btn" data-target="announcementOutput"><i class="fas fa-copy"></i> 复制</button>
+          </div>
+          <textarea class="text-area output-textarea" id="announcementOutput" placeholder="群公告将显示在这里..."></textarea>
+        </div>
+
+        <div class="output-card">
+          <div class="card-header">
+            <div class="title"><i class="fas fa-users"></i> 群名</div>
+            <button class="copy-btn" data-target="groupNameOutput"><i class="fas fa-copy"></i> 复制</button>
+          </div>
+          <textarea class="text-area output-textarea" id="groupNameOutput" placeholder="群名将显示在这里..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span class="footer-line"></span>
+      <span class="footer-text"><i class="fas fa-code"></i> Powered by XUGL</span>
+      <span class="footer-line"></span>
+    </footer>
+  </div>
+
+  <script>
+    /* ============ 窗口拖动（HTA） ============ */
+    var dragging = false;
+    var startX, startY, startLeft, startTop;
+    function dragStart(e) {
+      dragging = true;
+      e = e || window.event;
+      startX = e.screenX; startY = e.screenY;
+      startLeft = window.screenLeft; startTop = window.screenTop;
+    }
+    document.onmousemove = function(e) {
+      if (!dragging) return;
+      e = e || window.event;
+      window.moveTo(startLeft + (e.screenX - startX), startTop + (e.screenY - startY));
+    };
+    document.onmouseup = function() { dragging = false; };
+
+    (function() {
+      var sourceInput = document.getElementById('sourceInput');
+      var announcementOutput = document.getElementById('announcementOutput');
+      var groupNameOutput = document.getElementById('groupNameOutput');
+
+      var pasteBtn = document.getElementById('pasteBtn');
+      var regenBtn = document.getElementById('regenBtn');
+      var clearBtn = document.getElementById('clearBtn');
+      var openWindowBtn = document.getElementById('openWindowBtn');
+      var copyBtns = document.querySelectorAll('.copy-btn');
+
+      // 标题栏拖动
+      document.getElementById('dragBar').onmousedown = function(e) {
+        e = e || window.event;
+        if (e.target.closest('.icon-btn-top')) return;
+        dragStart(e);
+      };
+
+      function parseDateFromOrderNo(orderNo) {
+        if (!orderNo) return '';
+        var m = orderNo.match(/(\d{4})-(\d{2})-(\d{2})/);
+        return m ? m[1] + '-' + m[2] + '-' + m[3] : '';
+      }
+
+      function formatShortDate(yyyy_mm_dd) {
+        if (!yyyy_mm_dd) return '';
+        var parts = yyyy_mm_dd.split('-');
+        return parts.length === 3 ? parseInt(parts[1], 10) + '/' + parseInt(parts[2], 10) : '';
+      }
+
+      function extractDistrict(addressRaw) {
+        if (!addressRaw) return '';
+        var parts = addressRaw.split('_');
+        return parts.length >= 3 ? (parts[2] || '') : '';
+      }
+
+      function cleanAddress(addressRaw) {
+        if (!addressRaw) return '';
+        var joined = addressRaw.replace(/_/g, '').replace(/\s+/g, '').trim();
+
+        var prefix = "";
+        var prefixMatch = joined.match(/^(江苏省|浙江省|安徽省|山东省|河南省|河北省|湖北省|湖南省|广东省|福建省|江西省|四川省|贵州省|云南省|陕西省|甘肃省|青海省|辽宁省|吉林省|黑龙江省|山西省|海南省|台湾省|内蒙古自治区|广西壮族自治区|西藏自治区|宁夏回族自治区|新疆维吾尔自治区|北京市|上海市|天津市|重庆市)/);
+        if (prefixMatch) {
+          prefix = prefixMatch[0];
+          joined = joined.substring(prefix.length);
+        }
+
+        var cityMatch = joined.match(/^[^省市区县]*?(市|县|区)/);
+        if (cityMatch) {
+          prefix += cityMatch[0];
+          joined = joined.substring(cityMatch[0].length);
+        }
+
+        var districtMatch = joined.match(/^[^省市区县]*?(市|县|区)/);
+        if (districtMatch) {
+          prefix += districtMatch[0];
+          joined = joined.substring(districtMatch[0].length);
+        }
+
+        var province = prefix.substring(0, 3);
+        var city = prefix.substring(3, 6);
+        var dist = prefix.substring(6);
+
+        joined = joined.replace(province, '');
+        joined = joined.replace(city, '');
+        joined = joined.replace(dist, '');
+
+        var doubleMatch = joined.match(/(.{2,5}(?:街道|镇|乡|村|社区))\1/);
+        while (doubleMatch) {
+          joined = joined.replace(doubleMatch[0], doubleMatch[1]);
+          doubleMatch = joined.match(/(.{2,5}(?:街道|镇|乡|村|社区))\1/);
+        }
+
+        return prefix + joined;
+      }
+
+      function extractPhone(text) {
+        if (!text) return '';
+        var m = text.match(/(\d{11})/);
+        return m ? m[1] : '';
+      }
+
+      function extractBracketContent(text) {
+        var m = text.match(/[（(](.*?)[)）]/);
+        return m ? m[1].trim() : '';
+      }
+
+      function parseSource(raw) {
+        if (!raw || raw.trim() === '') return { announcement: '', groupName: '' };
+
+        var lines = raw.split(/\r?\n/);
+        var systemOrderNo = '', carOrderNo = '', serviceType = '', brandRaw = '';
+        var candidateAddressLines = [];
+
+        var nonEmptyLines = [];
+        for (var i = 0; i < lines.length; i++) {
+          if (lines[i].trim() !== '') nonEmptyLines.push(lines[i].trim());
+        }
+
+        for (var i = 0; i < nonEmptyLines.length; i++) {
+          var line = nonEmptyLines[i];
+          var sysMatch = line.match(/^.*统订单号[:：]\s*(.+)$/);
+          if (sysMatch) { systemOrderNo = sysMatch[1].trim(); continue; }
+          var carMatch = line.match(/^.*企订单号[:：]\s*(.+)$/);
+          if (carMatch) { carOrderNo = carMatch[1].trim(); continue; }
+          var brandMatch = line.match(/^品牌[:：]\s*(.+)$/);
+          if (brandMatch) { brandRaw = brandMatch[1].trim(); continue; }
+          var serviceMatch = line.match(/^(服务[-—][^\s\t]+)/);
+          if (serviceMatch) { serviceType = serviceMatch[1].trim(); continue; }
+
+          if (line.indexOf('_') > -1 || /省|市|区|县/.test(line)) {
+            candidateAddressLines.push(line);
+            continue;
+          }
+        }
+
+        var phone = '', customerName = '';
+        var foundServiceManIdx = -1;
+
+        for (var j = 0; j < nonEmptyLines.length; j++) {
+          if (nonEmptyLines[j].indexOf('服务兵') > -1) {
+            foundServiceManIdx = j;
+            break;
+          }
+        }
+
+        if (foundServiceManIdx > -1) {
+          if (foundServiceManIdx + 1 < nonEmptyLines.length) {
+            var nameLine = nonEmptyLines[foundServiceManIdx + 1];
+            var nameMatch = nameLine.match(/(\d{11})/);
+            if (nameMatch) {
+              phone = nameMatch[1];
+              customerName = nameLine.replace(/\d{11}/g, '').trim();
+            } else {
+              customerName = nameLine;
+              if (foundServiceManIdx + 2 < nonEmptyLines.length) {
+                phone = extractPhone(nonEmptyLines[foundServiceManIdx + 2]);
+              }
+            }
+          }
+        }
+
+        var addressLineRaw = candidateAddressLines.length > 0 ? candidateAddressLines[candidateAddressLines.length - 1] : '';
+        var district = extractDistrict(addressLineRaw);
+        var address = cleanAddress(addressLineRaw);
+        var shortDate = formatShortDate(parseDateFromOrderNo(systemOrderNo));
+        var serviceShort = '';
+        if (serviceType) {
+          var m = serviceType.match(/服务[-—](.+)/);
+          serviceShort = m ? m[1].trim() : serviceType;
+        }
+
+        var brand = brandRaw, brandForGroup = brand.trim();
+        var bracketContent = extractBracketContent(customerName);
+        if (bracketContent) {
+          customerName = customerName.replace(/[（(].*?[)）]/g, '').trim();
+        }
+
+        var brandDisplay = brand, customerDisplay = '', extraLines = [];
+        var isGuangqi = brand.indexOf('广汽') > -1, isAianDanji = brand === '埃安单机', isLingPao = brand === '零跑';
+        var isGuangqiXinnengyuan = brand === '广汽新能源', isGalaxy = brand === '银河', isLynk = brand === '领克';
+        var isHaier = brand === '海尔', isBeijiJihu = brand.indexOf('北汽极狐') > -1 || brand.indexOf('极狐') > -1;
+
+        var groupCustomerName = customerName;
+
+        if (isBeijiJihu) {
+          var jihuBrand = '极狐智能';
+          if (customerName.indexOf('问道') > -1) jihuBrand = '极狐问道';
+          else if (customerName.indexOf('30米') > -1) jihuBrand = '极狐智能';
+          else if (customerName.indexOf('20米') > -1) jihuBrand = '极狐刷卡';
+          else if (customerName.indexOf('T7') > -1 || customerName.indexOf('t7') > -1) jihuBrand = '极狐智能T7';
+
+          brandDisplay = brandForGroup = jihuBrand;
+          customerDisplay = jihuBrand + '-' + customerName + phone;
+
+          if (groupCustomerName.indexOf('-') > -1) {
+            groupCustomerName = groupCustomerName.split('-')[0].trim();
+          }
+        }
+
+        if (isLingPao) {
+          if (bracketContent) {
+            brandDisplay = brandForGroup = '零跑(' + bracketContent + ')';
+            customerDisplay = customerName + phone;
+          } else {
+            brandDisplay = brandForGroup = '零跑';
+            customerDisplay = '零跑-' + customerName + phone;
+          }
+        }
+        if (isGuangqiXinnengyuan) {
+          if (bracketContent) {
+            brandDisplay = '广汽新能源-(' + bracketContent + ')';
+            brandForGroup = '广汽新能源';
+            customerDisplay = customerName + phone;
+          } else {
+            brandDisplay = brandForGroup = '广汽新能源';
+            customerDisplay = '广汽新能源-' + customerName + phone;
+          }
+        }
+        if (isGalaxy || isLynk) {
+          brandDisplay = brandForGroup = brand;
+          customerDisplay = brand + '-' + customerName + phone;
+        }
+        if (isHaier) {
+          brandDisplay = brandForGroup = '海尔';
+          customerDisplay = '海尔-' + customerName + phone;
+        }
+        if (isAianDanji) {
+          brandDisplay = brandForGroup = '埃安单机';
+          customerDisplay = '埃安单机-' + customerName + phone;
+        }
+        if (isGuangqi && !isGuangqiXinnengyuan && !isAianDanji) {
+          if (bracketContent) {
+            brandDisplay = brand + '-(' + bracketContent + ')';
+            brandForGroup = brand;
+            customerDisplay = customerName + phone;
+          } else {
+            brandDisplay = brandForGroup = brand;
+            customerDisplay = brand + '-' + customerName + phone;
+          }
+        }
+        if (brand.indexOf('工程-') === 0) {
+          brandDisplay = brandForGroup = brand;
+          customerDisplay = brand + '-' + customerName + phone;
+        }
+        if (!isBeijiJihu && !isLingPao && !isGuangqiXinnengyuan && !isGalaxy && !isLynk && !isHaier && !isAianDanji && !isGuangqi && brand.indexOf('工程-') !== 0) {
+          if (bracketContent) {
+            brandDisplay = brand + '-(' + bracketContent + ')';
+            brandForGroup = brand;
+            customerDisplay = customerName + phone;
+          } else {
+            brandDisplay = brandForGroup = brand;
+            customerDisplay = brand + '-' + customerName + phone;
+          }
+        }
+        if (!customerDisplay) {
+          if (bracketContent) {
+            brandDisplay = brand + '-(' + bracketContent + ')';
+            customerDisplay = customerName + phone;
+          } else {
+            brandDisplay = brandForGroup = brand;
+            customerDisplay = brand + '-' + customerName + phone;
+          }
+        }
+
+        if ((isGuangqi || isAianDanji) && serviceShort !== '维修') extraLines.push('车架号：');
+        if (isHaier) extraLines.push('#请查看扩展信息中的桩型信息');
+        if (serviceShort === '维修') extraLines.push('#请查看拓展信息中的故障');
+
+        var announcementLines = [];
+        announcementLines.push(serviceType ? '到每家订单//' + serviceType : '到每家订单//');
+        if (systemOrderNo) announcementLines.push('系统订单号：' + systemOrderNo);
+        if (carOrderNo) announcementLines.push('车企订单号：' + carOrderNo);
+
+        var brandOutputLine = '', customerOutputLine = '';
+        if (isBeijiJihu) {
+          brandOutputLine = brandDisplay + '-' + customerName + phone;
+        } else if (isLingPao) {
+          brandOutputLine = (bracketContent ? '零跑(' + bracketContent + ')' : '零跑') + '-' + customerName + phone;
+        } else if (isGuangqiXinnengyuan) {
+          if (bracketContent) {
+            brandOutputLine = '广汽新能源-(' + bracketContent + ')';
+            customerOutputLine = customerName + phone;
+          } else brandOutputLine = '广汽新能源-' + customerName + phone;
+        } else if (isGalaxy || isLynk) {
+          brandOutputLine = brand + '-' + customerName + phone;
+        } else if (isHaier) {
+          brandOutputLine = '海尔-' + customerName + phone;
+        } else if (isAianDanji) {
+          brandOutputLine = '埃安单机-' + customerName + phone;
+        } else if (isGuangqi && !isGuangqiXinnengyuan && !isAianDanji) {
+          if (bracketContent) {
+            brandOutputLine = brand + '-(' + bracketContent + ')';
+            customerOutputLine = customerName + phone;
+          } else brandOutputLine = brand + '-' + customerName + phone;
+        } else if (brand.indexOf('工程-') === 0) {
+          brandOutputLine = brand + '-' + customerName + phone;
+        } else {
+          if (bracketContent) {
+            brandOutputLine = brand + '-(' + bracketContent + ')';
+            customerOutputLine = customerName + phone;
+          } else brandOutputLine = brand + '-' + customerName + phone;
+        }
+
+        if (brandOutputLine) announcementLines.push(brandOutputLine);
+        if (customerOutputLine) announcementLines.push(customerOutputLine);
+        for (var l = 0; l < extraLines.length; l++) announcementLines.push(extraLines[l]);
+        if (address) announcementLines.push(address);
+
+        var groupName = '';
+        if (shortDate && brandForGroup && district && groupCustomerName && serviceShort) {
+          var groupBrand = isBeijiJihu ? brandDisplay : brandForGroup;
+          groupName = shortDate + groupBrand + district + groupCustomerName + '·' + serviceShort + '服务群';
+        }
+
+        return {
+          announcement: announcementLines.join('\n').trim(),
+          groupName: groupName.trim()
+        };
+      }
+
+      function updateOutputs() {
+        var parsed = parseSource(sourceInput.value);
+        announcementOutput.value = parsed.announcement;
+        groupNameOutput.value = parsed.groupName;
+        resetAllCopyBtns();
+      }
+
+      function resetAllCopyBtns() {
+        copyBtns.forEach(function(btn) {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+        });
+      }
+
+      function copyTextToClipboard(text, callback) {
+        try {
+          if (window.clipboardData) {
+            window.clipboardData.setData('Text', text);
+            callback(true);
+          } else {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            var success = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            callback(success);
+          }
+        } catch (e) { callback(false); }
+      }
+
+      function handleCopyClick(event) {
+        var btn = event.currentTarget;
+        var targetEl = document.getElementById(btn.getAttribute('data-target'));
+        if (!targetEl) return;
+        copyTextToClipboard(targetEl.value, function(success) {
+          if (success) {
+            btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+            btn.classList.add('copied');
+            setTimeout(function() {
+              if (btn.classList.contains('copied')) {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="fas fa-copy"></i> 复制';
+              }
+            }, 2000);
+          } else alert('复制失败，请手动选择文本');
+        });
+      }
+
+      function pasteAndGenerate() {
+        if (window.clipboardData) {
+          try {
+            var text = window.clipboardData.getData('Text');
+            if (text) sourceInput.value = text;
+            updateOutputs();
+          } catch (e) {}
+        } else {
+          alert('请手动粘贴到左侧文本框，然后点击“重新生成”按钮。');
+        }
+      }
+
+      function regenerate() { updateOutputs(); }
+
+      function clearAll() {
+        sourceInput.value = '';
+        announcementOutput.value = '';
+        groupNameOutput.value = '';
+        resetAllCopyBtns();
+        sourceInput.focus();
+      }
+
+      function openInNewWindow() {
+        var htmlContent = document.documentElement.outerHTML;
+        var blob = new Blob([htmlContent], { type: 'text/html' });
+        var url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'width=1440,height=900,menubar=no,toolbar=no,location=no,status=no');
+      }
+
+      pasteBtn.addEventListener('click', pasteAndGenerate);
+      regenBtn.addEventListener('click', regenerate);
+      clearBtn.addEventListener('click', clearAll);
+      openWindowBtn.addEventListener('click', openInNewWindow);
+      copyBtns.forEach(function(btn) { btn.addEventListener('click', handleCopyClick); });
+
+      window.addEventListener('load', function() {
+        updateOutputs();
+      });
+    })();
+  </script>
+</body>
+</html>
