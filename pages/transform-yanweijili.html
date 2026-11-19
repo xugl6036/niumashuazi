@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>平台工单数据转换工具</title>
+  <title>妍伟运营平台/吉利工单数据转换工具</title>
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -328,7 +328,7 @@
     <header class="topbar">
       <div class="topbar-left">
         <div class="topbar-title">
-          <i class="fas fa-gears"></i> 平台工单数据转换工具
+          <i class="fas fa-gears"></i> 妍伟运营平台/吉利工单数据转换工具
         </div>
       </div>
       <div class="topbar-right">
@@ -474,11 +474,24 @@
 
       // 核心转换逻辑
       function transformData(data) {
-        if (!data || !data['工单编号']) return { announcement: '', groupName: '', table: '' };
+        if (!data || !data['工单编号']) return { announcement: '', groupName: '', table: '', row: [] };
+
+        // ---- 拦截：规则校验 ----
+        const orderType = data['工单类型'] || '';
+        if (!orderType.includes('吉利')) {
+          return {
+            announcement: '⚠️ 暂无规则，请核实工单类型',
+            groupName: '',
+            table: '',
+            row: []
+          };
+        }
 
         // ---- 预处理字段 ----
         let workOrderNo = data['工单编号'] || '';
         let customerName = data['购车人姓名'] || '无';
+        let customerPhone = data['购车人电话'] || '无';
+        
         if (customerName === '无') customerName = data['安装联系人姓名'] || '';
         
         let addressRaw = data['客户地址'] || '';
@@ -495,8 +508,9 @@
         let installPhone = data['安装联系人手机号'] || '';
         let userRemark = data['用户备注'] || '无';
         let opRemark = data['运营备注'] || '无';
+        let parkingSpace = data['详细车位'] || '无';
 
-        // ---- 规则 1：地址拆分 (修复重复问题) ----
+        // ---- 规则 1：地址拆分 ----
         let province = '', city = '', district = '', detail = '';
         let addrParts = addressRaw.split(/\s+/).filter(s=>s);
         if (addrParts.length >= 4) {
@@ -519,7 +533,6 @@
           }
         }
 
-        // 去除详细地址中重复的省市区县
         if (detail && province && detail.startsWith(province)) detail = detail.substring(province.length);
         if (detail && city && detail.startsWith(city)) detail = detail.substring(city.length);
         if (detail && district && detail.startsWith(district)) detail = detail.substring(district.length);
@@ -553,9 +566,24 @@
         annLines.push('工单编号：' + workOrderNo);
         annLines.push('安装联系人：' + installContact + installPhone);
         annLines.push('客户地址：' + province + city + district + detail);
+        
+        // 详细车位追加
+        if (parkingSpace !== '无' && parkingSpace !== '') {
+          annLines.push('详细车位：' + parkingSpace);
+        }
+
         annLines.push('吉利单号：' + jiliNo);
         if (carVIN !== '无' && carVIN !== '') annLines.push('车架号：' + carVIN);
-        if (data['购车人姓名'] && data['购车人姓名'] !== '无') annLines.push('购车人：' + data['购车人姓名']);
+        
+        // 购车人及电话追加
+        if (data['购车人姓名'] && data['购车人姓名'] !== '无') {
+          let buyerStr = '购车人：' + data['购车人姓名'];
+          if (customerPhone !== '无' && customerPhone !== '') {
+            buyerStr += '（' + customerPhone + '）';
+          }
+          annLines.push(buyerStr);
+        }
+
         if (finalBuyTime) annLines.push('购车时间：' + finalBuyTime.split(' ')[0] + '；权益截止：' + finalRightTime);
         annLines.push('车型名称：' + finalModel + '/' + finalCarType + '/' + deliveryMethod);
         annLines.push('桩名称：' + (data['桩名称'] || '无'));
@@ -581,7 +609,7 @@
         let dateStr = m ? `${m}/${d}` : '';
         let groupName = `${dateStr}妍伟·${finalModel}${district}${customerName}安装服务群`;
 
-        // ---- 组装：制表（A1 ~ Z1，无表头） ----
+        // ---- 组装：制表（A1 ~ Z1） ----
         let row = new Array(26).fill(''); 
         
         row[0] = workOrderNo; // A
@@ -589,7 +617,7 @@
         // C, D, E 留空
         row[5] = data['创建时间'] || ''; // F
         // G ~ S 留空
-        row[19] = installContact; // T (只有名字)
+        row[19] = installContact; // T
         row[20] = city; // U
         row[21] = district; // V
         row[22] = (carVIN === '无' || !carVIN) ? '无' : carVIN; // W
@@ -597,7 +625,7 @@
         row[24] = finalBuyTime ? finalBuyTime.split(' ')[0] : ''; // Y
         row[25] = jiliNo; // Z
 
-        let table = row.join('\t'); // Tab文本
+        let table = row.join('\t');
 
         return { announcement, groupName, table, row };
       }
@@ -719,12 +747,10 @@
             updateOutputs();
           }
         } catch (err) {
-          // 如果在独立窗口(blob)中，Chrome拦截了读取，直接通过UI引导
-          // 不弹窗，而是聚焦输入框，并把占位符改为提示
+          // 独立窗口降级处理：不弹窗，直接聚焦输入框并提示
           sourceInput.focus();
           sourceInput.placeholder = '⚠️ 当前环境限制了自动读取。\n\n请直接在此按下 Ctrl+V (或右键粘贴)，\n系统会自动生成结果。';
           
-          // 3秒后恢复默认提示
           setTimeout(() => {
             if (sourceInput.value.trim() === '') {
                sourceInput.placeholder = defaultPlaceholder;
@@ -760,7 +786,6 @@
         btn.addEventListener('click', handleCopyClick);
       });
       
-      // 绑定输入监听，无论是手动打字还是粘贴，均实时触发更新
       sourceInput.addEventListener('input', updateOutputs);
     })();
   </script>
