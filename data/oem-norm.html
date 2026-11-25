@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主机厂安装规范查询工具</title>
+    <script src="https://fastly.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f3f6f9;
+            --card-bg: #ffffff;
+            --primary-color: #3b82f6;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --soft-bg: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-color: var(--bg-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 左侧区域 */
+        .left-panel { flex: 6; min-width: 0; }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 6px 12px;
+            width: 280px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        .search-box:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-main);
+            background: transparent;
+            padding-right: 20px;
+        }
+        .clear-btn {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            color: #9ca3af;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .clear-btn:hover { color: #4b5563; }
+
+        .nav-tabs {
+            display: flex;
+            flex: 1;
+            margin-bottom: -1px;
+            flex-wrap: wrap;
+        }
+        .nav-item {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .nav-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* ========== 设置弹窗 ========== */
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 20px;
+        }
+        .modal-mask.show { display: flex; }
+        .modal-wrap {
+            background: #fff;
+            border-radius: 14px;
+            width: 440px;
+            max-width: 100%;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            animation: modalIn 0.18s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-title { font-weight: 600; font-size: 16px; }
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+        .modal-close:hover { background: #f2f5f9; color: var(--text-main); }
+        .modal-body { padding: 20px; line-height: 1.7; }
+        .modal-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            color: #1a56bd;
+            background: #eaf1fe;
+            border-radius: 8px;
+            padding: 4px 11px;
+            margin-bottom: 12px;
+        }
+        .modal-status.err { color: #9a4b00; background: #fff2e2; }
+        .modal-body p { font-size: 13px; color: var(--text-secondary); }
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: right;
+        }
+        .btn-primary {
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13.5px;
+        }
+        .btn-primary:hover { background: #2563eb; }
+
+        .left-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            background-color: #fff;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            align-content: start;
+        }
+        .result-card {
+            background: var(--soft-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .result-card:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .result-card.active {
+            background: #eff6ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .result-card .card-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+        .result-card.active .card-title { color: var(--primary-color); }
+        .result-card .card-sub {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .empty-tip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            height: 100%;
+            color: var(--text-secondary);
+            font-size: 15px;
+            text-align: center;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .empty-tip .pick-btn {
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .empty-tip .pick-btn:hover { background: #f0f6ff; }
+
+        /* 右侧区域 */
+        .right-panel { flex: 4; min-width: 0; }
+        .right-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafafa;
+        }
+        .right-title { font-size: 16px; font-weight: 600; }
+        .right-header-actions { display: flex; gap: 6px; }
+
+        .icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover {
+            background-color: #e5e7eb;
+            color: var(--text-main);
+            border-color: var(--border-color);
+        }
+
+        .preview-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafbfc;
+        }
+
+        .detail-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .detail-name { font-size: 19px; font-weight: 650; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #eaf1fe;
+            color: #1a56bd;
+        }
+        .badge.count { background: #f2f5f9; color: var(--text-secondary); }
+
+        .record-block {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .block-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .block-oem { font-size: 15px; font-weight: 600; }
+        .block-plat {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: #f2f5f9;
+            border-radius: 7px;
+            padding: 2px 9px;
+        }
+
+        .kv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px 18px;
+            margin-bottom: 12px;
+        }
+        .kv-item { font-size: 12.5px; }
+        .kv-item b {
+            display: block;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 11.5px;
+            letter-spacing: .3px;
+            margin-bottom: 2px;
+        }
+        .kv-item span { color: var(--text-main); font-weight: 500; }
+
+        .chips-title {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            letter-spacing: .3px;
+            margin-bottom: 8px;
+        }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            background: #eaf1fe;
+            color: #1a56bd;
+            border-radius: 8px;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .chip.empty { background: #f2f5f9; color: var(--text-secondary); font-weight: 400; }
+
+        mark { background: #ffe9a8; color: inherit; padding: 0 1px; border-radius: 2px; }
+
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .main-container { flex-direction: column; }
+            .left-panel, .right-panel { min-height: 0; }
+            .search-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <!-- 左侧功能区 -->
+        <div class="card left-panel">
+            <div class="left-header">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="模糊搜索主机厂、平台、漏保/线缆品牌..." autocomplete="off">
+                    <button class="clear-btn" id="clearSearch" title="清空">✕</button>
+                </div>
+                <div class="nav-tabs" id="navTabs">
+                    <div class="nav-item active" data-type="all">全部</div>
+                    <div class="nav-item" data-type="主机厂">主机厂</div>
+                    <div class="nav-item" data-type="平台">平台</div>
+                    <div class="nav-item" data-type="线缆品牌">线缆品牌</div>
+                </div>
+            </div>
+
+            <div class="left-content">
+                <div class="empty-tip" id="emptyTip">数据加载中...</div>
+                <div class="result-grid" id="resultGrid" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 右侧预览区 -->
+        <div class="card right-panel">
+            <div class="right-header">
+                <div class="right-title">主机厂安装规范</div>
+                <div class="right-header-actions">
+                    <!-- 齿轮：数据设置 / 选择 Excel -->
+                    <button class="icon-btn" id="settingBtn" title="数据设置 / 选择 Excel 文件">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                    <!-- 新窗口按钮 -->
+                    <button class="icon-btn" id="openWindowBtn" title="在新窗口打开">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-area" id="previewArea"></div>
+        </div>
+
+    </div>
+
+    <!-- ========== 设置弹窗 ========== -->
+    <div class="modal-mask" id="modalMask">
+        <div class="modal-wrap">
+            <div class="modal-header">
+                <div class="modal-title">数据设置</div>
+                <button class="modal-close" id="modalClose" title="关闭">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-status" id="modalStatus">正在加载数据…</div>
+                <p id="modalDesc">当前显示内置快照：本地双击打开或在线预览时浏览器不允许自动读取同目录文件。查看最新数据请选择 Excel 文件，或部署到 Pages。</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="selectFileBtn">选择 Excel 文件</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= 配置区 ================= */
+        const CONFIG = {
+            dataPaths: [
+                "data/各主机厂安装规范.xlsx",
+                "data/oem-sop.xlsx",
+                "./各主机厂安装规范.xlsx"
+            ],
+            sheetIndex: 0
+        };
+
+        /* 内置快照：自动读取 data 文件失败时（本地双击 / 在线预览）兜底使用 */
+        const EMBEDDED_DATA = {"generatedAt": "2026-11-25", "fields": ["主机厂", "平台", "漏保型号", "漏保品牌", "管材规格", "配电盒", "质保售后", "接地", "水印要求", "权益核验"], "rows": [{"主机厂": "长安", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "无要求", "权益核验": "深蓝提供照片，其他车型无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "远东电缆", "珠江电缆", "重庆华旗", "浙江正泰", "宁波东方", "亨通电缆", "鸽牌电缆", "渝丰电缆", "宝胜电缆", "桂林国际"]}, {"主机厂": "吉利", "平台": "均胜", "漏保型号": "TSM标A型", "漏保品牌": "正泰", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "安装照片和免责需要现场水印", "权益核验": "提供照片", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "远东电缆", "珠江电缆"]}, {"主机厂": "吉利", "平台": "妍伟", "漏保型号": "TSM标A型", "漏保品牌": "正泰", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "安装照片和免责需要现场水印", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "珠江", "浙江元通", "成天泰", "浙江正泰", "金龙羽", "宁波东方", "奔达康", "南洋", "江南", "飞鹤", "朝阳", "特变电工", "金山", "锐洋", "龙腾红旗", "远洋", "江苏江扬", "盛隆", "民兴", "江苏中超", "新兴"]}, {"主机厂": "极狐", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "施耐德、ABB、德力西、西门子", "管材规格": "B管305规格", "配电盒": "PZ30", "质保售后": "安装质保2年", "接地": "智能免费，刷卡收费", "水印要求": "极狐团队水印", "权益核验": "无需", "__brands": ["浙江万马", "上海起帆", "江苏上上", "远东电缆", "广州珠江", "江南电缆", "天津津达"]}, {"主机厂": "极狐", "平台": "到每家", "漏保型号": "A型", "漏保品牌": "施耐德、ABB、德力西、西门子", "管材规格": "B管305规格", "配电盒": "PZ30", "质保售后": "安装质保2年", "接地": "智能免费，刷卡收费", "水印要求": "极狐团队水印", "权益核验": "无需", "__brands": ["浙江万马", "上海起帆", "江苏上上", "远东电缆", "广州珠江", "江南电缆", "天津津达"]}, {"主机厂": "北汽北京", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "安装质保2年", "接地": "越野免费，轿车收费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "翼真", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "施耐德；ABB；西门子", "管材规格": "φ32mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "需要", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "浙江元通", "浙江正泰", "宁波东方", "江苏中超", "航天瑞奇", "无锡华美"]}, {"主机厂": "雷达", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "良信；天正；正泰", "管材规格": "φ32mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "需要", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "浙江元通", "浙江正泰", "宁波东方", "江苏中超", "航天瑞奇", "无锡华美"]}, {"主机厂": "长城", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ32mm²", "配电盒": "5位及以上", "质保售后": "设备安装3年", "接地": "免费", "水印要求": "需要", "权益核验": "无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "零跑", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "安装1年，设备3年", "接地": "免费", "水印要求": "需要", "权益核验": "无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "比亚迪", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "方程豹", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "腾势", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "仰望", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "8位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}]};
+
+        /* ================= 状态 ================= */
+        const state = {
+            fields: [],
+            records: [],
+            tab: 'all',
+            q: '',
+            selected: null,   // { kind, key, indexes }
+            loaded: false,
+            source: '',
+            mode: ''          // file | embedded
+        };
+
+        const emptyTip = document.getElementById('emptyTip');
+        const resultGrid = document.getElementById('resultGrid');
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const navItems = document.querySelectorAll('.nav-item');
+        const previewArea = document.getElementById('previewArea');
+        const modalMask = document.getElementById('modalMask');
+        const modalClose = document.getElementById('modalClose');
+        const settingBtn = document.getElementById('settingBtn');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalDesc = document.getElementById('modalDesc');
+        const fileInput = document.getElementById('fileInput');
+
+        /* ================= 工具函数 ================= */
+        const esc = (s) => String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const norm = (v) => v == null ? "" : String(v).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+        const hay = (r) => state.fields.map(f => r[f]).join(" ") + " " + r.__brands.join(" ");
+
+        function hl(text) {
+            const s = String(text == null ? "" : text);
+            if (!state.q) return esc(s);
+            const idx = s.toLowerCase().indexOf(state.q.toLowerCase());
+            if (idx < 0) return esc(s);
+            return esc(s.slice(0, idx)) + "<mark>" + esc(s.slice(idx, idx + state.q.length)) + "</mark>" + esc(s.slice(idx + state.q.length));
+        }
+
+        /* ================= 数据解析 ================= */
+        function fromAoA(aoa) {
+            const headRow = aoa[0] || [];
+            let lastHead = -1;
+            headRow.forEach((h, i) => { if (norm(h) !== "") lastHead = i; });
+            if (lastHead < 0) throw new Error("未识别到表头");
+            const fields = headRow.slice(0, lastHead + 1).map((h, i) => norm(h) || ("列" + (i + 1)));
+            const records = aoa.slice(1).filter(r => r && norm(r[0]) !== "").map(r => {
+                const o = { __brands: [] };
+                fields.forEach((f, i) => { o[f] = norm(r[i]); });
+                o.__brands = Array.from(new Set(r.slice(lastHead + 1).map(norm).filter(Boolean)));
+                return o;
+            });
+            if (!records.length) throw new Error("没有读到数据行");
+            return { fields, records };
+        }
+
+        function parseWorkbook(arrayBuffer, sourceName) {
+            if (typeof XLSX === "undefined") throw new Error("解析库未加载，请联网后刷新重试");
+            const wb = XLSX.read(arrayBuffer, { type: "array" });
+            const sheetName = wb.SheetNames[CONFIG.sheetIndex] || wb.SheetNames[0];
+            const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "", raw: false, blankrows: false });
+            if (!aoa.length) throw new Error("工作表为空");
+            const { fields, records } = fromAoA(aoa);
+            applyData(fields, records, sourceName, "file");
+        }
+
+        function applyData(fields, records, sourceName, mode) {
+            state.fields = fields;
+            state.records = records;
+            state.selected = null;
+            state.loaded = true;
+            state.source = sourceName;
+            state.mode = mode;
+            searchInput.value = "";
+            clearBtn.style.display = "none";
+            updateModalStatus();
+            render();
+        }
+
+        /* ================= 卡片列表 ================= */
+        function buildCards() {
+            const q = state.q.toLowerCase();
+            const cards = [];
+
+            if (state.tab === 'all') {
+                state.records.forEach((r, i) => {
+                    if (!q || hay(r).toLowerCase().includes(q)) {
+                        cards.push({ kind: 'record', key: i, title: r['主机厂'], sub: r['平台'] || '—' });
+                    }
+                });
+            } else if (state.tab === '主机厂') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    const name = r['主机厂']; if (!name) return;
+                    if (!seen.has(name)) seen.set(name, []);
+                    seen.get(name).push(i);
+                });
+                seen.forEach((idxs, name) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        const plats = [...new Set(idxs.map(x => state.records[x]['平台']).filter(Boolean))].join(' / ');
+                        cards.push({ kind: 'oem', key: name, title: name, sub: idxs.length + ' 条 · 平台：' + plats });
+                    }
+                });
+            } else if (state.tab === '平台') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    const name = r['平台']; if (!name) return;
+                    if (!seen.has(name)) seen.set(name, []);
+                    seen.get(name).push(i);
+                });
+                seen.forEach((idxs, name) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        cards.push({ kind: 'platform', key: name, title: name, sub: idxs.length + ' 个主机厂' });
+                    }
+                });
+            } else if (state.tab === '线缆品牌') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    r.__brands.forEach(b => {
+                        if (!seen.has(b)) seen.set(b, []);
+                        seen.get(b).push(i);
+                    });
+                });
+                [...seen.entries()].sort((a, b) => b[1].length - a[1].length).forEach(([name, idxs]) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        cards.push({ kind: 'brand', key: name, title: name, sub: idxs.length + ' 个主机厂认可' });
+                    }
+                });
+            }
+            return cards;
+        }
+
+        function matchIndexes(card) {
+            if (card.kind === 'record') return [card.key];
+            if (card.kind === 'oem') return state.records.map((r, i) => r['主机厂'] === card.key ? i : -1).filter(i => i >= 0);
+            if (card.kind === 'platform') return state.records.map((r, i) => r['平台'] === card.key ? i : -1).filter(i => i >= 0);
+            return state.records.map((r, i) => r.__brands.includes(card.key) ? i : -1).filter(i => i >= 0);
+        }
+
+        /* ================= 渲染：左侧卡片 ================= */
+        function renderGrid(cards) {
+            resultGrid.innerHTML = "";
+            if (!cards.length) {
+                resultGrid.innerHTML = '<div class="empty-tip" style="grid-column: 1/-1; height: 200px;">未找到匹配项，换个关键词试试</div>';
+                return;
+            }
+            cards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'result-card' + (state.selected && state.selected.kind === card.kind && state.selected.key === card.key ? ' active' : '');
+                el.dataset.kind = card.kind;
+                el.dataset.key = card.key;
+                el.innerHTML = '<div class="card-title">' + hl(card.title) + '</div>' +
+                    (card.sub ? '<div class="card-sub">' + hl(card.sub) + '</div>' : '');
+                el.addEventListener('click', () => selectCard(card));
+                resultGrid.appendChild(el);
+            });
+        }
+
+        function render() {
+            if (!state.loaded) return;
+            const cards = buildCards();
+
+            if (state.tab === 'all' && !state.q && !state.selected) {
+                emptyTip.style.display = 'flex';
+                resultGrid.style.display = 'none';
+                emptyTip.innerHTML = '欢迎使用桩企规范查询工具<br><br>点击左侧卡片查看详情，或搜索主机厂、平台、漏保 / 线缆品牌';
+            } else {
+                emptyTip.style.display = 'none';
+                resultGrid.style.display = 'grid';
+                renderGrid(cards);
+            }
+            renderPreview();
+        }
+
+        /* ================= 渲染：右侧详情 ================= */
+        const KIND_LABEL = { record: '规范详情', oem: '主机厂', platform: '平台', brand: '认可品牌' };
+
+        function recordBlock(r) {
+            const kv = state.fields.map(f =>
+                '<div class="kv-item"><b>' + esc(f) + '</b><span>' + hl(r[f] || '—') + '</span></div>'
+            ).join('');
+            const brands = r.__brands.length
+                ? r.__brands.map(b => '<span class="chip">' + hl(b) + '</span>').join('')
+                : '<span class="chip empty">本表暂未列出认可品牌</span>';
+            return '<div class="record-block">' +
+                '<div class="block-head"><span class="block-oem">' + hl(r['主机厂']) + '</span>' +
+                '<span class="block-plat">' + hl(r['平台'] || '—') + '</span></div>' +
+                '<div class="kv-grid">' + kv + '</div>' +
+                '<div class="chips-title">认可电缆品牌（' + r.__brands.length + '）</div>' +
+                '<div class="chips">' + brands + '</div></div>';
+        }
+
+        function renderPreview() {
+            if (!state.loaded) {
+                previewArea.innerHTML = '<div class="empty-tip">数据加载中...</div>';
+                return;
+            }
+            if (!state.selected) {
+                previewArea.innerHTML = '<div class="empty-tip">从左侧选择一个主机厂 / 平台 / 品牌<br>此处展示对应的安装规范详情</div>';
+                return;
+            }
+            const { kind, key, indexes } = state.selected;
+            const records = indexes.map(i => state.records[i]);
+            const head = '<div class="detail-head">' +
+                '<span class="detail-name">' + hl(key) + '</span>' +
+                '<span class="badge">' + KIND_LABEL[kind] + '</span>' +
+                '<span class="badge count">' + records.length + ' 条记录</span></div>';
+            previewArea.innerHTML = head + records.map(recordBlock).join('');
+        }
+
+        /* ================= 选中 / 交互 ================= */
+        function selectCard(card) {
+            state.selected = { kind: card.kind, key: card.key, indexes: matchIndexes(card) };
+            render();
+            syncHash();
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function () {
+                navItems.forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                state.tab = this.dataset.type;
+                render();
+            });
+        });
+
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                state.q = val.toLowerCase();
+                render();
+            }, 250);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            state.q = '';
+            render();
+            searchInput.focus();
+        });
+
+        /* ================= hash 路由（新窗口打开 / 恢复选中） ================= */
+        function syncHash() {
+            if (!state.selected) { history.replaceState(null, '', location.pathname + location.search); return; }
+            const h = state.selected.kind + ':' + encodeURIComponent(state.selected.key);
+            history.replaceState(null, '', location.pathname + location.search + '#' + h);
+        }
+
+        function restoreFromHash() {
+            const h = location.hash.replace(/^#/, '');
+            if (!h) return;
+            const idx = h.indexOf(':');
+            if (idx < 0) return;
+            const kind = h.slice(0, idx);
+            const key = decodeURIComponent(h.slice(idx + 1));
+            const card = { kind, key };
+            if (!['record', 'oem', 'platform', 'brand'].includes(kind)) return;
+            const indexes = matchIndexes(card);
+            if (indexes.length) state.selected = { kind, key, indexes };
+        }
+
+        document.getElementById('openWindowBtn').addEventListener('click', () => {
+            window.open(location.href, '_blank', 'width=1000,height=800,menubar=no,toolbar=no');
+        });
+
+        /* ================= 弹窗控制 ================= */
+        function openModal() { modalMask.classList.add('show'); }
+        function closeModal() { modalMask.classList.remove('show'); }
+
+        function updateModalStatus() {
+            if (!state.loaded) {
+                modalStatus.className = 'modal-status err';
+                modalStatus.textContent = '未加载数据';
+                modalDesc.textContent = '没能读取到 Excel 数据，请点击下方按钮手动选择文件。';
+                return;
+            }
+            if (state.mode === 'embedded') {
+                modalStatus.className = 'modal-status';
+                modalStatus.textContent = '当前数据源：内置快照（' + (EMBEDDED_DATA.generatedAt || '') + '）';
+                modalDesc.textContent = '当前显示内置快照：本地双击打开或在线预览时浏览器不允许自动读取同目录文件。查看最新数据请选择 Excel 文件，或部署到 Pages。';
+            } else {
+                modalStatus.className = 'modal-status';
+                modalStatus.textContent = '当前数据源：' + state.source;
+                modalDesc.textContent = '数据已从本地 Excel 文件加载；如需更换文件，可再次点击下方按钮选择。';
+            }
+        }
+
+        settingBtn.addEventListener('click', openModal);
+        modalClose.addEventListener('click', closeModal);
+        modalMask.addEventListener('click', e => { if (e.target === modalMask) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+        selectFileBtn.addEventListener('click', () => fileInput.click());
+
+        /* ================= 文件读取 / 加载 ================= */
+        async function autoLoad() {
+            for (const path of CONFIG.dataPaths) {
+                try {
+                    const res = await fetch(encodeURI(path), { cache: "no-store" });
+                    if (!res.ok) continue;
+                    const buf = await res.arrayBuffer();
+                    if (!buf || buf.byteLength < 1000) continue;
+                    parseWorkbook(buf, path);
+                    return;
+                } catch (e) { /* 继续尝试下一个路径 */ }
+            }
+            if (EMBEDDED_DATA && EMBEDDED_DATA.fields && EMBEDDED_DATA.rows) {
+                applyData(EMBEDDED_DATA.fields,
+                    EMBEDDED_DATA.rows.map(r => Object.assign({}, r, { __brands: (r.__brands || []).slice() })),
+                    "内置快照", "embedded");
+            } else {
+                state.loaded = false;
+                updateModalStatus();
+            }
+        }
+
+        function readFile(file) {
+            const fr = new FileReader();
+            fr.onload = e => {
+                try {
+                    parseWorkbook(e.target.result, file.name);
+                    closeModal();
+                } catch (err) {
+                    alert("解析失败：" + err.message);
+                }
+            };
+            fr.readAsArrayBuffer(file);
+        }
+
+        fileInput.addEventListener('change', e => {
+            const f = e.target.files && e.target.files[0];
+            if (f) readFile(f);
+            e.target.value = '';
+        });
+
+        /* ================= 初始化 ================= */
+        document.addEventListener('DOMContentLoaded', () => {
+            autoLoad().then(() => {
+                restoreFromHash();
+                render();
+            });
+        });
+    </script>
+</body>
+</html>
