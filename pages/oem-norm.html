@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主机厂安装规范查询工具</title>
-    <!-- 引入 SheetJS 库用于解析 Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --bg-color: #f3f6f9;
@@ -14,21 +13,23 @@
             --text-main: #1f2937;
             --text-secondary: #6b7280;
             --border-color: #e5e7eb;
+            --soft-bg: #f8fafc;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
-            height: 100vh;
+            min-height: 100vh;
             padding: 20px;
             display: flex;
             flex-direction: column;
+            color: var(--text-main);
         }
 
         .main-container {
@@ -36,6 +37,7 @@
             flex: 1;
             gap: 20px;
             overflow: hidden;
+            min-height: 0;
         }
 
         .card {
@@ -49,11 +51,8 @@
         }
 
         /* 左侧区域 */
-        .left-panel {
-            flex: 6;
-        }
+        .left-panel { flex: 6; min-width: 0; }
 
-        /* 头部工具栏 */
         .left-header {
             display: flex;
             align-items: center;
@@ -61,9 +60,9 @@
             border-bottom: 1px solid var(--border-color);
             background: #fafafa;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
-        /* 搜索框样式 */
         .search-box {
             display: flex;
             align-items: center;
@@ -87,9 +86,8 @@
             font-size: 14px;
             color: var(--text-main);
             background: transparent;
-            padding-right: 20px; 
+            padding-right: 20px;
         }
-        /* 清空按钮 X */
         .clear-btn {
             position: absolute;
             right: 10px;
@@ -103,15 +101,13 @@
             font-size: 16px;
             font-weight: bold;
         }
-        .clear-btn:hover {
-            color: #4b5563;
-        }
+        .clear-btn:hover { color: #4b5563; }
 
-        /* 导航标签 */
         .nav-tabs {
             display: flex;
             flex: 1;
             margin-bottom: -1px;
+            flex-wrap: wrap;
         }
         .nav-item {
             padding: 12px 16px;
@@ -129,7 +125,33 @@
             font-weight: 500;
         }
 
-        /* 左侧内容区 */
+        .notice {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 20px 0;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            line-height: 1.55;
+            background: #f4f7fd;
+            border: 1px solid #dde6f7;
+            color: #31538f;
+        }
+        .notice.info { display: flex; }
+        .notice.err { display: flex; background: #fff7ed; border-color: #fed7aa; color: #9a4b00; }
+        .notice button {
+            flex: 0 0 auto;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: var(--text-secondary);
+            padding: 5px 11px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+        .notice button:hover { border-color: #c9d5e6; color: var(--text-main); }
+
         .left-content {
             padding: 20px;
             display: flex;
@@ -137,51 +159,76 @@
             flex: 1;
             background-color: #fff;
             overflow-y: auto;
+            min-height: 0;
         }
 
-        /* 矩阵式结果展示 */
         .result-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 12px;
+            align-content: start;
         }
         .result-card {
-            background: #f8fafc;
+            background: var(--soft-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 16px;
-            text-align: center;
+            padding: 14px 16px;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: center;
+        }
+        .result-card:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .result-card.active {
+            background: #eff6ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .result-card .card-title {
             font-size: 15px;
             font-weight: 500;
             color: var(--text-main);
             word-break: break-all;
         }
-        .result-card:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        .result-card.active .card-title { color: var(--primary-color); }
+        .result-card .card-sub {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            word-break: break-all;
         }
-        
-        /* 提示信息/空状态 */
+
         .empty-tip {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 10px;
             height: 100%;
             color: var(--text-secondary);
             font-size: 15px;
             text-align: center;
             line-height: 1.6;
+            padding: 20px;
         }
+        .empty-tip .pick-btn {
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .empty-tip .pick-btn:hover { background: #f0f6ff; }
 
         /* 右侧区域 */
-        .right-panel {
-            flex: 4;
-        }
+        .right-panel { flex: 4; min-width: 0; }
         .right-header {
             display: flex;
             align-items: center;
@@ -190,13 +237,9 @@
             border-bottom: 1px solid var(--border-color);
             background: #fafafa;
         }
-        .right-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
+        .right-title { font-size: 16px; font-weight: 600; }
 
-        .open-window-btn {
+        .icon-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -209,7 +252,7 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .open-window-btn:hover {
+        .icon-btn:hover {
             background-color: #e5e7eb;
             color: var(--text-main);
             border-color: var(--border-color);
@@ -217,30 +260,110 @@
 
         .preview-area {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            overflow-y: auto;
             padding: 20px;
             background: #fafbfc;
+        }
+
+        .detail-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .detail-name { font-size: 19px; font-weight: 650; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #eaf1fe;
+            color: #1a56bd;
+        }
+        .badge.count { background: #f2f5f9; color: var(--text-secondary); }
+
+        .record-block {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .block-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .block-oem { font-size: 15px; font-weight: 600; }
+        .block-plat {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: #f2f5f9;
+            border-radius: 7px;
+            padding: 2px 9px;
+        }
+
+        .kv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px 18px;
+            margin-bottom: 12px;
+        }
+        .kv-item { font-size: 12.5px; }
+        .kv-item b {
+            display: block;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 11.5px;
+            letter-spacing: .3px;
+            margin-bottom: 2px;
+        }
+        .kv-item span { color: var(--text-main); font-weight: 500; }
+
+        .chips-title {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            letter-spacing: .3px;
+            margin-bottom: 8px;
+        }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            background: #eaf1fe;
+            color: #1a56bd;
+            border-radius: 8px;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .chip.empty { background: #f2f5f9; color: var(--text-secondary); font-weight: 400; }
+
+        mark { background: #ffe9a8; color: inherit; padding: 0 1px; border-radius: 2px; }
+
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .main-container { flex-direction: column; overflow: visible; }
+            .left-panel, .right-panel { min-height: 320px; }
+            .search-box { width: 100%; }
         }
     </style>
 </head>
 <body>
 
     <div class="main-container">
-        
+
         <!-- 左侧功能区 -->
         <div class="card left-panel">
-            <!-- 头部：搜索 + 标签 -->
             <div class="left-header">
-                <!-- 全局模糊搜索框 -->
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="模糊搜索线缆品牌、漏保规格..." autocomplete="off">
+                    <input type="text" id="searchInput" placeholder="模糊搜索主机厂、平台、漏保/线缆品牌..." autocomplete="off">
                     <button class="clear-btn" id="clearSearch" title="清空">✕</button>
                 </div>
-
-                <!-- 标签栏 -->
                 <div class="nav-tabs" id="navTabs">
                     <div class="nav-item active" data-type="all">全部</div>
                     <div class="nav-item" data-type="主机厂">主机厂</div>
@@ -249,7 +372,12 @@
                 </div>
             </div>
 
-            <!-- 左侧内容区 -->
+            <div class="notice" id="notice">
+                <span id="noticeText"></span>
+                <button id="pickBtn">选择 Excel 文件</button>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+
             <div class="left-content">
                 <div class="empty-tip" id="emptyTip">数据加载中...</div>
                 <div class="result-grid" id="resultGrid" style="display: none;"></div>
@@ -260,7 +388,7 @@
         <div class="card right-panel">
             <div class="right-header">
                 <div class="right-title">主机厂安装规范</div>
-                <button class="open-window-btn" title="在新窗口打开" onclick="openInNewWindow()">
+                <button class="icon-btn" id="openWindowBtn" title="在新窗口打开">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7" rx="1"></rect>
                         <rect x="14" y="3" width="7" height="7" rx="1"></rect>
@@ -269,249 +397,341 @@
                     </svg>
                 </button>
             </div>
-            <div class="preview-area"></div>
+            <div class="preview-area" id="previewArea"></div>
         </div>
 
     </div>
 
     <script>
-        // --- 全局变量 ---
-        let tableRows = []; // 原始二维数组
-        let allData = [];   // 所有数据列表（用于全局搜索）
-        let currentNavType = 'all'; 
-        let currentSearchKeyword = ''; 
+        /* ================= 配置区 ================= */
+        const CONFIG = {
+            dataPaths: [
+                "data/各主机厂安装规范.xlsx",
+                "data/oem-sop.xlsx",
+                "./各主机厂安装规范.xlsx"
+            ],
+            sheetIndex: 0
+        };
 
-        // --- DOM 元素 ---
+        /* 内置快照：自动读取 data 文件失败时（本地双击 / 在线预览）兜底使用 */
+        const EMBEDDED_DATA = {"generatedAt": "2026-11-25", "fields": ["主机厂", "平台", "漏保型号", "漏保品牌", "管材规格", "配电盒", "质保售后", "接地", "水印要求", "权益核验"], "rows": [{"主机厂": "长安", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "无要求", "权益核验": "深蓝提供照片，其他车型无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "远东电缆", "珠江电缆", "重庆华旗", "浙江正泰", "宁波东方", "亨通电缆", "鸽牌电缆", "渝丰电缆", "宝胜电缆", "桂林国际"]}, {"主机厂": "吉利", "平台": "均胜", "漏保型号": "TSM标A型", "漏保品牌": "正泰", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "安装照片和免责需要现场水印", "权益核验": "提供照片", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "远东电缆", "珠江电缆"]}, {"主机厂": "吉利", "平台": "妍伟", "漏保型号": "TSM标A型", "漏保品牌": "正泰", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "安装照片和免责需要现场水印", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "珠江", "浙江元通", "成天泰", "浙江正泰", "金龙羽", "宁波东方", "奔达康", "南洋", "江南", "飞鹤", "朝阳", "特变电工", "金山", "锐洋", "龙腾红旗", "远洋", "江苏江扬", "盛隆", "民兴", "江苏中超", "新兴"]}, {"主机厂": "极狐", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "施耐德、ABB、德力西、西门子", "管材规格": "B管305规格", "配电盒": "PZ30", "质保售后": "安装质保2年", "接地": "智能免费，刷卡收费", "水印要求": "极狐团队水印", "权益核验": "无需", "__brands": ["浙江万马", "上海起帆", "江苏上上", "远东电缆", "广州珠江", "江南电缆", "天津津达"]}, {"主机厂": "极狐", "平台": "到每家", "漏保型号": "A型", "漏保品牌": "施耐德、ABB、德力西、西门子", "管材规格": "B管305规格", "配电盒": "PZ30", "质保售后": "安装质保2年", "接地": "智能免费，刷卡收费", "水印要求": "极狐团队水印", "权益核验": "无需", "__brands": ["浙江万马", "上海起帆", "江苏上上", "远东电缆", "广州珠江", "江南电缆", "天津津达"]}, {"主机厂": "北汽北京", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "安装质保2年", "接地": "越野免费，轿车收费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "翼真", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "施耐德；ABB；西门子", "管材规格": "φ32mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "需要", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "浙江元通", "浙江正泰", "宁波东方", "江苏中超", "航天瑞奇", "无锡华美"]}, {"主机厂": "雷达", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "良信；天正；正泰", "管材规格": "φ32mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "收费", "水印要求": "需要", "权益核验": "提供照片", "__brands": ["浙江万马", "上海起帆", "浙江元通", "浙江正泰", "宁波东方", "江苏中超", "航天瑞奇", "无锡华美"]}, {"主机厂": "长城", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ32mm²", "配电盒": "5位及以上", "质保售后": "设备安装3年", "接地": "免费", "水印要求": "需要", "权益核验": "无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "零跑", "平台": "均胜", "漏保型号": "A型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "5位及以上", "质保售后": "安装1年，设备3年", "接地": "免费", "水印要求": "需要", "权益核验": "无需", "__brands": ["湖南恒飞", "浙江万马", "上海起帆", "江苏上上", "上海沪卓", "远东电缆", "浙江元通", "重庆华旗", "津达线缆", "宁波东方", "小猫", "京兴", "珠江花城", "盛源", "旭建", "青鸟", "泽鹏", "缆圣", "新益源", "阳工", "中缆电缆", "京诚", "晋川", "鑫永信", "珠峰", "宝睿", "盛佳", "浩华", "绿水青山", "新金源", "杰辉", "德盛祥", "新远能", "朝东京洲", "杭州电缆", "中煤", "宏展", "科宝", "华林", "新都美河", "新疆长城", "天津华光"]}, {"主机厂": "比亚迪", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "方程豹", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "腾势", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "6位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}, {"主机厂": "仰望", "平台": "均胜", "漏保型号": "AC型", "漏保品牌": "正泰;德力西", "管材规格": "φ25mm²", "配电盒": "8位及以上", "质保售后": "设备安装2年", "接地": "免费", "水印要求": "需要", "权益核验": "桩码证件合照", "__brands": ["湖南恒飞", "浙江万马", "上海起帆(3*10)", "江苏上上(3*10)"]}]};
+
+        /* ================= 状态 ================= */
+        const state = {
+            fields: [],
+            records: [],
+            tab: 'all',
+            q: '',
+            selected: null,   // { kind, key, indexes }
+            loaded: false
+        };
+
         const emptyTip = document.getElementById('emptyTip');
         const resultGrid = document.getElementById('resultGrid');
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearSearch');
         const navItems = document.querySelectorAll('.nav-item');
+        const previewArea = document.getElementById('previewArea');
+        const notice = document.getElementById('notice');
+        const noticeText = document.getElementById('noticeText');
+        const pickBtn = document.getElementById('pickBtn');
+        const fileInput = document.getElementById('fileInput');
 
-        // --- 核心逻辑：解析 Excel ---
-        async function loadExcelData() {
-            let filePath = '../data/oem-sop.xlsx'; 
-            
-            try {
-                const response = await fetch(filePath);
-                if (!response.ok) throw new Error('文件获取失败');
-                
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                // header: 1 表示将每行作为数组返回
-                tableRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                buildSearchData(tableRows);
-                showWelcomeMessage();
+        /* ================= 工具函数 ================= */
+        const esc = (s) => String(s == null ? "" : s)
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const norm = (v) => v == null ? "" : String(v).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+        const hay = (r) => state.fields.map(f => r[f]).join(" ") + " " + r.__brands.join(" ");
 
-            } catch (error) {
-                console.error('读取 Excel 失败:', error);
-                emptyTip.innerHTML = `<span style="color:#ef4444">数据加载失败。</span><br><br>
-                请使用 VS Code 的 Live Server 插件运行，或部署到 GitHub Pages。`;
-            }
+        function hl(text) {
+            const s = String(text == null ? "" : text);
+            if (!state.q) return esc(s);
+            const idx = s.toLowerCase().indexOf(state.q.toLowerCase());
+            if (idx < 0) return esc(s);
+            return esc(s.slice(0, idx)) + "<mark>" + esc(s.slice(idx, idx + state.q.length)) + "</mark>" + esc(s.slice(idx + state.q.length));
         }
 
-        // --- 构建搜索用的长文本数据 ---
-        function buildSearchData(rows) {
-            allData = [];
-            // 获取主机厂行 (第4行，索引为 3)
-            const oemRow = rows[3] || []; 
+        /* ================= 数据解析 ================= */
+        function fromAoA(aoa) {
+            const headRow = aoa[0] || [];
+            let lastHead = -1;
+            headRow.forEach((h, i) => { if (norm(h) !== "") lastHead = i; });
+            if (lastHead < 0) throw new Error("未识别到表头");
+            const fields = headRow.slice(0, lastHead + 1).map((h, i) => norm(h) || ("列" + (i + 1)));
+            const records = aoa.slice(1).filter(r => r && norm(r[0]) !== "").map(r => {
+                const o = { __brands: [] };
+                fields.forEach((f, i) => { o[f] = norm(r[i]); });
+                o.__brands = Array.from(new Set(r.slice(lastHead + 1).map(norm).filter(Boolean)));
+                return o;
+            });
+            if (!records.length) throw new Error("没有读到数据行");
+            return { fields, records };
+        }
 
-            for (let col = 1; col < oemRow.length; col++) {
-                let textPieces = [];
-                for (let r = 0; r < rows.length; r++) {
-                    if (rows[r] && rows[r][col]) {
-                        textPieces.push(rows[r][col].toString().trim());
+        function parseWorkbook(arrayBuffer, sourceName) {
+            if (typeof XLSX === "undefined") throw new Error("解析库未加载，请联网后刷新重试");
+            const wb = XLSX.read(arrayBuffer, { type: "array" });
+            const sheetName = wb.SheetNames[CONFIG.sheetIndex] || wb.SheetNames[0];
+            const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "", raw: false, blankrows: false });
+            if (!aoa.length) throw new Error("工作表为空");
+            const { fields, records } = fromAoA(aoa);
+            applyData(fields, records, sourceName, "file");
+        }
+
+        function applyData(fields, records, sourceName, mode) {
+            state.fields = fields;
+            state.records = records;
+            state.selected = null;
+            state.loaded = true;
+            searchInput.value = "";
+            clearBtn.style.display = "none";
+            render();
+        }
+
+        /* ================= 卡片列表 ================= */
+        function buildCards() {
+            const q = state.q.toLowerCase();
+            const cards = [];
+
+            if (state.tab === 'all') {
+                state.records.forEach((r, i) => {
+                    if (!q || hay(r).toLowerCase().includes(q)) {
+                        cards.push({ kind: 'record', key: i, title: r['主机厂'], sub: r['平台'] || '—' });
                     }
-                }
-                allData.push(textPieces.join(' ').toLowerCase());
-            }
-        }
-
-        // --- 提取各维度的数据 ---
-        
-        // 提取指定行，去重并过滤空值
-        function extractColumnData(rows, rowIndex) {
-            const rowData = rows[rowIndex] || [];
-            const set = new Set();
-            for (let i = 1; i < rowData.length; i++) {
-                if (rowData[i] && rowData[i].toString().trim() !== '') {
-                    set.add(rowData[i].toString().trim());
-                }
-            }
-            return Array.from(set);
-        }
-
-        // 提取线缆品牌并智能拆分
-        function extractCableBrands(rows) {
-            // 查找"线缆品牌"所在的行号
-            let brandRowIndex = -1;
-            for (let r = 0; r < rows.length; r++) {
-                if (rows[r] && rows[r][0] && rows[r][0].toString().trim() === '线缆品牌') {
-                    brandRowIndex = r;
-                    break;
-                }
-            }
-            if (brandRowIndex === -1) return [];
-
-            const brandRow = rows[brandRowIndex];
-            const brands = new Set();
-            
-            // 正则匹配中文、英文标点及空格进行切分
-            const splitRegex = /[\s,，、;；\n/()（）]+/;
-            
-            // 过滤词列表（排除掉口语化的废话）
-            const stopWords = ['如果', '需要', '报备', '白名单', '使用', '建议', '优选', '的需', '的', '在群里', '均胜', '上上', '起帆', '远东', '珠江', '宁波东方', '恒飞', '重庆华旗', '桂林国际', '万马']; 
-            // 注意：上面 stopWords 里我暂且放了些词，但实际中如果品牌名字就是这些就不该过滤。
-            // 更好的方式是只过滤带“如果”、“报备”等长句子。
-
-            for (let i = 1; i < brandRow.length; i++) {
-                if (brandRow[i]) {
-                    let text = brandRow[i].toString().trim();
-                    let parts = text.split(splitRegex);
-                    
-                    parts.forEach(p => {
-                        let cleanP = p.trim();
-                        // 过滤掉说明性的长句废话
-                        if (cleanP.length > 0 && 
-                            cleanP.length < 15 && // 一般品牌名不会超过15个字
-                            !cleanP.includes('如果') && 
-                            !cleanP.includes('需要') && 
-                            !cleanP.includes('报备') && 
-                            !cleanP.includes('白名单') && 
-                            !cleanP.includes('建议') &&
-                            !cleanP.includes('优选') &&
-                            !cleanP.includes('使用')
-                        ) {
-                            brands.add(cleanP);
-                        }
+                });
+            } else if (state.tab === '主机厂') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    const name = r['主机厂']; if (!name) return;
+                    if (!seen.has(name)) seen.set(name, []);
+                    seen.get(name).push(i);
+                });
+                seen.forEach((idxs, name) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        const plats = [...new Set(idxs.map(x => state.records[x]['平台']).filter(Boolean))].join(' / ');
+                        cards.push({ kind: 'oem', key: name, title: name, sub: idxs.length + ' 条 · 平台：' + plats });
+                    }
+                });
+            } else if (state.tab === '平台') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    const name = r['平台']; if (!name) return;
+                    if (!seen.has(name)) seen.set(name, []);
+                    seen.get(name).push(i);
+                });
+                seen.forEach((idxs, name) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        cards.push({ kind: 'platform', key: name, title: name, sub: idxs.length + ' 个主机厂' });
+                    }
+                });
+            } else if (state.tab === '线缆品牌') {
+                const seen = new Map();
+                state.records.forEach((r, i) => {
+                    r.__brands.forEach(b => {
+                        if (!seen.has(b)) seen.set(b, []);
+                        seen.get(b).push(i);
                     });
-                }
+                });
+                [...seen.entries()].sort((a, b) => b[1].length - a[1].length).forEach(([name, idxs]) => {
+                    if (!q || name.toLowerCase().includes(q)) {
+                        cards.push({ kind: 'brand', key: name, title: name, sub: idxs.length + ' 个主机厂认可' });
+                    }
+                });
             }
-            return Array.from(brands);
+            return cards;
         }
 
-        // --- 渲染逻辑 ---
-        function showWelcomeMessage() {
-            emptyTip.style.display = 'flex';
-            resultGrid.style.display = 'none';
-            emptyTip.innerHTML = `欢迎使用桩企规范查询工具<br><br>可以模糊搜索线缆品牌、漏保规格型号等...`;
+        function matchIndexes(card) {
+            if (card.kind === 'record') return [card.key];
+            if (card.kind === 'oem') return state.records.map((r, i) => r['主机厂'] === card.key ? i : -1).filter(i => i >= 0);
+            if (card.kind === 'platform') return state.records.map((r, i) => r['平台'] === card.key ? i : -1).filter(i => i >= 0);
+            return state.records.map((r, i) => r.__brands.includes(card.key) ? i : -1).filter(i => i >= 0);
         }
 
-        function renderResults() {
-            // 如果是全部标签，且没有搜索词，显示欢迎语
-            if (currentNavType === 'all' && !currentSearchKeyword) {
-                showWelcomeMessage();
+        /* ================= 渲染：左侧卡片 ================= */
+        function renderGrid(cards) {
+            resultGrid.innerHTML = "";
+            if (!cards.length) {
+                resultGrid.innerHTML = '<div class="empty-tip" style="grid-column: 1/-1; height: 200px;">未找到匹配项，换个关键词试试</div>';
                 return;
             }
-
-            emptyTip.style.display = 'none';
-            resultGrid.style.display = 'grid';
-            resultGrid.innerHTML = '';
-
-            // 1. 如果是全局模糊搜索
-            if (currentSearchKeyword) {
-                let matchedNames = [];
-                
-                if (currentNavType === 'all') {
-                    // 在【主机厂】列表中搜索匹配的列
-                    const oemRow = rows[3] || []; // 主机厂在第4行(索引3)
-                    allData.forEach((fullText, index) => {
-                        if (fullText.includes(currentSearchKeyword)) {
-                            if (oemRow[index + 1]) {
-                                matchedNames.push(oemRow[index + 1].toString().trim());
-                            }
-                        }
-                    });
-                } else if (currentNavType === '主机厂') {
-                    // 只在主机厂名字里搜
-                    let list = extractColumnData(tableRows, 3);
-                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
-                } else if (currentNavType === '平台') {
-                    // 只在平台名字里搜
-                    let list = extractColumnData(tableRows, 2);
-                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
-                } else if (currentNavType === '线缆品牌') {
-                    // 只在提取出的线缆品牌里搜
-                    let list = extractCableBrands(tableRows);
-                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
-                }
-
-                const uniqueNames = [...new Set(matchedNames)];
-                renderGrid(uniqueNames, '未找到匹配的主机厂/品牌');
-
-            } else {
-                // 2. 如果是纯标签点击（无搜索词）
-                let list = [];
-                if (currentNavType === '主机厂') {
-                    list = extractColumnData(tableRows, 3); // 第4行
-                } else if (currentNavType === '平台') {
-                    list = extractColumnData(tableRows, 2); // 第3行
-                } else if (currentNavType === '线缆品牌') {
-                    list = extractCableBrands(tableRows);
-                }
-                
-                renderGrid(list, '暂无数据');
-            }
-        }
-
-        function renderGrid(items, emptyText) {
-            if (items.length === 0) {
-                resultGrid.innerHTML = `<div class="empty-tip" style="grid-column: 1/-1; height: 200px;">${emptyText}</div>`;
-                return;
-            }
-
-            items.forEach(name => {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.textContent = name;
-                resultGrid.appendChild(card);
+            cards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'result-card' + (state.selected && state.selected.kind === card.kind && state.selected.key === card.key ? ' active' : '');
+                el.dataset.kind = card.kind;
+                el.dataset.key = card.key;
+                el.innerHTML = '<div class="card-title">' + hl(card.title) + '</div>' +
+                    (card.sub ? '<div class="card-sub">' + hl(card.sub) + '</div>' : '');
+                el.addEventListener('click', () => selectCard(card));
+                resultGrid.appendChild(el);
             });
         }
 
-        // --- 事件监听 ---
+        function render() {
+            if (!state.loaded) return;
+            const cards = buildCards();
+
+            if (state.tab === 'all' && !state.q && !state.selected) {
+                emptyTip.style.display = 'flex';
+                resultGrid.style.display = 'none';
+                emptyTip.innerHTML = '欢迎使用桩企规范查询工具<br><br>点击左侧卡片查看详情，或搜索主机厂、平台、漏保 / 线缆品牌';
+            } else {
+                emptyTip.style.display = 'none';
+                resultGrid.style.display = 'grid';
+                renderGrid(cards);
+            }
+            renderPreview();
+        }
+
+        /* ================= 渲染：右侧详情 ================= */
+        const KIND_LABEL = { record: '规范详情', oem: '主机厂', platform: '平台', brand: '认可品牌' };
+
+        function recordBlock(r) {
+            const kv = state.fields.map(f =>
+                '<div class="kv-item"><b>' + esc(f) + '</b><span>' + hl(r[f] || '—') + '</span></div>'
+            ).join('');
+            const brands = r.__brands.length
+                ? r.__brands.map(b => '<span class="chip">' + hl(b) + '</span>').join('')
+                : '<span class="chip empty">本表暂未列出认可品牌</span>';
+            return '<div class="record-block">' +
+                '<div class="block-head"><span class="block-oem">' + hl(r['主机厂']) + '</span>' +
+                '<span class="block-plat">' + hl(r['平台'] || '—') + '</span></div>' +
+                '<div class="kv-grid">' + kv + '</div>' +
+                '<div class="chips-title">认可电缆品牌（' + r.__brands.length + '）</div>' +
+                '<div class="chips">' + brands + '</div></div>';
+        }
+
+        function renderPreview() {
+            if (!state.loaded) {
+                previewArea.innerHTML = '<div class="empty-tip">数据加载中...</div>';
+                return;
+            }
+            if (!state.selected) {
+                previewArea.innerHTML = '<div class="empty-tip">从左侧选择一个主机厂 / 平台 / 品牌<br>此处展示对应的安装规范详情</div>';
+                return;
+            }
+            const { kind, key, indexes } = state.selected;
+            const records = indexes.map(i => state.records[i]);
+            const head = '<div class="detail-head">' +
+                '<span class="detail-name">' + hl(key) + '</span>' +
+                '<span class="badge">' + KIND_LABEL[kind] + '</span>' +
+                '<span class="badge count">' + records.length + ' 条记录</span></div>';
+            previewArea.innerHTML = head + records.map(recordBlock).join('');
+        }
+
+        /* ================= 选中 / 交互 ================= */
+        function selectCard(card) {
+            state.selected = { kind: card.kind, key: card.key, indexes: matchIndexes(card) };
+            render();
+            syncHash();
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function () {
+                navItems.forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                state.tab = this.dataset.type;
+                render();
+            });
+        });
+
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             const val = e.target.value.trim();
-            
-            if (val.length > 0) {
-                clearBtn.style.display = 'flex';
-            } else {
-                clearBtn.style.display = 'none';
-            }
-
+            clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                currentSearchKeyword = val.toLowerCase();
-                renderResults();
-            }, 300);
+                state.q = val.toLowerCase();
+                render();
+            }, 250);
         });
 
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             clearBtn.style.display = 'none';
-            currentSearchKeyword = '';
-            renderResults();
+            state.q = '';
+            render();
             searchInput.focus();
         });
 
-        navItems.forEach(item => {
-            item.addEventListener('click', function() {
-                navItems.forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
-                currentNavType = this.getAttribute('data-type');
-                renderResults();
-            });
-        });
-
-        function openInNewWindow() {
-            window.open(window.location.href, '_blank', 'width=1000,height=800,menubar=no,toolbar=no');
+        /* ================= hash 路由（新窗口打开 / 恢复选中） ================= */
+        function syncHash() {
+            if (!state.selected) { history.replaceState(null, '', location.pathname + location.search); return; }
+            const h = state.selected.kind + ':' + encodeURIComponent(state.selected.key);
+            history.replaceState(null, '', location.pathname + location.search + '#' + h);
         }
 
-        // --- 初始化 ---
+        function restoreFromHash() {
+            const h = location.hash.replace(/^#/, '');
+            if (!h) return;
+            const idx = h.indexOf(':');
+            if (idx < 0) return;
+            const kind = h.slice(0, idx);
+            const key = decodeURIComponent(h.slice(idx + 1));
+            const card = { kind, key };
+            if (!['record', 'oem', 'platform', 'brand'].includes(kind)) return;
+            const indexes = matchIndexes(card);
+            if (indexes.length) state.selected = { kind, key, indexes };
+        }
+
+        document.getElementById('openWindowBtn').addEventListener('click', () => {
+            window.open(location.href, '_blank', 'width=1000,height=800,menubar=no,toolbar=no');
+        });
+
+        /* ================= 文件读取 / 加载 ================= */
+        function showNotice(kind, text) {
+            notice.className = 'notice ' + kind;
+            noticeText.textContent = text;
+        }
+
+        async function autoLoad() {
+            for (const path of CONFIG.dataPaths) {
+                try {
+                    const res = await fetch(encodeURI(path), { cache: "no-store" });
+                    if (!res.ok) continue;
+                    const buf = await res.arrayBuffer();
+                    if (!buf || buf.byteLength < 1000) continue;
+                    parseWorkbook(buf, path);
+                    notice.className = 'notice';
+                    return;
+                } catch (e) { /* 继续尝试下一个路径 */ }
+            }
+            if (EMBEDDED_DATA && EMBEDDED_DATA.fields && EMBEDDED_DATA.rows) {
+                applyData(EMBEDDED_DATA.fields,
+                    EMBEDDED_DATA.rows.map(r => Object.assign({}, r, { __brands: (r.__brands || []).slice() })),
+                    "内置快照", "embedded");
+                showNotice("info", "当前显示内置快照：本地双击打开或在线预览时浏览器不允许自动读取同目录文件。查看最新数据请点右侧「选择 Excel 文件」，或部署到 Pages。");
+            } else {
+                showNotice("err", "没能读取到 Excel 数据，请点击按钮手动选择文件。");
+            }
+        }
+
+        function readFile(file) {
+            const fr = new FileReader();
+            fr.onload = e => {
+                try {
+                    parseWorkbook(e.target.result, file.name);
+                    notice.className = 'notice';
+                } catch (err) {
+                    alert("解析失败：" + err.message);
+                }
+            };
+            fr.readAsArrayBuffer(file);
+        }
+
+        pickBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            const f = e.target.files && e.target.files[0];
+            if (f) readFile(f);
+        });
+
+        /* ================= 初始化 ================= */
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(loadExcelData, 100);
+            autoLoad().then(() => {
+                restoreFromHash();
+                render();
+            });
         });
     </script>
 </body>
