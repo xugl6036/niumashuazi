@@ -87,7 +87,7 @@
             font-size: 14px;
             color: var(--text-main);
             background: transparent;
-            padding-right: 20px; /* 给 X 留空间 */
+            padding-right: 20px; 
         }
         /* 清空按钮 X */
         .clear-btn {
@@ -156,7 +156,7 @@
             font-size: 15px;
             font-weight: 500;
             color: var(--text-main);
-            word-break: break-all; /* 防止长品牌名溢出 */
+            word-break: break-all;
         }
         .result-card:hover {
             background: #eff6ff;
@@ -259,7 +259,6 @@
         <!-- 右侧预览区 -->
         <div class="card right-panel">
             <div class="right-header">
-                <!-- 移除了小眼睛图标 -->
                 <div class="right-title">主机厂安装规范</div>
                 <button class="open-window-btn" title="在新窗口打开" onclick="openInNewWindow()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -300,12 +299,10 @@
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                // header: 1 表示将每行作为数组返回
                 tableRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                // 预处理全局搜索数据
                 buildSearchData(tableRows);
-                
-                // 初始状态：显示欢迎语
                 showWelcomeMessage();
 
             } catch (error) {
@@ -318,6 +315,7 @@
         // --- 构建搜索用的长文本数据 ---
         function buildSearchData(rows) {
             allData = [];
+            // 获取主机厂行 (第4行，索引为 3)
             const oemRow = rows[3] || []; 
 
             for (let col = 1; col < oemRow.length; col++) {
@@ -332,15 +330,20 @@
         }
 
         // --- 提取各维度的数据 ---
+        
+        // 提取指定行，去重并过滤空值
         function extractColumnData(rows, rowIndex) {
             const rowData = rows[rowIndex] || [];
             const set = new Set();
             for (let i = 1; i < rowData.length; i++) {
-                if (rowData[i]) set.add(rowData[i].toString().trim());
+                if (rowData[i] && rowData[i].toString().trim() !== '') {
+                    set.add(rowData[i].toString().trim());
+                }
             }
             return Array.from(set);
         }
 
+        // 提取线缆品牌并智能拆分
         function extractCableBrands(rows) {
             // 查找"线缆品牌"所在的行号
             let brandRowIndex = -1;
@@ -357,22 +360,29 @@
             
             // 正则匹配中文、英文标点及空格进行切分
             const splitRegex = /[\s,，、;；\n/()（）]+/;
+            
+            // 过滤词列表（排除掉口语化的废话）
+            const stopWords = ['如果', '需要', '报备', '白名单', '使用', '建议', '优选', '的需', '的', '在群里', '均胜', '上上', '起帆', '远东', '珠江', '宁波东方', '恒飞', '重庆华旗', '桂林国际', '万马']; 
+            // 注意：上面 stopWords 里我暂且放了些词，但实际中如果品牌名字就是这些就不该过滤。
+            // 更好的方式是只过滤带“如果”、“报备”等长句子。
 
             for (let i = 1; i < brandRow.length; i++) {
                 if (brandRow[i]) {
                     let text = brandRow[i].toString().trim();
-                    // 按标点拆分
                     let parts = text.split(splitRegex);
+                    
                     parts.forEach(p => {
                         let cleanP = p.trim();
-                        // 过滤掉说明性的废话（比如"均胜白名单"、"如果需使用...需要在群里报备"等）
+                        // 过滤掉说明性的长句废话
                         if (cleanP.length > 0 && 
+                            cleanP.length < 15 && // 一般品牌名不会超过15个字
                             !cleanP.includes('如果') && 
                             !cleanP.includes('需要') && 
+                            !cleanP.includes('报备') && 
                             !cleanP.includes('白名单') && 
-                            !cleanP.includes('使用') &&
                             !cleanP.includes('建议') &&
-                            !cleanP.includes('优选')
+                            !cleanP.includes('优选') &&
+                            !cleanP.includes('使用')
                         ) {
                             brands.add(cleanP);
                         }
@@ -405,23 +415,25 @@
                 let matchedNames = [];
                 
                 if (currentNavType === 'all') {
-                    // 在所有数据中搜索，显示匹配的主机厂
-                    const oemRow = tableRows[3] || [];
+                    // 在【主机厂】列表中搜索匹配的列
+                    const oemRow = rows[3] || []; // 主机厂在第4行(索引3)
                     allData.forEach((fullText, index) => {
                         if (fullText.includes(currentSearchKeyword)) {
-                            // col 索引对应的是 index + 1
                             if (oemRow[index + 1]) {
                                 matchedNames.push(oemRow[index + 1].toString().trim());
                             }
                         }
                     });
                 } else if (currentNavType === '主机厂') {
+                    // 只在主机厂名字里搜
                     let list = extractColumnData(tableRows, 3);
                     matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
                 } else if (currentNavType === '平台') {
+                    // 只在平台名字里搜
                     let list = extractColumnData(tableRows, 2);
                     matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
                 } else if (currentNavType === '线缆品牌') {
+                    // 只在提取出的线缆品牌里搜
                     let list = extractCableBrands(tableRows);
                     matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
                 }
@@ -432,9 +444,13 @@
             } else {
                 // 2. 如果是纯标签点击（无搜索词）
                 let list = [];
-                if (currentNavType === '主机厂') list = extractColumnData(tableRows, 3);
-                else if (currentNavType === '平台') list = extractColumnData(tableRows, 2);
-                else if (currentNavType === '线缆品牌') list = extractCableBrands(tableRows);
+                if (currentNavType === '主机厂') {
+                    list = extractColumnData(tableRows, 3); // 第4行
+                } else if (currentNavType === '平台') {
+                    list = extractColumnData(tableRows, 2); // 第3行
+                } else if (currentNavType === '线缆品牌') {
+                    list = extractCableBrands(tableRows);
+                }
                 
                 renderGrid(list, '暂无数据');
             }
@@ -455,13 +471,10 @@
         }
 
         // --- 事件监听 ---
-
-        // 搜索框输入
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             const val = e.target.value.trim();
             
-            // 控制 X 按钮显示/隐藏
             if (val.length > 0) {
                 clearBtn.style.display = 'flex';
             } else {
@@ -475,7 +488,6 @@
             }, 300);
         });
 
-        // 点击 X 清空
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             clearBtn.style.display = 'none';
@@ -484,7 +496,6 @@
             searchInput.focus();
         });
 
-        // 标签切换
         navItems.forEach(item => {
             item.addEventListener('click', function() {
                 navItems.forEach(nav => nav.classList.remove('active'));
