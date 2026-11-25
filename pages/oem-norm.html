@@ -53,7 +53,7 @@
             flex: 6;
         }
 
-        /* 头部工具栏：包含搜索框和标签 */
+        /* 头部工具栏 */
         .left-header {
             display: flex;
             align-items: center;
@@ -71,19 +71,14 @@
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 6px 12px;
-            width: 250px;
+            width: 280px;
             margin-bottom: 10px;
             transition: border-color 0.2s;
+            position: relative;
         }
         .search-box:focus-within {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-        }
-        .search-box svg {
-            color: var(--text-secondary);
-            margin-right: 8px;
-            width: 16px;
-            height: 16px;
         }
         .search-box input {
             border: none;
@@ -92,6 +87,24 @@
             font-size: 14px;
             color: var(--text-main);
             background: transparent;
+            padding-right: 20px; /* 给 X 留空间 */
+        }
+        /* 清空按钮 X */
+        .clear-btn {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            color: #9ca3af;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .clear-btn:hover {
+            color: #4b5563;
         }
 
         /* 导航标签 */
@@ -101,9 +114,6 @@
             margin-bottom: -1px;
         }
         .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
             padding: 12px 16px;
             color: var(--text-secondary);
             cursor: pointer;
@@ -146,6 +156,7 @@
             font-size: 15px;
             font-weight: 500;
             color: var(--text-main);
+            word-break: break-all; /* 防止长品牌名溢出 */
         }
         .result-card:hover {
             background: #eff6ff;
@@ -155,12 +166,16 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
-        /* 加载提示 */
-        .loading-tip {
+        /* 提示信息/空状态 */
+        .empty-tip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             color: var(--text-secondary);
+            font-size: 15px;
             text-align: center;
-            margin-top: 50px;
-            font-size: 14px;
+            line-height: 1.6;
         }
 
         /* 右侧区域 */
@@ -176,15 +191,9 @@
             background: #fafafa;
         }
         .right-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             font-size: 16px;
             font-weight: 600;
             color: var(--text-main);
-        }
-        .right-title svg {
-            color: var(--primary-color);
         }
 
         .open-window-btn {
@@ -215,12 +224,6 @@
             padding: 20px;
             background: #fafbfc;
         }
-
-        .icon {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
     </style>
 </head>
 <body>
@@ -233,34 +236,22 @@
             <div class="left-header">
                 <!-- 全局模糊搜索框 -->
                 <div class="search-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="searchInput" placeholder="全局模糊搜索..." autocomplete="off">
+                    <input type="text" id="searchInput" placeholder="模糊搜索线缆品牌、漏保规格..." autocomplete="off">
+                    <button class="clear-btn" id="clearSearch" title="清空">✕</button>
                 </div>
 
                 <!-- 标签栏 -->
                 <div class="nav-tabs" id="navTabs">
-                    <div class="nav-item active" data-type="all">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
-                        全部
-                    </div>
-                    <div class="nav-item" data-type="主机厂">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M14 4l2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"/></svg>
-                        主机厂
-                    </div>
-                    <div class="nav-item" data-type="平台">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
-                        平台
-                    </div>
-                    <div class="nav-item" data-type="线缆品牌">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
-                        线缆品牌
-                    </div>
+                    <div class="nav-item active" data-type="all">全部</div>
+                    <div class="nav-item" data-type="主机厂">主机厂</div>
+                    <div class="nav-item" data-type="平台">平台</div>
+                    <div class="nav-item" data-type="线缆品牌">线缆品牌</div>
                 </div>
             </div>
 
-            <!-- 左侧内容区 (数据渲染区) -->
+            <!-- 左侧内容区 -->
             <div class="left-content">
-                <div class="loading-tip" id="loadingTip">正在加载数据...</div>
+                <div class="empty-tip" id="emptyTip">数据加载中...</div>
                 <div class="result-grid" id="resultGrid" style="display: none;"></div>
             </div>
         </div>
@@ -268,10 +259,8 @@
         <!-- 右侧预览区 -->
         <div class="card right-panel">
             <div class="right-header">
-                <div class="right-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    主机厂安装规范
-                </div>
+                <!-- 移除了小眼睛图标 -->
+                <div class="right-title">主机厂安装规范</div>
                 <button class="open-window-btn" title="在新窗口打开" onclick="openInNewWindow()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -288,145 +277,214 @@
 
     <script>
         // --- 全局变量 ---
-        let allData = []; 
+        let tableRows = []; // 原始二维数组
+        let allData = [];   // 所有数据列表（用于全局搜索）
         let currentNavType = 'all'; 
         let currentSearchKeyword = ''; 
 
         // --- DOM 元素 ---
-        const loadingTip = document.getElementById('loadingTip');
+        const emptyTip = document.getElementById('emptyTip');
         const resultGrid = document.getElementById('resultGrid');
         const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
         const navItems = document.querySelectorAll('.nav-item');
 
         // --- 核心逻辑：解析 Excel ---
         async function loadExcelData() {
-            // 判断当前环境路径：
-            // 如果是本地双击打开 (file://)，由于 fetch 不支持直接读本地文件，我们会尝试通过 XMLHttpRequest 兜底，或者提示。
-            // 最佳实践是通过 VS Code 的 Live Server 插件打开。
-            
-            let filePath = '../data/oem-sop.xlsx'; // 默认按照您的目录结构
-            
-            // 如果您的 html 放在 pages 文件夹里，而本地直接双击打开，相对路径是这样的
-            // 建议：如果直接双击，请将 html 放在根目录，或者用 Live Server
+            let filePath = '../data/sop.xlsx'; 
             
             try {
-                loadingTip.textContent = '正在加载数据，请稍候...';
                 const response = await fetch(filePath);
                 if (!response.ok) throw new Error('文件获取失败');
                 
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                tableRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                 
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                // 预处理全局搜索数据
+                buildSearchData(tableRows);
                 
-                parseTableData(jsonData);
-                
-                loadingTip.style.display = 'none';
-                resultGrid.style.display = 'grid';
-                renderResults(); 
+                // 初始状态：显示欢迎语
+                showWelcomeMessage();
 
             } catch (error) {
                 console.error('读取 Excel 失败:', error);
-                loadingTip.innerHTML = `<span style="color:#ef4444">数据加载失败。</span><br><br>
-                由于浏览器安全限制，直接双击 HTML 文件通常无法读取本地 Excel。<br>
-                请使用 <b>VS Code 的 Live Server 插件</b> 运行，<br>
-                或者将项目部署到 GitHub Pages。`;
+                emptyTip.innerHTML = `<span style="color:#ef4444">数据加载失败。</span><br><br>
+                请使用 VS Code 的 Live Server 插件运行，或部署到 GitHub Pages。`;
             }
         }
 
-        // --- 核心逻辑：提取数据 ---
-        function parseTableData(rows) {
-            // 根据 Excel 结构，第 3 行是平台，第 4 行是主机厂 (索引从 0 开始，即 2 和 3)
-            const platformRow = rows[2]; 
-            const oemRow = rows[3];
+        // --- 构建搜索用的长文本数据 ---
+        function buildSearchData(rows) {
+            allData = [];
+            const oemRow = rows[3] || []; 
 
-            const maxCols = Math.max(platformRow.length, oemRow.length);
-
-            // 从第 1 列 (B列) 开始遍历，提取每列的数据
-            for (let col = 1; col < maxCols; col++) {
-                const platform = platformRow[col] ? platformRow[col].toString().trim() : '';
-                const oem = oemRow[col] ? oemRow[col].toString().trim() : '';
-
-                if (oem || platform) {
-                    let rowData = {
-                        type: '主机厂', 
-                        platform: platform,
-                        oemName: oem || '未命名',
-                        displayName: oem || platform,
-                        fullText: '' // 存储整列内容用于全局模糊搜索
-                    };
-
-                    let textPieces = [];
-                    // 收集该列所有行的数据（包括属性名和值）
-                    for (let r = 0; r < rows.length; r++) {
-                        if (rows[r] && rows[r][col]) {
-                            textPieces.push(rows[r][col].toString().trim());
-                        }
+            for (let col = 1; col < oemRow.length; col++) {
+                let textPieces = [];
+                for (let r = 0; r < rows.length; r++) {
+                    if (rows[r] && rows[r][col]) {
+                        textPieces.push(rows[r][col].toString().trim());
                     }
-                    rowData.fullText = textPieces.join(' ').toLowerCase();
-
-                    allData.push(rowData);
                 }
+                allData.push(textPieces.join(' ').toLowerCase());
             }
         }
 
-        // --- 核心逻辑：过滤与渲染 ---
-        function renderResults() {
-            const filteredData = allData.filter(item => {
-                // 1. 标签过滤
-                let matchTab = true;
-                if (currentNavType !== 'all') {
-                    // 这里仅做基础演示，当前数据的 type 都是主机厂
-                    matchTab = item.type === currentNavType;
+        // --- 提取各维度的数据 ---
+        function extractColumnData(rows, rowIndex) {
+            const rowData = rows[rowIndex] || [];
+            const set = new Set();
+            for (let i = 1; i < rowData.length; i++) {
+                if (rowData[i]) set.add(rowData[i].toString().trim());
+            }
+            return Array.from(set);
+        }
+
+        function extractCableBrands(rows) {
+            // 查找"线缆品牌"所在的行号
+            let brandRowIndex = -1;
+            for (let r = 0; r < rows.length; r++) {
+                if (rows[r] && rows[r][0] && rows[r][0].toString().trim() === '线缆品牌') {
+                    brandRowIndex = r;
+                    break;
                 }
+            }
+            if (brandRowIndex === -1) return [];
 
-                // 2. 搜索过滤（全局模糊匹配）
-                let matchSearch = true;
-                if (currentSearchKeyword) {
-                    matchSearch = item.fullText.includes(currentSearchKeyword);
-                }
-
-                return matchTab && matchSearch;
-            });
-
-            resultGrid.innerHTML = '';
+            const brandRow = rows[brandRowIndex];
+            const brands = new Set();
             
-            if (filteredData.length === 0) {
-                resultGrid.innerHTML = '<div class="loading-tip">未找到匹配的主机厂</div>';
+            // 正则匹配中文、英文标点及空格进行切分
+            const splitRegex = /[\s,，、;；\n/()（）]+/;
+
+            for (let i = 1; i < brandRow.length; i++) {
+                if (brandRow[i]) {
+                    let text = brandRow[i].toString().trim();
+                    // 按标点拆分
+                    let parts = text.split(splitRegex);
+                    parts.forEach(p => {
+                        let cleanP = p.trim();
+                        // 过滤掉说明性的废话（比如"均胜白名单"、"如果需使用...需要在群里报备"等）
+                        if (cleanP.length > 0 && 
+                            !cleanP.includes('如果') && 
+                            !cleanP.includes('需要') && 
+                            !cleanP.includes('白名单') && 
+                            !cleanP.includes('使用') &&
+                            !cleanP.includes('建议') &&
+                            !cleanP.includes('优选')
+                        ) {
+                            brands.add(cleanP);
+                        }
+                    });
+                }
+            }
+            return Array.from(brands);
+        }
+
+        // --- 渲染逻辑 ---
+        function showWelcomeMessage() {
+            emptyTip.style.display = 'flex';
+            resultGrid.style.display = 'none';
+            emptyTip.innerHTML = `欢迎使用桩企规范查询工具<br><br>可以模糊搜索线缆品牌、漏保规格型号等...`;
+        }
+
+        function renderResults() {
+            // 如果是全部标签，且没有搜索词，显示欢迎语
+            if (currentNavType === 'all' && !currentSearchKeyword) {
+                showWelcomeMessage();
                 return;
             }
 
-            // 去重展示
-            const uniqueNames = new Set();
-            
-            filteredData.forEach(item => {
-                if (!uniqueNames.has(item.displayName)) {
-                    uniqueNames.add(item.displayName);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'result-card';
-                    card.textContent = item.displayName;
-                    card.onclick = () => {
-                        // 点击卡片，未来可以在这里渲染右侧的详细信息
-                        console.log(`点击了 ${item.displayName}，该列详细数据：`, item.fullText);
-                    };
-                    resultGrid.appendChild(card);
+            emptyTip.style.display = 'none';
+            resultGrid.style.display = 'grid';
+            resultGrid.innerHTML = '';
+
+            // 1. 如果是全局模糊搜索
+            if (currentSearchKeyword) {
+                let matchedNames = [];
+                
+                if (currentNavType === 'all') {
+                    // 在所有数据中搜索，显示匹配的主机厂
+                    const oemRow = tableRows[3] || [];
+                    allData.forEach((fullText, index) => {
+                        if (fullText.includes(currentSearchKeyword)) {
+                            // col 索引对应的是 index + 1
+                            if (oemRow[index + 1]) {
+                                matchedNames.push(oemRow[index + 1].toString().trim());
+                            }
+                        }
+                    });
+                } else if (currentNavType === '主机厂') {
+                    let list = extractColumnData(tableRows, 3);
+                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
+                } else if (currentNavType === '平台') {
+                    let list = extractColumnData(tableRows, 2);
+                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
+                } else if (currentNavType === '线缆品牌') {
+                    let list = extractCableBrands(tableRows);
+                    matchedNames = list.filter(name => name.toLowerCase().includes(currentSearchKeyword));
                 }
+
+                const uniqueNames = [...new Set(matchedNames)];
+                renderGrid(uniqueNames, '未找到匹配的主机厂/品牌');
+
+            } else {
+                // 2. 如果是纯标签点击（无搜索词）
+                let list = [];
+                if (currentNavType === '主机厂') list = extractColumnData(tableRows, 3);
+                else if (currentNavType === '平台') list = extractColumnData(tableRows, 2);
+                else if (currentNavType === '线缆品牌') list = extractCableBrands(tableRows);
+                
+                renderGrid(list, '暂无数据');
+            }
+        }
+
+        function renderGrid(items, emptyText) {
+            if (items.length === 0) {
+                resultGrid.innerHTML = `<div class="empty-tip" style="grid-column: 1/-1; height: 200px;">${emptyText}</div>`;
+                return;
+            }
+
+            items.forEach(name => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.textContent = name;
+                resultGrid.appendChild(card);
             });
         }
 
         // --- 事件监听 ---
+
+        // 搜索框输入
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            
+            // 控制 X 按钮显示/隐藏
+            if (val.length > 0) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                currentSearchKeyword = e.target.value.trim().toLowerCase();
+                currentSearchKeyword = val.toLowerCase();
                 renderResults();
             }, 300);
         });
 
+        // 点击 X 清空
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            currentSearchKeyword = '';
+            renderResults();
+            searchInput.focus();
+        });
+
+        // 标签切换
         navItems.forEach(item => {
             item.addEventListener('click', function() {
                 navItems.forEach(nav => nav.classList.remove('active'));
@@ -442,10 +500,8 @@
 
         // --- 初始化 ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 稍微延迟加载，确保 UI 已经渲染
             setTimeout(loadExcelData, 100);
         });
-
     </script>
 </body>
 </html>
