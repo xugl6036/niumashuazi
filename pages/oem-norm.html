@@ -695,7 +695,7 @@
                 });
                 [...seen.entries()].sort((a, b) => b[1].length - a[1].length).forEach(([name, idxs]) => {
                     if (!q || name.toLowerCase().includes(q)) {
-                        cards.push({ kind: 'brand', key: name, title: name, sub: idxs.length + ' 个主机厂认可' });
+                        cards.push({ kind: 'brand', key: name, title: name, sub: idxs.length + ' 个桩企可用' });
                     }
                 });
             }
@@ -752,7 +752,7 @@
         }
 
         /* ================= 渲染：右侧详情 ================= */
-        const KIND_LABEL = { record: '规范详情', oem: '主机厂', platform: '平台', brand: '认可品牌' };
+        const KIND_LABEL = { record: '规范详情', oem: '主机厂', platform: '平台', brand: '适用车企列表' };
 
         function recordBlock(r) {
             const kv = state.fields
@@ -762,7 +762,7 @@
             ).join('');
             const brands = r.__brands.length
                 ? r.__brands.map(b => '<span class="chip">' + hl(b) + '</span>').join('')
-                : '<span class="chip empty">本表暂未列出认可品牌</span>';
+                : '<span class="chip empty">本表暂未列出适用车企明细</span>';
             return '<div class="record-block">' +
                 '<div class="block-head"><span class="block-oem">' + hl(r['主机厂']) + '</span>' +
                 '<span class="block-plat">' + hl(r['平台'] || '—') + '</span></div>' +
@@ -773,17 +773,17 @@
 
         function renderPreview() {
             if (!state.loaded) {
-                rightTitle.textContent = '规范详情';
+                rightTitle.textContent = '自律谏言';
                 rightBadge.style.display = 'none';
                 rightCount.style.display = 'none';
-                previewArea.innerHTML = '<div class="empty-tip">请先上传本地 Excel 表格<br>此处展示对应的安装规范详情</div>';
+                previewArea.innerHTML = '<div class="empty-tip">三分产品、七分安装<br><br>坚守材料使用要求规范<br><br>切勿使用非标材料</div>';
                 return;
             }
             if (!state.selected) {
-                rightTitle.textContent = '规范详情';
+                rightTitle.textContent = '自律谏言';
                 rightBadge.style.display = 'none';
                 rightCount.style.display = 'none';
-                previewArea.innerHTML = '<div class="empty-tip">从左侧选择一个主机厂 / 平台 / 品牌<br>此处展示对应的安装规范详情</div>';
+                previewArea.innerHTML = '<div class="empty-tip">三分产品、七分安装<br><br>坚守材料使用要求规范<br><br>切勿使用非标材料</div>';
                 return;
             }
             const { kind, key, title, indexes } = state.selected;
