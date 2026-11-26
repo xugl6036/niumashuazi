@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充电桩安装·拍照要求矩阵</title>
+    <!-- 引入必备库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f3efe9;
+            font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+            background-image: radial-gradient(circle at center, #f8f5f0 0%, #ebe5db 100%);
+        }
+
+        * { caret-color: transparent !important; }
+
+        .main-container {
+            display: flex;
+            width: 1300px;
+            max-width: 100%;
+            height: 820px;
+            max-height: 92vh;
+            background-color: #fdfdfc;
+            box-shadow: 0 20px 50px -10px rgba(60, 50, 40, 0.08), 0 0 0 1px rgba(200, 190, 180, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 加载遮罩 */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(253, 253, 252, 0.95);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 12px;
+            transition: opacity 0.3s;
+        }
+        .loading-overlay h2 {
+            font-size: 20px;
+            color: #1a1714;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+        .loading-overlay p {
+            color: #8f7d6a;
+            font-size: 14px;
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            width: 20%;
+            background: #f9f7f4;
+            border-right: 1px solid #e8e2d9;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .left-header {
+            padding: 36px 20px 20px 20px;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(232, 226, 217, 0.5);
+        }
+
+        .matrix-title {
+            font-size: 14px;
+            letter-spacing: 4px;
+            color: #9c8f7f;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper svg { position: absolute; left: 4px; width: 16px; height: 16px; color: #b3a698; }
+        .search-input {
+            width: 100%; padding: 8px 8px 8px 28px; border: none; border-bottom: 1px solid #dcd3c7;
+            background: transparent; font-size: 15px; color: #2b2723; outline: none;
+            caret-color: #4a433b !important; user-select: text !important;
+        }
+        .search-input:focus { border-bottom-color: #8f7d6a; }
+
+        .matrix-scroll-area { flex: 1; overflow-y: auto; padding: 16px 20px; scrollbar-width: none; }
+        .matrix-scroll-area::-webkit-scrollbar { display: none; }
+
+        .matrix-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        .brand-item {
+            position: relative; background: #ffffff; border: 1px solid #ece7df; border-radius: 8px;
+            padding: 16px 10px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s; font-size: 16px; color: #4a433b; letter-spacing: 0.1em;
+        }
+
+        .brand-item::before {
+            content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0);
+            width: 3px; height: 60%; background-color: #8f7d6a; transition: transform 0.3s;
+        }
+        .brand-item:hover { background-color: #fcfaf7; transform: translateX(2px); }
+        .brand-item.active {
+            background-color: #ffffff; border-color: #d8cfc4; color: #1a1714; font-weight: 500;
+            box-shadow: 0 4px 12px -4px rgba(80, 60, 40, 0.1);
+        }
+        .brand-item.active::before { transform: translateY(-50%) scaleY(1); }
+
+        /* 右侧面板 */
+        .right-panel {
+            width: 80%; background: #fdfdfc; padding: 60px; overflow-y: auto;
+            display: flex; flex-direction: column; scrollbar-width: thin;
+        }
+        .right-panel::-webkit-scrollbar { width: 6px; }
+        .right-panel::-webkit-scrollbar-thumb { background-color: #e0d7cc; border-radius: 10px; }
+
+        .classic-container { margin: auto; max-width: 600px; width: 100%; }
+        .classic-text { font-size: 22px; line-height: 2.2; color: #2b2723; text-align: justify; letter-spacing: 0.08em; }
+        .classic-author { display: block; text-align: right; margin-top: 40px; font-size: 16px; color: #8f7d6a; }
+
+        .brand-detail { width: 100%; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .brand-detail-header {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            margin-bottom: 40px; padding-bottom: 24px; position: relative; gap: 20px;
+        }
+        .brand-detail-header::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, #dcd3c7 0%, #f0ebe5 100%);
+        }
+
+        .header-left { display: flex; align-items: baseline; gap: 20px; flex-shrink: 0; }
+        .brand-detail-name { font-size: 42px; font-weight: 500; color: #1a1714; letter-spacing: 0.12em; line-height: 1; }
+
+        .brand-note-badge {
+            font-size: 15px; color: #6b5d4d; background: #fdfaf5; border-left: 3px solid #c2b2a0;
+            padding: 6px 12px; border-radius: 0 4px 4px 0; display: flex; align-items: center;
+            gap: 8px; line-height: 1.4; max-width: 600px;
+        }
+        .brand-note-badge svg { width: 16px; height: 16px; color: #8f7d6a; flex-shrink: 0; }
+
+        .header-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; margin-left: auto; }
+
+        .icon-btn {
+            background: transparent; border: 1px solid transparent; padding: 8px; border-radius: 50%;
+            cursor: pointer; color: #9c8f7f; transition: all 0.2s ease;
+        }
+        .icon-btn:hover { background: #f9f7f4; color: #4a433b; border-color: #ece7df; }
+        .icon-btn svg { width: 20px; height: 20px; display: block; }
+
+        .stage-group { margin-bottom: 40px; }
+        .stage-title {
+            font-size: 20px; color: #8f7d6a; font-weight: 500; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .stage-title::after { content: ''; flex: 1; height: 1px; background: #ece7df; }
+
+        .task-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .task-item { display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; transition: transform 0.2s; }
+        .task-item:hover { transform: translateY(-4px); }
+
+        .task-thumb-container {
+            width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1px solid #e8e2d9;
+            background-color: #f9f7f4; overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+        .task-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .task-name { font-size: 14px; font-weight: 500; color: #1a1714; text-align: center; }
+
+        .detail-footer {
+            margin-top: 60px; display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px dashed #ece7df; padding-top: 20px;
+        }
+        .detail-logo { font-size: 13px; color: #b3a698; letter-spacing: 2px; }
+        .detail-mark { font-size: 32px; color: #f0ebe5; font-weight: bold; font-style: italic; }
+
+        .image-viewer-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30, 28, 25, 0.85); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 10000; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;
+        }
+        .image-viewer-overlay.show { display: flex; opacity: 1; }
+        .image-viewer-content {
+            max-width: 90vw; max-height: 90vh; border-radius: 12px;
+            transform: scale(0.95); transition: transform 0.3s ease;
+            background: #fdfdfc; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .image-viewer-overlay.show .image-viewer-content { transform: scale(1); }
+        .image-viewer-content img { max-width: 90vw; max-height: 80vh; object-fit: contain; display: block; }
+        .image-viewer-caption {
+            padding: 16px 24px; font-size: 18px; color: #2b2723;
+            text-align: center; border-top: 1px solid #ece7df; letter-spacing: 2px;
+        }
+
+        .toast-message {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(43, 39, 35, 0.95); color: #f3efe9; padding: 12px 28px;
+            border-radius: 8px; font-size: 14px; opacity: 0; transition: all 0.3s ease;
+            pointer-events: none; z-index: 9999;
+        }
+        .toast-message.show { opacity: 1; transform: translate(-50%, -5px); }
+
+        @media (max-width: 1024px) { .task-list { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 加载提示 -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <h2>正在读取数据...</h2>
+            <p>正在从 data 和 images 目录加载网络资源</p>
+        </div>
+
+        <aside class="left-panel">
+            <div class="left-header">
+                <div class="matrix-title">品 牌 矩 阵</div>
+                <div class="search-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" class="search-input" placeholder="搜索品牌..." autocomplete="off">
+                </div>
+            </div>
+            <div class="matrix-scroll-area">
+                <div class="matrix-grid" id="brandMatrix"></div>
+            </div>
+        </aside>
+
+        <main class="right-panel" id="rightPanel">
+            <div class="classic-container">
+                <div class="classic-text">
+                    积土成山，风雨兴焉；积水成渊，蛟龙生焉；<br><br>
+                    积善成德，而神明自得，圣心备焉。<br><br>
+                    故不积跬步，无以至千里；不积小流，无以成江海。<br><br>
+                    骐骥一跃，不能十步；驽马十驾，功在不舍。<br><br>
+                    锲而舍之，朽木不折；锲而不舍，金石可镂。
+                </div>
+                <span class="classic-author">——《荀子・劝学》</span>
+            </div>
+        </main>
+    </div>
+
+    <div id="imageViewer" class="image-viewer-overlay" onclick="closeImageViewer()">
+        <div class="image-viewer-content" onclick="event.stopPropagation()">
+            <img id="viewerImg" src="" alt="示例图">
+            <div id="viewerCaption" class="image-viewer-caption"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-message"></div>
+
+    <script>
+        let parsedBrands = []; 
+        let activeBrandElement = null;
+        let currentBrandDetail = null;
+
+        const brandMatrix = document.getElementById('brandMatrix');
+        const rightPanel = document.getElementById('rightPanel');
+        const toastEl = document.getElementById('toast');
+        const searchInput = document.getElementById('searchInput');
+        const imageViewer = document.getElementById('imageViewer');
+        const viewerImg = document.getElementById('viewerImg');
+        const viewerCaption = document.getElementById('viewerCaption');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500);
+        }
+
+        window.openImageViewer = function(src, title) {
+            if (!src) return;
+            viewerImg.style.display = 'block';
+            viewerImg.src = src;
+            viewerCaption.textContent = title;
+            imageViewer.classList.add('show');
+        };
+
+        window.closeImageViewer = function() { imageViewer.classList.remove('show'); };
+
+        // 解析 Excel 中的内嵌图片（DISPIMG）
+        async function extractImagesFromExcel(arrayBuffer) {
+            try {
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const mediaFiles = {};
+                const mediaNodes = zip.folder("xl/media");
+                if (mediaNodes) {
+                    const promises = [];
+                    mediaNodes.forEach((relativePath, file) => {
+                        if(!file.dir && (relativePath.endsWith('.png') || relativePath.endsWith('.jpg') || relativePath.endsWith('.jpeg'))){
+                            promises.push(file.async('base64').then(base64 => {
+                                let ext = relativePath.split('.').pop();
+                                if(ext === 'jpg') ext = 'jpeg';
+                                mediaFiles[relativePath] = `data:image/${ext};base64,${base64}`;
+                            }));
+                        }
+                    });
+                    await Promise.all(promises);
+                }
+
+                let idToImagePath = {};
+                const cellImagesFile = zip.file("xl/cellimages.xml");
+                if (cellImagesFile) {
+                    const xmlStr = await cellImagesFile.async("string");
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+                    const picNodes = xmlDoc.getElementsByTagNameNS("*", "pic");
+                    for (let i = 0; i < picNodes.length; i++) {
+                        const pic = picNodes[i];
+                        const cNvPr = pic.getElementsByTagNameNS("*", "cNvPr")[0];
+                        const blip = pic.getElementsByTagNameNS("*", "blip")[0];
+                        if (cNvPr && blip) {
+                            const nameId = cNvPr.getAttribute("name"); 
+                            const embedId = blip.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "embed");
+                            if (embedId) {
+                                const relsFile = zip.file("xl/_rels/cellimages.xml.rels");
+                                if (relsFile) {
+                                    const relsStr = await relsFile.async("string");
+                                    const relsDoc = parser.parseFromString(relsStr, "text/xml");
+                                    const rels = relsDoc.getElementsByTagName("Relationship");
+                                    for (let j = 0; j < rels.length; j++) {
+                                        if (rels[j].getAttribute("Id") === embedId) {
+                                            let target = rels[j].getAttribute("Target");
+                                            idToImagePath[nameId] = "xl/" + target;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return { mediaFiles, idToImagePath };
+            } catch (e) {
+                return { mediaFiles: {}, idToImagePath: {} };
+            }
+        }
+
+        // 初始化加载网络数据
+        async function initData() {
+            try {
+                // 因为在 pages/ 目录下，所以去上一级找 data 和 images
+                const excelUrl = '../data/img-norm.xlsx';
+                const response = await fetch(excelUrl);
+                if (!response.ok) throw new Error('网络请求失败，找不到文件');
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const { mediaFiles, idToImagePath } = await extractImagesFromExcel(arrayBuffer);
+                
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+                if (rows.length < 3) throw new Error('表格数据异常');
+
+                const brandRow = rows[0]; 
+                const noteRowIndex = rows.findIndex(r => r[0] === '特殊备注');
+                const tempBrands = [];
+
+                for (let col = 2; col < brandRow.length; col++) {
+                    const brandName = brandRow[col]?.toString().trim();
+                    if (!brandName) continue;
+
+                    let note = '';
+                    if (noteRowIndex !== -1 && rows[noteRowIndex][col]) {
+                        note = rows[noteRowIndex][col].toString().trim();
+                    }
+
+                    const stages = { '勘测': [], '安装前': [], '安装中': [], '安装后': [] };
+                    let currentStage = '';
+
+                    for (let r = 1; r < noteRowIndex; r++) {
+                        const stageCell = rows[r][0]?.toString().trim();
+                        if (stageCell) currentStage = stageCell;
+
+                        const itemName = rows[r][1]?.toString().trim();
+                        const itemVal = rows[r][col]?.toString().trim();
+
+                        if (itemVal === '1' && itemName) {
+                            let imgSrc = '';
+                            
+                            // 优先从内嵌图读取
+                            const rawCell = sheet[XLSX.utils.encode_cell({ r, c: col })];
+                            if (rawCell && rawCell.f) {
+                                const match = rawCell.f.match(/DISPIMG\("([^"]+)"/);
+                                if (match && match[1] && idToImagePath[match[1]]) {
+                                    imgSrc = mediaFiles[idToImagePath[match[1]]]; 
+                                }
+                            }
+
+                            // 如果没有内嵌图，则去 images 网络目录找同名图片
+                            if (!imgSrc) {
+                                // 注意：这里支持常见图片格式，如果不确定可以全部尝试，或者统一用 jpg
+                                imgSrc = `../images/${itemName}.jpg`; 
+                            }
+
+                            if (stages[currentStage]) {
+                                stages[currentStage].push({ name: itemName, img: imgSrc });
+                            }
+                        }
+                    }
+                    tempBrands.push({ name: brandName, stages, note });
+                }
+
+                parsedBrands = tempBrands;
+                renderMatrix();
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 300);
+                
+            } catch (err) {
+                console.error(err);
+                loadingOverlay.innerHTML = `
+                    <h2 style="color:#c96;">数据加载失败</h2>
+                    <p>请确保正确上传了 data/拍照要求.xlsx，并且开启了 GitHub Pages</p>
+                `;
+            }
+        }
+
+        function renderMatrix(filterText = '') {
+            if (parsedBrands.length === 0) return;
+            brandMatrix.innerHTML = '';
+            let hasResult = false;
+            const keyword = filterText.trim().toLowerCase();
+
+            parsedBrands.forEach((brand) => {
+                if (keyword && !brand.name.toLowerCase().includes(keyword)) return;
+                hasResult = true;
+
+                const brandDiv = document.createElement('div');
+                brandDiv.className = 'brand-item';
+                if (currentBrandDetail && currentBrandDetail.name === brand.name) {
+                    brandDiv.classList.add('active');
+                    activeBrandElement = brandDiv;
+                }
+
+                brand.name.split('').forEach(ch => {
+                    const span = document.createElement('span');
+                    span.textContent = ch;
+                    brandDiv.appendChild(span);
+                });
+                
+                brandDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (activeBrandElement) activeBrandElement.classList.remove('active');
+                    brandDiv.classList.add('active');
+                    activeBrandElement = brandDiv;
+                    showBrandDetail(brand);
+                });
+
+                brandMatrix.appendChild(brandDiv);
+            });
+
+            if (!hasResult) brandMatrix.innerHTML = '<div style="font-size:14px;color:#b3a698;text-align:center;padding:20px;">未找到品牌</div>';
+        }
+
+        searchInput.addEventListener('input', (e) => renderMatrix(e.target.value));
+
+        function showBrandDetail(brand) {
+            currentBrandDetail = brand;
+            rightPanel.innerHTML = '';
+
+            const detailContainer = document.createElement('div');
+            detailContainer.className = 'brand-detail';
+
+            const header = document.createElement('div');
+            header.className = 'brand-detail-header';
+
+            const headerLeft = document.createElement('div');
+            headerLeft.className = 'header-left';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'brand-detail-name';
+            nameEl.textContent = brand.name;
+            
+            headerLeft.appendChild(nameEl);
+
+            if (brand.note) {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'brand-note-badge';
+                noteEl.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>${brand.note}</span>
+                `;
+                headerLeft.appendChild(noteEl);
+            }
+
+            const actions = document.createElement('div');
+            actions.className = 'header-actions';
+
+            const cameraBtn = document.createElement('button');
+            cameraBtn.className = 'icon-btn';
+            cameraBtn.title = '复制详情到剪贴板';
+            cameraBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+            cameraBtn.addEventListener('click', (e) => { e.stopPropagation(); copyDetailToClipboard(); });
+            actions.appendChild(cameraBtn);
+
+            const externalBtn = document.createElement('button');
+            externalBtn.className = 'icon-btn';
+            externalBtn.title = '在独立窗口打开';
+            externalBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+            externalBtn.addEventListener('click', (e) => { e.stopPropagation(); openToolInPopupWindow(); });
+            actions.appendChild(externalBtn);
+
+            header.appendChild(headerLeft);
+            header.appendChild(actions);
+
+            const contentEl = document.createElement('div');
+            contentEl.className = 'detail-content-wrapper';
+
+            const stages = ['勘测', '安装前', '安装中', '安装后'];
+            let hasAnyTask = false;
+
+            stages.forEach(stageName => {
+                const tasks = brand.stages[stageName] || [];
+                if (tasks.length === 0) return;
+                hasAnyTask = true;
+
+                const stageGroup = document.createElement('div');
+                stageGroup.className = 'stage-group';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'stage-title';
+                titleEl.textContent = stageName;
+                stageGroup.appendChild(titleEl);
+
+                const listEl = document.createElement('div');
+                listEl.className = 'task-list';
+
+                tasks.forEach(task => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'task-item';
+                    // 对网络图片加载失败的处理：如果图片 404，隐藏整个模块，不占位
+                    itemEl.innerHTML = `
+                        <div class="task-thumb-container">
+                            <img src="${task.img}" class="task-thumb-img" alt="${task.name}" onerror="this.parentElement.parentElement.style.display='none'">
+                        </div>
+                        <div class="task-name">${task.name}</div>
+                    `;
+                    itemEl.onclick = () => window.openImageViewer(task.img, task.name);
+                    listEl.appendChild(itemEl);
+                });
+
+                stageGroup.appendChild(listEl);
+                contentEl.appendChild(stageGroup);
+            });
+
+            if (!hasAnyTask) {
+                contentEl.innerHTML = '<p style="text-align:center;color:#b3a698;padding:40px 0;">该品牌暂无特定的拍照要求记录。</p>';
+            }
+
+            const footer = document.createElement('div');
+            footer.className = 'detail-footer';
+            footer.innerHTML = `<div class="detail-logo">${brand.name} · 充电桩拍照要求</div><div class="detail-mark">Z</div>`;
+
+            detailContainer.appendChild(header);
+            detailContainer.appendChild(contentEl);
+            detailContainer.appendChild(footer);
+            rightPanel.appendChild(detailContainer);
+        }
+
+        function copyDetailToClipboard() {
+            if (!currentBrandDetail) return;
+            showToast('正在生成图片...');
+
+            const brand = currentBrandDetail;
+            let tasksHTML = '';
+            
+            ['勘测', '安装前', '安装中', '安装后'].forEach(stageName => {
+                const tasks = brand.stages[stageName] || [];
+                if (tasks.length === 0) return;
+
+                tasksHTML += `
+                    <div style="margin-bottom: 40px;">
+                        <div style="font-size: 20px; color: #8f7d6a; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                            ${stageName}
+                            <span style="flex: 1; height: 1px; background: #ece7df; display: inline-block;"></span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+                            ${tasks.map(task => `
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                    <div style="width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1px solid #e8e2d9; background-color: #f9f7f4; overflow: hidden;">
+                                        <img src="${task.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" crossorigin="anonymous" />
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 500; color: #1a1714; text-align: center;">${task.name}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            let noteHTML = brand.note ? `
+                <div style="font-size: 15px; color: #6b5d4d; background: #fdfaf5; border-left: 3px solid #c2b2a0; padding: 6px 12px; border-radius: 0 4px 4px 0; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>${brand.note}</span>
+                </div>
+            ` : '';
+
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'fixed';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.top = '0';
+            tempDiv.style.width = '920px';
+            tempDiv.style.backgroundColor = '#fdfdfc';
+            tempDiv.style.padding = '60px';
+            tempDiv.style.fontFamily = "'Noto Serif SC', 'Songti SC', 'STSong', serif";
+
+            tempDiv.innerHTML = `
+                <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #dcd3c7;">
+                    <div style="display: flex; align-items: baseline; gap: 20px;">
+                        <div style="font-size: 42px; font-weight: 500; color: #1a1714; letter-spacing: 0.12em; line-height: 1;">${brand.name}</div>
+                        ${noteHTML}
+                    </div>
+                </div>
+                ${tasksHTML}
+                <div style="margin-top: 60px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #ece7df; padding-top: 20px;">
+                    <div style="font-size: 13px; color: #b3a698; letter-spacing: 2px;">${brand.name} · 充电桩拍照要求</div>
+                    <div style="font-size: 32px; color: #f0ebe5; font-weight: bold; font-style: italic;">Z</div>
+                </div>
+            `;
+            document.body.appendChild(tempDiv);
+
+            html2canvas(tempDiv, {
+                scale: 2,
+                backgroundColor: '#fdfdfc',
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        showToast('详情图片已复制到剪贴板');
+                    } catch (err) {
+                        showToast('复制失败，请检查浏览器权限');
+                    } finally {
+                        document.body.removeChild(tempDiv);
+                    }
+                }, 'image/png');
+            }).catch(err => {
+                showToast('截图生成失败，请重试');
+                document.body.removeChild(tempDiv);
+            });
+        }
+
+        function openToolInPopupWindow() {
+            const docHtml = document.documentElement.outerHTML;
+            const w = Math.min(1300, Math.round(window.screen.availWidth * 0.85));
+            const h = Math.min(860, Math.round(window.screen.availHeight * 0.85));
+            const left = Math.round((window.screen.availWidth - w) / 2);
+            const top = Math.round((window.screen.availHeight - h) / 2);
+
+            const win = window.open('', '_blank', `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+            if (win) {
+                win.document.open();
+                win.document.write(docHtml);
+                win.document.close();
+                win.focus();
+                showToast('已在独立窗口打开工具');
+            }
+        }
+
+        document.addEventListener('contextmenu', (e) => { if(e.target.tagName !== 'INPUT') { e.preventDefault(); showToast('内容不可复制'); } });
+        document.addEventListener('copy', (e) => { if(e.target.tagName !== 'INPUT') { e.preventDefault(); showToast('内容不可复制'); } });
+        document.addEventListener('selectstart', (e) => { if(e.target.tagName !== 'INPUT') { e.preventDefault(); } });
+
+        // 启动加载
+        initData();
+    </script>
+</body>
+</html>
