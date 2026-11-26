@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>充电桩安装·拍照要求矩阵</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>充电桩安装·拍照要求示意图</title>
     <!-- 引入必备库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -16,14 +16,19 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 防止整体滚动，内部滚动 */
+        }
+
         body {
             background-color: #f3efe9;
             font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 0;   /* 全屏占满，无内边距 */
             user-select: none;
             -webkit-user-select: none;
             caret-color: transparent;
@@ -32,15 +37,16 @@
 
         * { caret-color: transparent !important; }
 
+        /* 主容器：占满整个视口，去除圆角和边距，但保留阴影和边框的精致感 */
         .main-container {
             display: flex;
-            width: 1300px;
-            max-width: 100%;
-            height: 820px;
-            max-height: 92vh;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
             background-color: #fdfdfc;
-            box-shadow: 0 20px 50px -10px rgba(60, 50, 40, 0.08), 0 0 0 1px rgba(200, 190, 180, 0.2);
-            border-radius: 12px;
+            box-shadow: none;
+            border-radius: 0;
             overflow: hidden;
             position: relative;
         }
@@ -56,7 +62,7 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
-            border-radius: 12px;
+            border-radius: 0;
             transition: opacity 0.3s;
         }
         .loading-overlay h2 {
@@ -77,6 +83,7 @@
             border-right: 1px solid #e8e2d9;
             display: flex;
             flex-direction: column;
+            overflow: hidden;  /* 内部滚动 */
         }
 
         .left-header {
@@ -94,13 +101,53 @@
         }
 
         .search-wrapper { position: relative; display: flex; align-items: center; }
-        .search-wrapper svg { position: absolute; left: 4px; width: 16px; height: 16px; color: #b3a698; }
+        .search-wrapper svg.search-icon { position: absolute; left: 4px; width: 16px; height: 16px; color: #b3a698; pointer-events: none; }
         .search-input {
-            width: 100%; padding: 8px 8px 8px 28px; border: none; border-bottom: 1px solid #dcd3c7;
-            background: transparent; font-size: 15px; color: #2b2723; outline: none;
-            caret-color: #4a433b !important; user-select: text !important;
+            width: 100%;
+            padding: 8px 32px 8px 28px;   /* 右侧留出清除图标空间 */
+            border: none;
+            border-bottom: 1px solid #dcd3c7;
+            background: transparent;
+            font-size: 15px;
+            color: #2b2723;
+            outline: none;
+            caret-color: #4a433b !important;
+            user-select: text !important;
         }
         .search-input:focus { border-bottom-color: #8f7d6a; }
+
+        /* 清除图标按钮 (搜索框最右侧) */
+        .search-clear-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #b3a698;
+            opacity: 0;
+            transition: opacity 0.2s, color 0.2s;
+            pointer-events: none;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0;
+            border-radius: 50%;
+        }
+        .search-clear-btn:hover {
+            color: #6b5d4d;
+            background-color: rgba(0,0,0,0.03);
+        }
+        .search-input:not(:placeholder-shown) + .search-clear-btn,
+        .search-input.has-value + .search-clear-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .matrix-scroll-area { flex: 1; overflow-y: auto; padding: 16px 20px; scrollbar-width: none; }
         .matrix-scroll-area::-webkit-scrollbar { display: none; }
@@ -181,8 +228,36 @@
         .task-thumb-container {
             width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1px solid #e8e2d9;
             background-color: #f9f7f4; overflow: hidden; display: flex; justify-content: center; align-items: center;
+            position: relative;
         }
         .task-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        
+        /* 图片缺失占位样式 */
+        .placeholder-demo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: #f3efe9;
+            color: #b3a698;
+            font-size: 14px;
+            gap: 8px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            border: 1px dashed #d8cfc4;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .placeholder-demo svg {
+            width: 32px;
+            height: 32px;
+            stroke: #c2b2a0;
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
         .task-name { font-size: 14px; font-weight: 500; color: #1a1714; text-align: center; }
 
         .detail-footer {
@@ -232,10 +307,16 @@
 
         <aside class="left-panel">
             <div class="left-header">
-                <div class="matrix-title">品 牌 矩 阵</div>
+                <div class="matrix-title">照片回传标准示意</div>
                 <div class="search-wrapper">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <!-- 搜索图标 -->
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
                     <input type="text" id="searchInput" class="search-input" placeholder="搜索品牌..." autocomplete="off">
+                    <!-- 清除按钮（搜索框最右侧） -->
+                    <button class="search-clear-btn" id="searchClearBtn" title="清空搜索">✕</button>
                 </div>
             </div>
             <div class="matrix-scroll-area">
@@ -275,10 +356,40 @@
         const rightPanel = document.getElementById('rightPanel');
         const toastEl = document.getElementById('toast');
         const searchInput = document.getElementById('searchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
         const imageViewer = document.getElementById('imageViewer');
         const viewerImg = document.getElementById('viewerImg');
         const viewerCaption = document.getElementById('viewerCaption');
         const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // 更新清除按钮显隐
+        function updateClearButtonVisibility() {
+            if (searchInput.value.trim().length > 0) {
+                searchClearBtn.style.opacity = '1';
+                searchClearBtn.style.pointerEvents = 'auto';
+            } else {
+                searchClearBtn.style.opacity = '0';
+                searchClearBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        // 清空搜索
+        searchClearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchInput.value = '';
+            updateClearButtonVisibility();
+            renderMatrix('');
+            searchInput.focus();
+        });
+
+        // 输入时更新清除按钮并过滤
+        searchInput.addEventListener('input', (e) => {
+            updateClearButtonVisibility();
+            renderMatrix(e.target.value);
+        });
+
+        // 初始化时也更新一次
+        updateClearButtonVisibility();
 
         function showToast(msg) {
             toastEl.textContent = msg;
@@ -472,7 +583,7 @@
             if (!hasResult) brandMatrix.innerHTML = '<div style="font-size:14px;color:#b3a698;text-align:center;padding:20px;">未找到品牌</div>';
         }
 
-        searchInput.addEventListener('input', (e) => renderMatrix(e.target.value));
+        // 注意：searchInput 的 input 监听已移到上面统一处理，这里不再重复绑定
 
         function showBrandDetail(brand) {
             currentBrandDetail = brand;
@@ -548,14 +659,37 @@
                 tasks.forEach(task => {
                     const itemEl = document.createElement('div');
                     itemEl.className = 'task-item';
-                    // 对网络图片加载失败的处理：如果图片 404，隐藏整个模块，不占位
+                    
+                    // 构建图片或占位符
+                    let imageHTML = '';
+                    if (task.img && task.img.trim() !== '') {
+                        // 有图片，使用 img 标签，并处理加载失败显示占位
+                        imageHTML = `<img src="${task.img}" class="task-thumb-img" alt="${task.name}" 
+                            onerror="this.parentElement.innerHTML='<div class=\'placeholder-demo\'><svg viewBox=\'0 0 24 24\' stroke=\'currentColor\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\' ry=\'2\'/><circle cx=\'8.5\' cy=\'8.5\' r=\'1.5\'/><polyline points=\'21 15 16 10 5 21\'/></svg><span>暂无示例图</span></div>';">`;
+                    } else {
+                        // 无图片路径，直接显示占位
+                        imageHTML = `<div class="placeholder-demo">
+                            <svg viewBox="0 0 24 24" stroke="currentColor">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <span>暂无示例图</span>
+                        </div>`;
+                    }
+                    
                     itemEl.innerHTML = `
                         <div class="task-thumb-container">
-                            <img src="${task.img}" class="task-thumb-img" alt="${task.name}" onerror="this.parentElement.parentElement.style.display='none'">
+                            ${imageHTML}
                         </div>
                         <div class="task-name">${task.name}</div>
                     `;
-                    itemEl.onclick = () => window.openImageViewer(task.img, task.name);
+                    // 只有图片存在时才绑定放大查看
+                    if (task.img && task.img.trim() !== '') {
+                        itemEl.onclick = () => window.openImageViewer(task.img, task.name);
+                    } else {
+                        itemEl.onclick = () => showToast('暂无示例图片');
+                    }
                     listEl.appendChild(itemEl);
                 });
 
@@ -597,8 +731,11 @@
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
                             ${tasks.map(task => `
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
-                                    <div style="width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1px solid #e8e2d9; background-color: #f9f7f4; overflow: hidden;">
-                                        <img src="${task.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" crossorigin="anonymous" />
+                                    <div style="width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1px solid #e8e2d9; background-color: #f9f7f4; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                        ${task.img && task.img.trim() !== '' ? 
+                                            `<img src="${task.img}" style="width: 100%; height: 100%; object-fit: cover; display: block;" crossorigin="anonymous" />` : 
+                                            `<div style="display:flex;flex-direction:column;align-items:center;color:#b3a698;font-size:14px;gap:8px;"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#c2b2a0" fill="none" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>暂无示例图</span></div>`
+                                        }
                                     </div>
                                     <div style="font-size: 14px; font-weight: 500; color: #1a1714; text-align: center;">${task.name}</div>
                                 </div>
